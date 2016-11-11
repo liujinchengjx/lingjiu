@@ -1,0 +1,125 @@
+<project name="gscm"  basedir=".">
+
+	<property file="build.properties" />
+
+	<!--<echo message="Covert Template to UTF-8.........."/>
+		<exec executable="native2ascii">
+			<arg line="./src/jsp/decorators/splitpage.template ./src/jsp/decorators/splitpage.properties"/>
+		</exec>
+	<echo message="Covert Template to GBK success."/>-->
+	<path id="jspc.classpath">
+		<pathelement location="${java.home}/../lib/tools.jar" />
+		<fileset dir="${CATALINA_HOME}/bin">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${CATALINA_HOME}/lib">
+			<include name="*.jar" />
+		</fileset>
+
+		<fileset dir="${fq.out.webapp.lib}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+	
+	<path id="classpath">
+		<pathelement location="${src}/" />
+		<fileset dir="${fq.lib}" includes="**/*.jar" />
+		<fileset dir="${CATALINA_HOME}/lib" includes="**/*.jar" />
+	</path>
+
+	<filterset id="templateset" begintoken="%" endtoken="*">
+		<filtersfile file="${TEMPLATE_DIR}/mainFrame.template" />
+	</filterset>
+
+	<target name="init">
+		<echo>Init Directory...</echo>
+		<mkdir dir="${fq.out.webapp}" /> 
+		<mkdir dir="${fq.out.webapp.classes}" />
+		<mkdir dir="${fq.out.jar}" />
+		<mkdir dir="${fq.out.tempclass}" />
+	</target>
+
+	<target name="clean">
+		<echo>clean web dir...</echo>
+		<delete dir="${fq.out.webapp.www}" />
+	</target>
+
+	<target name="complieJava">
+		<echo>Compile Web java files...</echo>
+		<javac encoding="UTF-8" destdir="${fq.src.webapp.classes}" deprecation="off" optimize="off" debug="true" failonerror="true">
+			<classpath refid="classpath" />
+			<src path="${fq.src.java}" />
+		</javac>
+	</target>
+	
+	<target name="copyAll" depends="init">
+		<copy todir="${fq.out.webapp.www}" preservelastmodified="true">
+			<fileset dir="./WebRoot">
+				<exclude name="**/_svn/**" />
+				<exclude name="**/lib/**" />
+				<exclude name="**/parameter.properties" />
+				<exclude name="**/web.xml" />
+				<exclude name="**/uploadfiles/**" />
+				
+				<!--<exclude name="images/**" />-->
+			</fileset>
+		</copy>
+	</target>
+	<target name="copy_gscmhtml">
+		<delete dir="${RELEASE_DIR}/gscm_html" />
+			<copy todir="${RELEASE_DIR}/gscm_html" preservelastmodified="true">
+				<fileset dir="${wwwhtml.dir}">
+					<exclude name="**/_svn/**" />	
+					<exclude name="**/plugins/**" />
+					<!--<exclude name="images/**" />-->
+					<!--<exclude name="js/common.js" />-->
+				</fileset>
+			</copy>
+			
+			<copy todir="${RELEASE_DIR}/gscm_html/images" preservelastmodified="true">
+				<fileset dir="${wwwhtml.dir}/images">
+					<exclude name="**/_svn/**" />
+					<date when="after" datetime="2013-01-08 00:00:00" pattern="yyyy-MM-dd HH:mm:ss"/>
+				</fileset>
+			</copy>
+			
+		
+			<delete file="${RELEASE_DIR}/gscm_html.zip" />
+			<zip destfile="${RELEASE_DIR}/gscm_html.zip">
+				<fileset dir="${RELEASE_DIR}/gscm_html"/>
+			</zip>
+	</target>
+	
+	
+	<target name="deploy" depends="clean,init,complieJava,copyAll">
+			<delete file="${RELEASE_DIR}/gscm_server.zip" />
+			<zip destfile="${RELEASE_DIR}/gscm_server.zip">
+				<fileset dir="${fq.out.webapp.www}"/>
+			</zip>
+	</target>
+	
+	<target name="copy_gscmhtmlnew">
+			<copy todir="d:/gscmnew/gscm_html" preservelastmodified="true">
+				<fileset dir="${wwwhtml.dir}">
+					<exclude name="**/_svn/**" />	
+				</fileset>
+			</copy>
+	</target>
+	<target name="copy_gscmjavanew">
+		<copy todir="d:/gscmnew/gscm_java" preservelastmodified="true">
+			<fileset dir="E:/gosonic/gscmcode/gscm">
+				<exclude name="**/_svn/**" />		
+			</fileset>
+		</copy>
+	</target>
+	<target name="copy_gscmdocnew">
+			<copy todir="D:\workspace\qinziyou\operation" preservelastmodified="true">
+				<fileset dir="D:\gscm\gscm_html">
+					<exclude name="**/_svn/**" />		
+				</fileset>
+			</copy>
+	</target>
+	
+	
+
+ </project>
