@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>修改贸易订单净重毛重</title>
+	<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<script type="text/javascript">	
+	    $(function(){		
+		      $("#nav_carton").omPanel({title : "<label style='font-weight:bolder'>订单号："+
+			  getIframeParm("coOrderNo")+"  客户："+getIframeParm("customerName")+"</label>",collapsed:false,height:'95%'});
+			  loadOrderCartons();
+			 $('#buttonbar').omButtonbar({
+				 width : "100%",
+				 btns : [{label:"保存",
+						 id:"btnSave" ,
+						 icons : {left : '/images/icon/add.png'},
+						 disabled: parseFloat(getQueryString("status"))>=20?true:false,
+						 onClick: saveCustomorderCarton
+						},
+						{separtor:true},
+						{label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);  
+						  }
+						 }					
+					 ]
+             });	 
+		});
+	function loadOrderCartons(){
+	      var customOrderId=getIframeParm("customOrderId");
+		  if (customOrderId !=""){	
+			 var url="order/CustomOrder/0/getCustomOrderCartons?limit=10000&customOrderId="+customOrderId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				 var mutitable=$(".mutitable");
+				 mutitable.find(".tbody_item").remove();
+				 var html="";
+				 for(var i=0;i<json.rows.length;i++){
+					 var coc=json.rows[i];
+					 html=html+"<div class='tbody_item'>";
+					 html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+					 html=html+" <tr> ";
+					 html=html+"   <td width='50'><strong><span name='cartonNo'>"+coc.cartonNo+"</span></strong>";
+					 html=html+"     <span name='id' style='display:none' >"+coc.id+"</span>";
+					 html=html+"     <span name='customOrderId' style='display:none' >"+coc.customOrderId+"</span>";
+					 html=html+"     <span name='tempnw' style='display:none' >"+coc.nw+"</span>";
+					 html=html+"     <span name='tempgw' style='display:none' >"+coc.gw+"</span>";
+					 html=html+"   </td>";
+					 html=html+"   <td width='140'>";
+					 html=html+"      <span name='orgCartonNo'>"+coc.orgCartonNo+"</span>";
+					 html=html+"  </td>";
+					 html=html+"   <td width='140'>";
+					 html=html+"      <span name='size'>"+coc.size+"</span>";
+					 html=html+"  </td> ";
+					 html=html+"   <td width='140'>";
+					 html=html+"     <input type='text' value='"+(coc.nw)+"' name='nw' ";
+					 html=html+"      style='width:90%;margin-right:2px;text-align:left;' validate="+"rules:['required'] >";
+					 html=html+"  </td> ";
+					 html=html+"  <td width='140'>";
+					 html=html+"      <input type='text' value='"+(coc.gw)+"' name='gw' ";
+					 html=html+"      style='width:90%;margin-right:2px;text-align: left;' ";
+					 html=html+"      validate="+"rules:['required']"+"  />";
+					 html=html+"  </td>";
+					 html=html+"<td style='text-align:left;'></td>";	 
+					 html=html+"</tr>";
+					 html=html+"</table></div>";
+				 } 
+				 mutitable.append(html);
+				 initValidateForm("product");
+				 $("input[name='nw']").omNumberField({allowDecimals:true,decimalPrecision:10});
+				 $("input[name='gw']").omNumberField({allowDecimals:true,decimalPrecision:10});
+			  }			
+			 });
+		}
+	}
+	function saveCustomorderCarton(){
+		if(validateForm("product")==false)return false;  
+		var customOrderId=getIframeParm("customOrderId");
+		if ((customOrderId=="") || (customOrderId<=0)) return ;
+		var cartons=[];	
+		cartons=getCartons();
+		if (cartons==null) return ;
+		if (cartons.length<=0) return ;
+		$.omMessageBox.confirm({title:'产品修改',content:'你确定要修改产品么？',onClose:function(v){
+		if(v){
+			var str= JSON.stringify(cartons);
+			var url = "order/CustomOrder/0/editCustomOrderCarton";
+			$.ajaxPost({data:{"cocString":str,"customOrderId":customOrderId},url:url,msg:false,success:function(json,textStatus){
+				loadOrderCartons();
+				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+			}});
+		}}});		 
+	}
+	function getCartons(){
+		var cartons=[];
+		$(".mutitable .tbody_item table tr").each(function(i){
+			 $this=$(this);
+			 var vo=$this.getVo();
+			 if (parseFloat(vo["gw"])<parseFloat(vo["nw"])){
+				 cartons=null;
+				$.omMessageTip.show({content :"对不起！箱号："+vo["cartonNo"]+" 的净重不能大于毛重",timeout : 2000,type : 'error'});
+				return false;
+			 }
+			 if ( (parseFloat(vo.nw)!=parseFloat(vo.tempnw)) || (parseFloat(vo.gw)!=parseFloat(vo.tempgw)) ) {
+				var pvo={};
+				for(prop in vo){
+				   if(prop.indexOf("temp")<0){
+					  pvo[prop]=vo[prop];
+				   }
+				}
+				cartons.push(pvo);				     
+			 } 				 
+		});
+		return cartons;
+	}
+	</script>
+</head>
+
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px; background-color: #EEEEEE">
+<div id="nav_carton" style="height:750px;" >
+	<div id="buttonbar"></div>
+	<form id="product" >	
+		<div class="mutitable">
+			<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+				<thead>
+				   <tr>
+					  <td width="50">箱号</td>
+					  <td width="80" style="text-align:center;margin-left:2px;">原箱号</td>
+					  <td width="140" style="text-align: center; margin-left:2px;">尺寸</td>
+					  <td width="140" style="text-align:center;margin-left:2px;">净重</td>
+					  <td width="140" style="text-align:center;margin-left:2px;">毛重</td>
+					  <td ></td>
+				   </tr>
+				</thead>
+			</table>
+		</div>
+	</form>	
+</div>
+</body>
+</html>

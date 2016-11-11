@@ -1,0 +1,322 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>益童行管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/kindeditor/kindeditor-min.js"></script>
+	<script type="text/javascript" src="/kindeditor/lang/zh_CN.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<script type="text/javascript">
+	$(document).ready(function(){
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("topic");
+		var topicId = getUrlParam("topicId");
+		if (topicId !=""){ //编辑状态
+		     var url="qinziyou/ActivityTopic/0/get?id="+topicId;
+			 $.ajaxPost({url:url,asynced:false,msg:false,success:function(json,textStatus){
+					$("#topic").initializeInput({"vo":json.entity}); //初始化
+				}			
+			 });
+ 		 }else{
+			$("#topic").initializeInput(); //初始化								
+		 }
+		
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveActity
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }
+		 	]
+        });
+	});
+	
+	
+	//保存
+	function saveActity(){
+	    if(validateForm("topic")==false)return false;
+		var vo=	$("#topic").getVo();
+			var url = $("#id").val()=="" ? "qinziyou/ActivityTopic/0/add" : "qinziyou/ActivityTopic/0/edit";
+			
+			$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){ 
+				   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+				 }
+			});
+		
+	}
+	
+var gatherPlaceEditor;
+var activityCrowdEditor;
+var activityFlowEditor;
+var activityRegEditor;
+var tipsEditor;
+KindEditor.ready(function(K) {
+	gatherPlaceEditor = K.create('#gatherPlace', {
+		uploadJson : baseUrl+'/qinziyou/ActivityFileUploadForEditor/0/upload',
+		//fileManagerJson : '../jsp/file_manager_json.jsp',
+		//allowFileManager : true,
+		items : [
+		'source', '|', 'undo', 'redo', '|', 'preview', 'print', 'template', 'code', 'cut', 'copy', 'paste',
+		'plainpaste', 'wordpaste', '|', 'justifyleft', 'justifycenter', 'justifyright',
+		'justifyfull', 'insertorderedlist', 'insertunorderedlist', 'indent', 'outdent', 'subscript',
+		'superscript', 'clearhtml', 'quickformat', 'selectall', '|', 'fullscreen', '/',
+		'formatblock', 'fontname', 'fontsize', '|', 'forecolor', 'hilitecolor', 'bold',
+		'italic', 'underline', 'strikethrough', 'lineheight', 'removeformat', '|', 'image', 
+		'flash', 'media', 'insertfile', 'table', 'hr', 'emoticons', 'baidumap', 'pagebreak',
+		'anchor', 'link', 'unlink', '|', 'about'
+		],
+		afterCreate : function() { 
+			this.sync(); 
+		}, 
+		afterBlur:function(){ 
+			this.sync();
+		}           
+	});
+	
+	activityCrowdEditor = K.create('#activityCrowd', {
+		uploadJson : baseUrl+'/qinziyou/ActivityFileUploadForEditor/0/upload',
+		//fileManagerJson : '../jsp/file_manager_json.jsp',
+		//allowFileManager : true,
+		items : [
+		'source', '|', 'undo', 'redo', '|', 'preview', 'print', 'template', 'code', 'cut', 'copy', 'paste',
+		'plainpaste', 'wordpaste', '|', 'justifyleft', 'justifycenter', 'justifyright',
+		'justifyfull', 'insertorderedlist', 'insertunorderedlist', 'indent', 'outdent', 'subscript',
+		'superscript', 'clearhtml', 'quickformat', 'selectall', '|', 'fullscreen', '/',
+		'formatblock', 'fontname', 'fontsize', '|', 'forecolor', 'hilitecolor', 'bold',
+		'italic', 'underline', 'strikethrough', 'lineheight', 'removeformat', '|', 'image', 
+		'flash', 'media', 'insertfile', 'table', 'hr', 'emoticons', 'baidumap', 'pagebreak',
+		'anchor', 'link', 'unlink', '|', 'about'
+		],
+		afterCreate : function() { 
+			this.sync(); 
+		}, 
+		afterBlur:function(){ 
+			this.sync();
+		}           
+	});
+	
+	activityFlowEditor = K.create('#activityFlow', {
+		uploadJson : baseUrl+'/qinziyou/ActivityFileUploadForEditor/0/upload',
+		//fileManagerJson : '../jsp/file_manager_json.jsp',
+		//allowFileManager : true,
+		items : [
+		'source', '|', 'undo', 'redo', '|', 'preview', 'print', 'template', 'code', 'cut', 'copy', 'paste',
+		'plainpaste', 'wordpaste', '|', 'justifyleft', 'justifycenter', 'justifyright',
+		'justifyfull', 'insertorderedlist', 'insertunorderedlist', 'indent', 'outdent', 'subscript',
+		'superscript', 'clearhtml', 'quickformat', 'selectall', '|', 'fullscreen', '/',
+		'formatblock', 'fontname', 'fontsize', '|', 'forecolor', 'hilitecolor', 'bold',
+		'italic', 'underline', 'strikethrough', 'lineheight', 'removeformat', '|', 'image', 
+		'flash', 'media', 'insertfile', 'table', 'hr', 'emoticons', 'baidumap', 'pagebreak',
+		'anchor', 'link', 'unlink', '|', 'about'
+		],
+		afterCreate : function() { 
+			this.sync(); 
+		}, 
+		afterBlur:function(){ 
+			this.sync();
+		}           
+	});
+	
+	activityRegEditor = K.create('#activityReg', {
+		uploadJson : baseUrl+'/qinziyou/ActivityFileUploadForEditor/0/upload',
+		//fileManagerJson : '../jsp/file_manager_json.jsp',
+		//allowFileManager : true,
+		items : [
+		'source', '|', 'undo', 'redo', '|', 'preview', 'print', 'template', 'code', 'cut', 'copy', 'paste',
+		'plainpaste', 'wordpaste', '|', 'justifyleft', 'justifycenter', 'justifyright',
+		'justifyfull', 'insertorderedlist', 'insertunorderedlist', 'indent', 'outdent', 'subscript',
+		'superscript', 'clearhtml', 'quickformat', 'selectall', '|', 'fullscreen', '/',
+		'formatblock', 'fontname', 'fontsize', '|', 'forecolor', 'hilitecolor', 'bold',
+		'italic', 'underline', 'strikethrough', 'lineheight', 'removeformat', '|', 'image', 
+		'flash', 'media', 'insertfile', 'table', 'hr', 'emoticons', 'baidumap', 'pagebreak',
+		'anchor', 'link', 'unlink', '|', 'about'
+		],
+		afterCreate : function() { 
+			this.sync(); 
+		}, 
+		afterBlur:function(){ 
+			this.sync();
+		}           
+	});
+	
+	tipsEditor = K.create('#tips', {
+		uploadJson : baseUrl+'/qinziyou/ActivityFileUploadForEditor/0/upload',
+		//fileManagerJson : '../jsp/file_manager_json.jsp',
+		//allowFileManager : true,
+		items : [
+		'source', '|', 'undo', 'redo', '|', 'preview', 'print', 'template', 'code', 'cut', 'copy', 'paste',
+		'plainpaste', 'wordpaste', '|', 'justifyleft', 'justifycenter', 'justifyright',
+		'justifyfull', 'insertorderedlist', 'insertunorderedlist', 'indent', 'outdent', 'subscript',
+		'superscript', 'clearhtml', 'quickformat', 'selectall', '|', 'fullscreen', '/',
+		'formatblock', 'fontname', 'fontsize', '|', 'forecolor', 'hilitecolor', 'bold',
+		'italic', 'underline', 'strikethrough', 'lineheight', 'removeformat', '|', 'image', 
+		'flash', 'media', 'insertfile', 'table', 'hr', 'emoticons', 'baidumap', 'pagebreak',
+		'anchor', 'link', 'unlink', '|', 'about'
+		],
+		afterCreate : function() { 
+			this.sync(); 
+		}, 
+		afterBlur:function(){ 
+			this.sync();
+		}           
+	});
+	/**
+	var editor = K.editor({
+		uploadJson : baseUrl+'/qinziyou/ActivityFileUploadForEditor/0/upload',
+		allowFileManager : true
+    });
+	$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         editor.loadPlugin('image', function() {
+						editor.plugin.imageDialog({
+							showRemote : false,
+							imageUrl : K('#mainImgUrl').val(),
+							clickFn : function(url, title, width, height, border, align) {
+								K('#mainImgUrl').val(url);
+								editor.hideDialog();
+							}
+						});
+					});
+			   }
+	});		
+	*/
+});
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>
+	<div id="nav_topic" title="新增活动">
+        <form id="topic">	
+		<input id="id" name="activityTopic.id" type="hidden" />
+		<input type="hidden" id="lastModifyTime" name="activityTopic.lastModifyTime" />
+		<input type="hidden" id="activityStatus" name="activityTopic.activityStatus" value="10"/>
+		<input type="hidden" id="createTime" name="activityTopic.createTime" />
+		<input type="hidden" id="lastModifyBy" name="activityTopic.lastModifyBy" />
+ 		<input type="hidden" id="createTime" name="activityTopic.createBy" />
+ 		<input type="hidden" id="mainImgUrl" name="activityTopic.mainImgUrl" />
+		<table class="edit2-table">		
+			<tr>
+   			    <td class="label" ><span class="color_red">*</span>活动名称：</td>
+				<td class="field" >
+				<input id="cname" name="activityTopic.topicName" validate="rules:['required']" style="width:300px;" />*</td>		
+			</tr>
+			<tr>
+   			    <td class="label" >活动城市：</td>
+				<td class="field" >
+				<input id="city" name="activityTopic.city" validate="rules:['required']" pattern='combo' editable='false' 
+						 remote='Citys' emptyText="选择活动城市"/>
+				</td>		
+			</tr>
+			<tr>
+   			    <td class="label" >活动地点：</td>
+				<td class="field" >
+					<input id="address" name="activityTopic.address" validate="rules:['required']"  style="width:300px;"/>
+				</td>		
+			</tr>
+
+			<tr>
+   			    <td class="label" >活动时间：</td>
+				<td class="field" >
+				<input id="activityDate" name="activityTopic.activityDate" pattern='date' editable='false' validate="rules:['required']" />日,从
+				<input id="fromTime" name="activityTopic.fromTime" validate="rules:['required']"   style="width:50px;"/> （精确到分，如10:25）  到  
+				<input id="endTime" name="activityTopic.endTime" validate="rules:['required']"   style="width:50px;"/> （精确到分，如12:25）
+				</td>		
+			</tr>
+			<tr>
+   			    <td class="label" >名额：</td>
+				<td class="field" >
+					<input id="limitCnt" name="activityTopic.limitCnt" validate="rules:['required']" style="width:50px;"/>（-1表示不限名额）
+				</td>		
+			</tr>
+			<tr>
+   			    <td class="label" >价钱：</td>
+				<td class="field" >
+				 成人：<input id="priceAdult" name="activityTopic.priceAdult" validate="rules:['required']" style="width:50px;"/>
+				 小孩：<input id="priceAdult" name="activityTopic.pricecChildren" validate="rules:['required']" style="width:50px;"/>（单位为分,10元请输入1000）
+				</td>		
+			</tr>
+			<tr>
+   			    <td class="label"> 活动简介：</td>
+				<td class="field" >
+					<textarea id="summary" name="activityTopic.summary" style="width:350px;height:80px;" validate="rules:['required']"></textarea>
+				</td>		
+			</tr>
+			<tr>
+   			    <td class="label" >集合地点：</td>
+				<td class="field" ><!--编辑框-->
+					<textarea id="gatherPlace" name="activityTopic.gatherPlace" style="width:350px;height:200px;visibility:hidden" validate="rules:['required']"></textarea>
+				</td>		
+			</tr>
+			<tr>
+   			    <td class="label" >活动对象：</td>
+				<td class="field" ><!--编辑框-->
+					<textarea  id="activityCrowd" name="activityTopic.activityCrowd" style="width:350px;height:200px;visibility:hidden" validate="rules:['required']" ></textarea>
+				</td>		
+			</tr>
+			<tr>
+   			    <td class="label" >活动流程：</td>
+				<td class="field" ><!--编辑框-->
+					<textarea  id="activityFlow" name="activityTopic.activityFlow" style="width:350px;height:200px;visibility:hidden" validate="rules:['required']" ></textarea>
+				</td>		
+			</tr>
+			<tr>
+   			    <td class="label" >报名方式：</td>
+				<td class="field" ><!--编辑框-->
+					<textarea  id="activityReg" name="activityTopic.activityReg" style="width:350px;height:200px;visibility:hidden" validate="rules:['required']" ></textarea>
+					
+				</td>		
+			</tr>
+
+			<tr>
+   			    <td class="label">温馨提示：</td> 
+				<td class="field" >
+				<textarea  id="tips" name="activityTopic.tips" style="width:350px;height:200px;visibility:hidden" validate="rules:['required']" ></textarea>
+				</td>				
+			</tr>
+			<!-- 
+			<tr>
+   			    <td class="label" >主题图片：</td>
+				<td class="field" >
+				<input id="mainImgUrl" name="activityTopic.mainImgUrl" type="hidden" value="aaaa"/>
+				<span id="button-search">搜索</span>
+				</td>		
+			</tr>
+			-->
+		</table>
+		</form>	
+	</div>
+<div id="buttonbar"></div>	
+</body>
+</html>
+

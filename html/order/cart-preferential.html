@@ -1,0 +1,246 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>百加商城 优惠套装选择</title>
+<meta content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
+<meta content="手机版百加商城客户端可以随时随地参与预约抢购百加手机，轻松下单购买，实时查询订单信息掌握物流状态，百加商城app手机客户端还有新品信息通知推送功能，所有商品信息随身掌握。" name="description">
+<meta content="百加商城,百加V6手机,百加V6,百加手机,百加商城app,百加商城app下载" name="keywords">
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+<link href="/css/style.css" rel="stylesheet">
+<script type="text/javascript" src="/js/jquery.min.js"></script>
+<script type="text/javascript" src="/js/common.js"></script>
+<script type="text/javascript">
+var GLOBAL = {
+	productId:getUrlParam("productId"),
+	jcode:getUrlParam("jcode"),
+	recommendId:0//搭配推荐ID，对应数据库记录ID
+}
+if(GLOBAL.productId == ''){
+	var referrer=$.trim(document.referrer);
+	if(referrer=="")url='/product/appointment.html';
+	else url = referrer;
+	window.location.href = url;
+}
+</script>
+<style type="text/css">
+.viewport{border-top:1px solid #DCDBDB;}
+.cart_preferential_left{width:11em; float:left;}
+.cart_preferential_list{background-color:#f2f4f4;}
+.cart_preferential_list li{min-height:8em;border-bottom:1px solid #DCDBDB;position:relative;}
+.cart_preferential_list li.cur{ background-color:#FFF;}
+.cart_preferential_list li .tips{ line-height:1.7em; position:absolute; left:0; top:0; background-color:#f74e5f; color:#FFF; padding:0 7px; font-size:0.7em;}
+.cart_preferential_list li .info{ padding:1.6em 0.5em 0.5em; text-align:center;}
+.cart_preferential_list li .info dt{ font-size:1.2em; color:#000;}
+.cart_preferential_list li .info dd{ font-size:1em; line-height:1.5em;}
+.cart_preferential_content{ padding-left:11em; background-color:#f2f4f4;}
+.cart_preferential_content li{ height:6em; overflow:hidden; padding:1em 0.5em; background-color:#fff;}
+.cart_preferential_content li .img{float:left;text-align:center;width:6em; height:6em; line-height:6em;}
+.cart_preferential_content li .img img{ max-width:6em; max-height:6em;}
+.cart_preferential_content li .info{ padding-left:7em;}
+.cart_preferential_content li dt{font-size:1.4em; padding:0.4em 0;}
+.cart_preferential_content li dd{font-size:1.3em;}
+.cart_bar{ height:2.5em; padding:1em; position:fixed; bottom:0; box-shadow:0 0 3px rgba(0,0,0,0.5); background-color:#FFF; opacity:0.9;left:0; width:100%;}
+.cart_bar .button{ width:6.5em; font-size:1.5em; line-height:2em; margin-right:1em;}
+</style>
+</head>
+
+<body>
+<div class="header clearfix">
+	<div class="back"><a href="/"><span class="icon-23"></span></a></div>
+	<div class="tit">
+		<h3>选择优惠套装</h3>
+	</div>
+	<div class="right">
+		<ul>
+			<li class="cart"><a title="购物车" href="/order/cart-index.html"><span class="icon-2"></span><span class="tip hide" id="ShoppingCartNum"></span></a></li>
+		</ul>
+	</div>
+</div>
+<div class="viewport" id="viewport">
+	<div class="cart_preferential_left">
+		<ul class="cart_preferential_list" id="allPreferentialInfoList"></ul>
+	</div>
+	<ul class="cart_preferential_content" id="singlePreferentialInfoList"></ul>
+</div>
+<div class="cart_bar">
+	<div class="h_box"><a class="baijia_button flex_1" href="javascript:;" onClick="proBuy();"><span>下一步</span></a></div>
+</div>
+<div class="footer">
+	<div class="links">
+		<p><a href="tel:4008-868-687"><span>百加商城客服热线：4008-868-687</span></a></p>
+		<p><a href="/user/login.html" id="footer_login"><span>登录</span></a><a href="javascript:window.scrollTo(0,0);"><span>返回顶部</span></a></p>
+	</div>
+</div>
+<script type="text/javascript">
+function proBuy(){
+	if(!GLOBAL.productId){
+		return;
+	}
+	var param = [];
+	param.push('productId='+GLOBAL['productId']);
+	param.push('recommendId='+GLOBAL['recommendId']);
+	if(GLOBAL['jcode']!=''){
+		param.push('jcode='+GLOBAL['jcode']);
+	}
+	param.push('resource='+getResource());
+	$.ajax({
+		url:TERMINAL_URL+'/jsonrest/mobile/order/ShoppingCart/0/addRecommend',
+		type:'post',
+		data:param.join('&'),
+		async:false,
+		cache:false,
+		dataType:"json",
+		error: function(){},
+		success:function(data){
+			if(data.msgCode == 1){
+				showTips("商品添加购物车成功，即将跳转至购物车");
+				window.setTimeout(function(){
+					window.location.href = '/order/cart-index.html';
+				},500);
+			}else if(data.msgCode == 3){
+				window.location.href = "/user/login.html?tourl="+encodeURIComponent(window.location.href);
+			}else{
+				showTips(data.msg);
+				return;
+			}
+		}
+	});
+}
+function loadAllRecommend(){
+	var param = [];
+	param.push('productId='+GLOBAL['productId']);
+	if(GLOBAL['jcode']!=''){
+		param.push('jcode='+GLOBAL['jcode']);
+	}
+	param.push('resource='+getResource());
+	$.ajax({
+		url:TERMINAL_URL+'/jsonrest/mobile/order/ShoppingCart/0/getRecommendInfo',
+		type: 'post',
+		data: param.join('&'),
+		dataType:'json',
+		async: true,
+		cache: false,
+		timeout: 30000,
+		error: function(){},
+		success: function(data){
+			if(data.msgCode == 3){
+				window.location.href = "/user/login.html?tourl="+encodeURIComponent(window.location.href);
+				return;
+			}
+			if(data.msgCode != 1){
+				showTips(data.msg);
+				window.setTimeout(function(){
+					window.location.href = '/order/cart-index.html';
+				},2000);
+				return;
+			}
+			var html = '';
+			var dataList = data.entity.dataList;
+			if (null != dataList && dataList.length > 0) {
+				for(var i=0,j=dataList.length;i<j;i++){
+					html += '<li ';
+					if (i==0) {
+						html += 'class="cur" ';
+					}
+					html += 'onclick="changeRecommend('+GLOBAL.productId +','+dataList[i].productRecommendId+',this)"><span class="tips">立减';
+					html += toPenny(dataList[i].preferentialAmount);
+					html += '元</span><dl class="info"><dt>';
+					html += dataList[i].proName;
+					html += '</dt><dd>';
+					html += toPenny(dataList[i].recommendAmount);
+					html += '元<br>(优惠 ';
+					html += toPenny(dataList[i].preferentialAmount);
+					html += '元 )<br>共';
+					html += dataList[i].recommendQuantity;
+					html += '件</dd>';
+					html += '</dl></li>';
+				}
+				GLOBAL['recommendId'] = dataList[0].productRecommendId;
+			} else {
+				window.location.href =("/order/cart-index.html");
+				return false;
+			}
+			html += '<li onclick="changeRecommend('+GLOBAL.productId +','+-1+',this)"><span class="tips"></span><dl class="info"><dt>仅手机</dt><dd>'+toPenny(data.entity.dataList[0].recommendAmount-data.entity.dataList[0].proPrice)+'元</dd></dl></li>';
+			$("#allPreferentialInfoList").html(html);
+			//只显示第一个搭配推荐信息
+			var html = '';
+			var dataList = data.entity.defaultVOs;
+			if (null != dataList && dataList.length > 0) {
+				for(var i=0,j=dataList.length;i<j;i++){
+					if (dataList[i].proClass.slice(0,2) != '30') {
+						html += '<li><div class="img"><img src="';
+						html += PHOTO_URL;
+						html += dataList[i].picturesList[0].url3;
+						html += '" onerror="this.src=\'/images/nopic/nopic_4.jpg\'" title="';
+						html += dataList[i].proName;
+						html += '"></div><dl class="info"><dt>';
+						html += dataList[i].proName;
+						html += '</dt><dd>';
+						html += dataList[i].proName;
+						html += '</dd></dl></li>';
+					}
+				}
+				$("#singlePreferentialInfoList").html(html); 
+			}
+		}
+	});
+}
+function changeRecommend(product,recordId,obj){
+	$.ajax({
+		url:TERMINAL_URL+'/jsonrest/mobile/product/Product/0/getRecommendDetail',
+		type: 'post',
+		data: 'productId='+product+'&recommendProductId='+recordId,
+		dataType: 'json',
+		async: true,
+		cache: false,
+		timeout: 30000,
+		error: function(){},
+		success: function(data){
+			if(data.msgCode != 1){
+				showTips(data.msg);
+				return;
+			}
+			var html = '';
+			var dataList = data.entity;
+			if (null != dataList) {
+				for(var i=0,j=dataList.length;i<j;i++){
+					if (dataList[i].proClass.slice(0,2) != '30') {
+						html += '<li><div class="img"><img src="';
+						html += PHOTO_URL;
+						html += dataList[i].picturesList[0].url3;
+						html += '" onerror="this.src=\'/images/nopic/nopic_4.jpg\'" title="';
+						html += dataList[i].proName;
+						html += '"></div><dl class="info"><dt>';
+						html += dataList[i].proName;
+						html += '</dt><dd>';
+						html += dataList[i].proName;
+						html += '</dd></dl></li>';
+					}
+				}
+				$("#singlePreferentialInfoList").html(html); 
+				$("#allPreferentialInfoList li").removeClass("cur");
+				$(obj).addClass('cur');
+				GLOBAL['recommendId'] = recordId;
+			}
+		}
+	});
+}
+(function(){
+	loadAllRecommend();
+	getCartNum();
+	loginHide();
+})();
+</script>
+<p class="hide">
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F27a6edda23c8cced290e66d76fc16a71' type='text/javascript'%3E%3C/script%3E"));
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-55764976-1', 'auto');ga('send', 'pageview');
+</script>
+</p>
+</body>
+</html>

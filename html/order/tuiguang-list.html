@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>元和津订单列表</title>
+<meta content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
+<meta content="" name="description">
+<meta content="" name="keywords">
+<link href="/css/style.css" rel="stylesheet">
+<script src="/js/zepto.min.js"></script>
+<script src="/js/common.js"></script>
+<script>
+var mcode=getUrlParam("mcode");
+function huodong(){
+	window.location.href="/hd.html?mcode="+mcode;
+}
+</script>
+<link href="/css/style.css" rel="stylesheet">
+<style type="text/css">
+body{background-color:#fff}
+.viewport{ border-top:1px solid #C9C9C9}
+.p01{padding:0 0.5em}
+.order_list{ padding:1em;}
+.list_nav{box-sizing:border-box;overflow:hidden; margin-bottom:1em; padding:0 1em; border:1px solid #c9c9c9}
+.list_nav dt{ font-size:1.4em; line-height:2em; border-bottom:1px solid #eee}
+.list_nav dd{border-bottom:1px solid #eee;background:#fff;}
+.list_nav dd:last-child{border-bottom:none}
+.list_nav .abox{position:relative;display:block;box-sizing:border-box}
+.list_nav .items{margin-top:-1em;color:#51545a;height: 3.8em;width:100%;display:-moz-box;display:-webkit-box;display:box;-moz-box-align: center;-webkit-box-align: center;box-align: center}
+.list_nav .items:first-child{margin-top:0}
+.list_nav .img{width:6.8em;height:6.8em;margin:0 0.5em;overflow:hidden;background-size:cover;}
+.list_nav .img img{width:100%}
+.list_nav .info{-moz-box-flex:1;-webkit-box-flex:1;box-flex:1; height:8em;}
+.list_nav .name{font-size:1.3em;color:#000;float:left; line-height:2em;}
+.list_nav .price{font-size:1.3em;color:#848484;float:right;line-height:2em; text-align:right;}
+.list_nav .totalPrice{ padding:0.5em 0; font-size:1.5em; line-height:1.5em;}
+.icon_arrow:after{content:"\0020";display:block;width:1em;height:1em;border-top:2px solid #c9c9c9;border-right:2px solid #c9c9c9;position:absolute;top:50%;right:1.0em;margin-top:-0.5em;-webkit-transition:0.2s ease;-moz-transition:0.2s ease;-o-transition:0.2s ease;transition:0.2s ease;-webkit-transform:rotate(45deg);-moz-transform:rotate(45deg);-ms-transform:rotate(45deg);-o-transform:rotate(45deg);transform:rotate(45deg)}
+.no_goods_box{ padding:5em 0 1em; background-color:#FFF;}
+.no_goods{ background:url(/images/detail/no_goods.gif) center top  no-repeat;-moz-background-size:cover;-webkit-background-size:cover;-o-background-size:cover;background-size:cover; width:11em; height:9em; margin:0 auto 1em;}
+.no_goods_box .tip01{ font-size:1.5em; line-height:2em;}
+.no_goods_box .tip02{ font-size:1.2em; line-height:2em; color:#888;}
+.no_goods_btn{ width:12em; margin:1em auto;}
+.button{ font-size:1.2em;}
+.cred{ color:#ea3f51;}
+</style>
+</head>
+<body>
+<div class="header">
+	<div class="back"><a href="/user/user-center.html"><span class="icon-23"></span></a></div>
+	<div class="tit">
+		<h3 id="header_title"></h3>
+	</div>
+	<div class="right">
+		<ul>
+			<!-- <li class="cart"><a title="" href="/order/cart-index.html"><span class="icon-2"></span><span class="tip hide" id="ShoppingCartNum"></span></a></li> -->
+		</ul>
+	</div>
+</div>
+<div class="viewport">
+	<div class="order_list" id="order_list"><dl class="list_nav"><dt><span class="fr cred"></span>168元茅台镇元和原浆免费领！</dt><dd><a class="abox" onclick="huodong();" href="javascript:void(0);"><div class="items"><ul class="info"><li class="name"><p>点击查看专属推广页并分享推广</p><p></p></li></ul></div></a></dd></dl></div>
+</div>
+
+
+
+
+<div class="footer">
+	<div class="links">
+		<p><a href="/user/login.html" id="footer_login"><span>登录</span></a><a href="javascript:window.scrollTo(0,0);"><span>返回顶部</span></a></p>
+	</div>
+</div>
+</body>
+</html>

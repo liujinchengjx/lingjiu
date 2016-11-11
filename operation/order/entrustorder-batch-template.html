@@ -1,0 +1,186 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>编辑委托单数据</title>
+    <link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<script type="text/javascript">	
+	    $(function(){		
+		      $("#nav_entrustordertemplate").omPanel({title : "<label style='font-weight:bolder'>编辑委托单模版数据 编号："+
+			  getQueryString("eoOrderNo")+"  客户："+getQueryString("customerName")+"</label>",collapsed:false});
+		      loadEntrustorderTemplate();
+			 $('#buttonbar').omButtonbar({
+				 width : '100%',
+				 btns : [{label:"保存",
+						 id:"btnSave" ,
+						 icons : {left : '/images/icon/add.png'},
+						 disabled: parseFloat(getQueryString("status"))>=20?true:false,
+						 onClick: saveBatchEntrustorderTemplate
+						},
+						{separtor:true},
+						{label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  window.close();
+						  }
+						 }					
+					 ]
+             });	 
+		});
+		
+		function loadEntrustorderTemplate(){
+		   var etOrderId=getQueryString("etOrderId");        
+		   if (etOrderId !=""){	
+			 var url="order/EntrustTemplate/0/list?limit=10000&etOrderId="+etOrderId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					 var mutitable=$(".mutitable");
+					 var html="";
+					 $(".tbody_item").remove();
+					 for(var i=0;i<json.rows.length;i++){
+						 var et=json.rows[i];
+						 html=html+"<div class='tbody_item'>";
+						 html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+						 html=html+" <tr> ";
+						 html=html+"   <td width='100'><strong><span name='carton'>"+et.carton+"</span></strong>";
+						 html=html+"     <span name='id' style='display:none' >"+et.id+"</span>";
+						 html=html+"     <span name='temporgCarton' style='display:none' >"+et.orgCarton+"</span>";
+						 html=html+"     <span name='tempsize' style='display:none' >"+et.size+"</span>";
+						 html=html+"     <span name='tempnw' style='display:none' >"+et.nw+"</span>";
+						 html=html+"     <span name='tempgw' style='display:none' >"+et.gw+"</span>";
+						 html=html+"     <span name='tempqty' style='display:none' >"+et.qty+"</span>";
+						 html=html+"   </td>";
+						 
+						 html=html+"   <td width='100'>";
+						 html=html+"     <strong><input type='text' value='"+et.orgCarton+"' name='orgCarton' ";
+						 html=html+"      style='width:90%;margin-right:2px;text-align:left;' ></strong> ";
+						 html=html+"  </td>";			
+						 html=html+"  <td width='100'>";
+						 html=html+"     <strong><input type='text' value='"+et.size+"' name='size' ";
+						 html=html+"      style='width:90%;margin-right:2px;text-align:left;' ></strong> ";
+						 html=html+"  </td>";							 
+						 
+						 html=html+"   <td width='100'>";
+						 if (et.nw>0){
+							 html=html+"     <strong><input type='text' value='"+(et.nw).toFixed(3)+"' name='nw' ";
+							 html=html+"      style='width:90%;margin-right:2px;text-align: right;'";
+							 html=html+"      validate="+"rules:['required']"+" class='nw' >";	
+							 html=html+"     </strong>";
+						 }else{
+							 html=html+"<span name='nw' style='display:none' >0</span>";
+						 }
+						 html=html+"  </td><td width='100'>";							 
+						 if (et.gw>0){
+							 html=html+"      <strong><input type='text' value='"+(et.gw).toFixed(3)+"' name='gw' ";
+							 html=html+"      style='width:90%;margin-right:2px;text-align: right;' ";
+							 html=html+"      validate="+"rules:['required']"+" class='gw' />";	
+							 html=html+"      </strong>";
+						 }else{
+							 html=html+"<span name='gw' style='display:none'>0</span>";
+						 }
+						 html=html+"</td>";
+						 html=html+"<td class='tbody_product' width='120'>";
+						 html=html+"    <dl>"; 
+						 html=html+"      <dd style='float:left;text-align:right;width:120px;'>";
+						 html=html+"         <input type='text' value='"+et.qty+"' name='qty' ";
+						 html=html+"         style='width:90%;margin-right:2px;text-align: right;'";
+						 html=html+"         validate="+"rules:['required']"+"  />";
+						 html=html+"      </dd>";
+						 html=html+"	</dl>";
+						 html=html+" </td>";
+						 html=html+" <td></td>";
+						 html=html+"</tr>";
+						 html=html+"</table></div>";
+					 } 
+					 mutitable.append(html);
+					 initValidateForm("entrustordertemplate");
+					 $("input[name='qty']").omNumberField({allowDecimals:true,decimalPrecision:10});
+					 $("input[name='nw']").omNumberField({allowDecimals:true,decimalPrecision:10});
+					 $("input[name='gw']").omNumberField({allowDecimals:true,decimalPrecision:10});
+			  }			
+			 });
+			}
+		}
+		function saveBatchEntrustorderTemplate(){
+		    if(validateForm("entrustordertemplate")==false)return false;  
+            var entrustorders=[];	
+			entrustorders=getEntrustorders();
+			if (entrustorders==null) return ;
+			if (entrustorders.length<=0) return ;
+			var str= JSON.stringify(entrustorders); 
+			var url="order/EntrustTemplate/0/saveBatchEntrustTemplate";
+			$.ajaxPost({data:{etOrderId:getQueryString("etOrderId"),"entrustTemplates":str},url:url,msg:false,
+			   success:function(json,textStatus){
+				  loadEntrustorderTemplate();
+				  $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   }			
+			});			
+		}
+		function getEntrustorders(){
+		    var entrustorders=[];
+		    $(".mutitable .tbody_item table tr").each(function(i){
+			     $this=$(this);
+				 var vo=$this.getVo();
+				 if (parseFloat(vo["gw"])<parseFloat(vo["nw"])){
+				     entrustorders=null;
+				    $.omMessageTip.show({content :"对不起！箱号："+vo["carton"]+" 的净重不能大于毛重",timeout : 2000,type : 'error'});
+				    return false;
+				 }
+				 if ( (parseFloat(vo.nw)!=parseFloat(vo.tempnw)) || (parseFloat(vo.gw)!=parseFloat(vo.tempgw)) ||
+					  (parseFloat(vo.qty)!=parseFloat(vo.tempqty)) || (vo.orgCarton.trim()!=vo.temporgCarton.trim()) ||
+					  (vo.size.trim()!=vo.tempsize.trim())  ){
+					var pvo={};
+					for(prop in vo){
+					   if(prop.indexOf("temp")<0){
+						  pvo[prop]=vo[prop];
+					   }
+					}
+					entrustorders.push(pvo);				     
+				 } 				 
+            });
+			return entrustorders;
+		}
+	</script>
+</head>
+
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px; background-color: #EEEEEE">
+<div id="nav_entrustordertemplate" style="height:750px;" >
+	<div id="buttonbar"></div>
+	<form id="entrustordertemplate" >	
+		<div class="mutitable">
+			<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+				<thead>
+				   <tr>
+					  <td width="100" >箱号</td>
+					  <td width="100" >客户箱号</td>
+					  <td width="100" >尺码</td>
+					  <td width="100" style="text-align:right">净重</td>
+					  <td width="100" style="text-align:right">毛重</td>
+					  <td width="120" style="text-align:right">数量</td>
+					  <td style="text-align:center"></td>
+				   </tr>
+				</thead>
+			</table>
+		</div>
+	</form>	
+</div>
+</body>
+</html>

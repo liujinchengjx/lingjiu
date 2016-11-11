@@ -1,0 +1,448 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/js/ajaxfileupload.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>  
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<style type="text/css">
+		input {vertical-align:middle;margin:0;padding:0; left:0px;}
+		.file-box {position:relative;margin-top:5px;width:620px; }
+		.txt {height:22px;border:1px solid #cdcdcd;width:450px;}
+		.btn {background-color:#FFF;border:1px solid #CDCDCD;margin-right:10px;padding:3px;}
+    </style>
+    <script type="text/javascript">
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+				]
+    };
+	var dialog=null;
+	$(function() {	
+	    dialog=$("#nav_uploadFiles").omDialog({autoOpen:false,draggable:false,resizable:false,height:250,width:700,modal:true,
+		   onClose : function(event) {$('#grid').omGrid('reload');}
+		});
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#customerId").initGridDropList(cusParams);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+					searchData();
+			   }
+		});				
+		$('#buttonbar').initToolBar();	
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '入库单列表',
+                dataSource :"warehouse/StockIn/0/searchStockIn",
+                colModel:[
+							 {header : '入库单号', name : 'stockInNo', width : 110, align : 'left'},
+							 {header : '业务类型', name : 'businessType', width : 70, align : 'left',
+								renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.BusinessType,colValue);
+								}  
+							 },
+                             {header : '客户', name : 'customerName', width : 120, align : 'left'}, 
+							 {header : '仓库', name : 'wh', width : 50, align : 'left',
+							   	renderer : function(colValue, rowData, rowIndex) {
+								    return Dictionary.getDictName(Dictionary.Warehouse,colValue);
+								}
+							 },
+							 {header : '状态', name : 'status', width : 50, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.StockInStatus,colValue);
+								}
+							 },
+							 {header : '上架状态', name : 'shelfStatus', width : 50, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.StockInShelfStatus,colValue);
+								}
+							 },
+							 {header : '入库时间', name : 'inTime', width : 110, align : 'left'},
+							 {header : '客服', name : 'entrustOrder.serviceMan', width : 50, align : 'left'},
+							 {header : '附件', name : 'fileNum', width : 28, align : 'center',
+							     renderer : function(colValue, rowData, rowIndex) {
+								    if (colValue>0){
+									   var str="<a class='files' name='"+rowData.id+"' ";
+									   str=str+" href='javascript:void(0)'><b>("+colValue+")</b></a>";	
+									   return str; 
+									}
+									return "";
+								 }
+							 },
+							 {header : '报关类型', name : 'grade', width : 50, align : 'left',
+								renderer : function(colValue, rowData, rowIndex){
+								     if (rowData.manageModel!=2){
+									    return Dictionary.getDictName(Dictionary.CustomsGrade,colValue);
+									 }else{
+									    return "无";
+									 }
+								}							 
+							 },
+							 {header : '管理模式', name : 'manageModel', width : 50, align : 'center',
+							     renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.ManageModel,colValue);
+								 }
+							 },
+							 {header : 'ippc木卡板数', name : 'ippcBoardCount', width : 70, align : 'left'}, 
+							 {header : 'ippc木箱数', name : 'ippcBoxCount', width : 60, align : 'left'},
+							 {header : '实际箱数', name : 'cartOnNum', width : 60, align : 'left'},
+							 {header : '备注', name : 'remark', align : 'left', width : 'autoExpand',
+								 renderer : function(colValue, rowData, rowIndex) {
+									return "<span title='"+colValue+"'> "+colValue+"</span>";
+								 }
+							 }
+					],
+					onRefresh : function(nowpage, records){
+						  $("#grid .files").omButton({
+							   onClick : function(event){
+								  $file=$(this);
+								  loadUpLoadFile($file.attr("name"),false);
+								  dialog.omDialog("option", "title", '附件');
+								  dialog.omDialog("open");//显示dialog
+								  event.stopPropagation(); 
+							   }	
+						  })      
+				 }
+         });
+		 
+		 $('#abtnfileupload').omButton({width : 60,
+		      onClick : function(event){	
+			    	var fileurl=$("#textfield").val();
+					var rowDatas = $('#grid').omGrid('getSelections',true);
+					if(rowDatas.length <= 0 ){
+						$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+						return;
+					}
+					var url=baseUrl+'attachment/UpLoadFile/0/importAttachment?ulf.fileType=STIN&ulf.relationId='+rowDatas[0].id;
+					$.ajaxFileUpload({url:url,secureuri:false,fileElementId:'fileField',dataType:'json',
+						success: function (json, status){
+						    if (json.msgCode==1){
+								loadUpLoadFile(rowDatas[0].id,true);
+								$("#textfield").val("");
+							   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+						    }else $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'error'});			
+						},
+						error: function (data, status, e){
+						}
+					})
+				
+			  }
+		  });			
+	});
+	function searchData(){
+		var vo=$("#search-panel").getVo();
+		if (vo["stockInNo"].indexOf("WT")>=0){
+		   vo["eoOrderNo"]=vo["stockInNo"];
+		   vo["stockInNo"]=null;  
+		}
+		var params=convertParamToUrl(vo);
+		$('#grid').omGrid('setData',"warehouse/StockIn/0/searchStockIn?"+params);
+	}
+	function editStockIn(){
+		 var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		 }	
+		 var paras={stockInId:rowDatas[0].id,tabId:"editStockIn001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	     addNewTab("编辑入库单","/warehouse/stockin-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	     });     	     	 
+	}
+	function confirmStockIn(){ //确定入库单
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			return;
+		}
+		if(rowDatas[0].status !=25 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '必须是先收货，验货之后才可以确定！',type : 'error'});
+			return false;
+		}		
+		$.omMessageBox.confirm({title:'确认入库单',content:'入库单确定之后，入库单状态（不可恢复），你确定要这样做吗？',
+		   onClose:function(v){
+		if(v){
+			   var url="warehouse/StockIn/0/auditStockIn?orderStatus=30&stockInId="+rowDatas[0].id;
+			   $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				  $('#grid').omGrid('reload');//刷新grid
+				  $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});									
+			   }});
+	    }
+       }});
+	}
+	function receiptStockIn(){ //收货操作
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+		   $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+		   return false;
+	   }
+	   $.omMessageBox.confirm({
+	   	title:'确定收货',content:'确定收货吗？',onClose:function(v){
+	   		if(v){
+	   			if(rowDatas[0].status !=10 ){
+		   			$.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起！该入库单已收货！',type : 'error'});
+		   			return false;
+	   			}			
+	   			var stockInId=rowDatas[0].id;
+	  			if (stockInId<=0) return ;
+	   			var url= "warehouse/StockIn/0/auditStockIn?orderStatus=20&stockInId="+stockInId;
+	   			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+		   		$.omMessageTip.show({content:json.msg,timeout:2000,type : 'success'});
+		   		$('#grid').omGrid('reload');
+	   		}}); 
+	   		}
+	   	}
+	   });
+	}
+	function receiptAuditing(){ //货物验核
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if (rowDatas.length <= 0 ){
+		   $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+		   return;
+	   }
+	   if(rowDatas[0].status ==10 ){
+		   $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起！必须是已收货的状态下才能验核！',type : 'error'});
+		   return false;
+	   }	
+	   if( (rowDatas[0].status ==20) || (rowDatas[0].status ==25) || (rowDatas[0].status ==30) ){
+	       var paras={stockInId:rowDatas[0].id,stockInNo:rowDatas[0].stockInNo,customerId:rowDatas[0].customerId,
+		   customerName:rowDatas[0].customerName,creditGrade:rowDatas[0].creditGrade,tabId:"receiptAuditing001"}; 
+		   addNewTab("货物验核对","/warehouse/stockin-check.html",paras,function(){
+				$('#grid').omGrid('reload');//
+		   }); 		
+	   }	
+	   
+	}
+	function shelfStockIn(){ //上架管理
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+	   }		
+	   var paras={stockInId:rowDatas[0].id,stockInNo:rowDatas[0].stockInNo,customerId:rowDatas[0].customerId,
+	   manageModel:rowDatas[0].manageModel,wh:rowDatas[0].wh,tabId:"stockInShelf001"}; 
+ 	   addNewTab("上架管理","/warehouse/stockin-shelf.html",paras,function(){
+		    $('#grid').omGrid('reload');//
+	   });       	     
+	}	
+	function stockInPackingArrange(){ //箱单整理
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		var paras={stockInId:rowDatas[0].id,tabId:"stockInPackingArrange001",companyName:rowDatas[0].customerName,stockOutNo:rowDatas[0].stockInNo}; //tabId用方法名加001命名而成，这样就不会重复
+ 	    addNewTab("整理箱单(入库)","/warehouse/stockin-packingarrange.html",paras,function(){
+		   // $('#grid').omGrid('reload');//刷新grid
+	    });
+	}
+	function addValueService(){ //增值服务费
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+		  $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+		  return false;
+	   }		
+	   if(rowDatas[0].etOrderId<=0){
+	      $.omMessageTip.show({content: "对不起！此类入库单属于系统自动生成，无增值服务！",timeout : 2000,type : 'error'});
+	      return false;
+	   }
+	   var paras={stockInId:rowDatas[0].id,stockInNo:rowDatas[0].stockInNo,customerName:rowDatas[0].customerName,
+	   wh:rowDatas[0].wh,customerId:rowDatas[0].customerId,etOrderId:rowDatas[0].etOrderId,refOrderNo:rowDatas[0].entrustOrder.eoOrderNo,
+	   tabId:"stockInAddValueService001"};
+ 	   addNewTab("增值服务工作单","/warehouse/stockin-addvalue.html",paras,function(){
+
+	   });       	    
+	}
+	function packingStockIn(){
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			return false;
+		}
+		var url="/warehouse/stockin-packing.html?id="+rowDatas[0].id;
+		if (rowDatas[0].manageModel==2){
+		    url="/warehouse/stockin-batch-packing.html?id="+rowDatas[0].id;
+		}
+	    showFullScreen(url);
+	}
+	
+	function nomergePackingStockIn(){
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			return false;
+		}
+		var url="/warehouse/stockin-nomergepacking.html?id="+rowDatas[0].id;
+		if (rowDatas[0].manageModel==2){
+		    url="/warehouse/stockin-batch-nomergepacking.html?id="+rowDatas[0].id;
+		}
+	    showFullScreen(url);
+	}
+	function backupStockIn(){ //备货单
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			return false;
+		}
+		var params=[];
+		params.push("id="+rowDatas[0].id);
+		params.push("customerName="+rowDatas[0].customerName);
+		params.push("creditGrade="+rowDatas[0].creditGrade);
+		params.push("enoderIds="+rowDatas[0].etOrderId);
+		var url="/warehouse/stockin-backup.html?"+params.join("&");
+		if (rowDatas[0].manageModel==2){
+		    url="/warehouse/stockin-batch-backup.html?"+params.join("&");
+		}
+	    showFullScreen(url);
+	}
+	function viewStockIn(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			return false;
+		}
+		var url="/warehouse/stockin-view.html?id="+rowDatas[0].id;
+		if (rowDatas[0].manageModel==2){
+		    var url="/warehouse/stockin-batch-view.html?id="+rowDatas[0].id;
+		}
+	    showFullScreen(url);
+	}
+	function editCancel(){
+	  
+	}
+	function uploadFile(){ //附件上传信息
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		loadUpLoadFile(rowDatas[0].id,true);
+		dialog.omDialog("option", "title",'附件');
+		dialog.omDialog("open");//显示dialog
+	}
+	function loadUpLoadFile(stockInId,isUpload){		
+		if (isUpload){$(".file-box").show();}else{$(".file-box").hide();}	
+		var $file=$("#upLoadSpan");
+		$file.html("");
+		var url="attachment/Files/0/searchFiles?limit=100&fileType=STIN&relationId="+stockInId;		
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			var files = "";
+			for (var i =0;i<json.rows.length;i++){
+				var f = json.rows[i];
+				files = files+ "<span style='line-height:25px; font-weight:bold'>("+(i+1)+")";
+				files = files+ " <a target='_blank' href='"+f.fileUrl+"'>"+f.fileName+" </a></span>";
+				files = files+ " <a href='#' onclick='btnDeleteFile(this);return false;' name='"+json.rows[i].id+"' rId='"+stockInId+"' >";
+				files = files+ " <img src='/images/icon/close_inline.gif' border='0'></a> <br />";
+			}
+		  	$file.html(files);
+		}			
+		});
+	}
+	function btnDeleteFile(obj){
+	   $this=$(obj);
+	   var fileId=$this.attr("name");
+	   var stockInId=$this.attr("rId");
+	   if (fileId>0 && stockInId>0){
+	      var url="attachment/Files/0/deleteFile?fileId="+fileId;		
+		  $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+		   		loadUpLoadFile(stockInId,false);
+		  }			
+		  });
+	   }
+	}
+	//子状态
+	function getStatus(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+	   }
+	   var paras={ids:rowDatas[0].id,eoOrderNo:rowDatas[0].stockInNo,tabId:"orgStatus001"};
+ 	   addNewTab("定单状态列表","/order/orderSatePage.html", paras,function(){
+	   });       
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">		
+	<tr>
+		<td>入仓号：</td>    
+		<td><input id="stockInNo" name="stockInNo"  onfocus="myFocus(this,'#f4eaf1')" 
+				      onblur="myblur(this,'white')" tip="这里输入仓号" />
+		</td>
+		<td>客户：</td>
+		<td><input id="customerId" name="customerId"  onfocus="myFocus(this,'#f4eaf1')" 
+		   onblur="myblur(this,'white')" tip="选择客户" showtext="" />
+		</td>
+		<td>仓库：</td>
+        <td><input id="wh" name="wh" pattern='combo' editable='false' remote="Warehouse" emptyText="请选择仓库"/></td>
+		<td>业务类型：</td>    
+		<td ><input id="businessType" name="businessType" pattern='combo' editable='false' width="120" remote="BusinessType"
+		 emptyText="请选择业务类型"/>
+		</td>			
+		<td>管理模式：</td>
+		<td><input id="manageModel" name="manageModel" pattern='combo' editable='false'  width="120" remote="ManageModel"/></td>
+	</tr>	
+	<tr>
+		<td>订单状态：</td>    
+	    <td><input id="orderStatus" name="orderStatus" pattern='combo' editable='false'  width="120" remote="StockInStatus"
+		 emptyText="请选择订单状态"/></td>
+		<td>上架状态：</td>    
+		<td><input id="shelfStatus" name="shelfStatus" pattern='combo' editable='false' width="120" remote="StockInShelfStatus"
+		  emptyText="请选择上架状态"/></td>
+		<td>时间：</td>    
+		<td><input id="startTime" name="startTime" pattern='date' editable='false' /></td>
+		<td>到：</td>    
+		<td><input id="endTime" name="endTime" pattern='date' editable='false' /></td>
+		<td>备注：</td>
+		<td><input id="remark" name="remark" editable='false' /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>
+  </table> 	 
+</div>			
+	<div id="nav_stockin" title="">
+       <div id="buttonbar"></div>	
+	   <div id="grid"></div>
+	</div>	
+<div id="nav_uploadFiles" title="附件" style="display:none;">
+	<div class="file-box" >
+		<input type='text' name='textfield' id='textfield' class='txt' />
+		<span class='btn'>浏览...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+		<input type="file" name="fileField" 
+		  style="position:absolute;top:0;left:0px;height:22px;filter:alpha(opacity:0);opacity: 0;width:530px;" id="fileField" 
+		  onchange="document.getElementById('textfield').value=this.value" />
+		<span id="abtnfileupload" name="abtnfileupload" />上&nbsp;传</span>
+	</div>
+	<div style="margin-top:10px; margin-bottom:5px;">
+	   <span id="upLoadSpan"></span>
+	</div>
+</div>
+</body>
+</html>

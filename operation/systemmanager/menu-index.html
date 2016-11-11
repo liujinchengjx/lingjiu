@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tabs.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-validate.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+    var subSysLst = [],subsysitem={id:"n1",pid:"",text:"主菜单",expanded:true},index=0;	
+	$(function() {
+	     var element = $('#nav_menu').omBorderLayout({
+            	   panels:[{id:"center-panel",header:true,title:"子菜单列表",region:"center",width:"100%",height:700},
+            	    {id:"west-panel",resizable:true,collapsible:true,title:"主菜单模块",region:"west",width:180,height:700}
+            	    ]
+         });
+		 var url = "systemmanager/FrameworkSubsystems/0/getSubsystemsList";	
+		 $.ajaxPost({data:{"fSubs.systemId":1},url:url,msg:false,success:function(json,textStatus){
+				subSysLst[index]=subsysitem;index=index+1;
+				for(var i=0;i< json.length; i++){
+				  var itemtemp={} ;
+				   itemtemp["id"]=subsysitem.id+json[i].id;
+				   itemtemp["text"]=json[i].description;
+				   itemtemp["pid"]=subsysitem.id;
+				   itemtemp["expanded"]=false;
+				   itemtemp["url"]=json[i].name;
+				   subSysLst[index+i]=itemtemp;
+				}				
+				$("#menuList").omTree({
+					dataSource : subSysLst,
+					simpleDataModel: true,
+					onClick : function(nodeData , event){
+						$('#grid').omGrid('setData', "systemmanager/FrameworkModules/0/getModules?fm.name="+nodeData.url+"&fm.systemId=1");
+					}
+				});
+			}			  
+		 });
+	
+		  
+		  $('#grid').omGrid({
+				autoFit:true,				
+				width:950,
+				height:350,
+				limit:10,
+				autoFit:true,
+                title : '子菜单列表',
+                dataSource :"",
+                colModel : [
+			 				 {header : '菜单名', name : 'description', width : 100, align : 'left',editor:{}}, 
+                             {header : '菜单模块', name : 'name', width : 80, align : 'left',editor:{}}, 
+							 {header : '图标', name : 'icon', width : 50, align : 'left',editor:{}},
+							 {header : '链接地址', name : 'url', width : '200', align : 'left',editor:{}}
+                           ],
+				onRowClick:function(rowIndex,rowData,event){
+         			$('#btngrid').omGrid('setData', "systemmanager/Menu/0/getButtonsList?fb.modules="+rowData.name+"&fb.systemId=1");
+     			}	            
+            });
+			$('#btngrid').omGrid({
+				autoFit:true,				
+				width:950,
+				height:280,
+				limit:10,
+				autoFit:true,
+                title : '操作按钮列表',
+                dataSource :"",
+                colModel : [
+			 				 {header : '按钮方法', name : 'hander', width : 100, align : 'left',editor:{}}, 
+                             {header : '按钮名称', name : 'text', width : 80, align : 'left',editor:{}}, 
+							 {header : '图标', name : 'icon', width : 50, align : 'left',editor:{}},
+							 {header : '请求路径', name : 'name', width : '200', align : 'left',editor:{}}
+                           ],
+				onRowClick:function(rowIndex,rowData,event){
+         			//$('#subgrid').omGrid('setData', baseUrl+ "baseinfo/OptionsDetail/0/list?opd.optionsSn="+rowData.id);
+     			}	            
+            });
+		
+	});	
+	
+	</script>	
+</head>
+<body class="dfbody">		
+	<div id="nav_menu" title="菜单"  style="width:100%; height:95%;">
+		<div id="center-panel">				    	
+			<div id="btnbar"></div>
+			<div id="grid"></div>
+			<div id="btnbar1"></div>		
+			<div id="btngrid"></div>
+		</div>
+		<div id="west-panel">
+		    <ul id="menuList"></ul>
+   	    </div>						
+	</div>
+</body>
+</html>

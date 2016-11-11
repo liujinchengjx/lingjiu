@@ -1,0 +1,112 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+     <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {	
+	    var title="客户："+getQueryString("customerName")+" 仓库："+getQueryString("wh");
+		title=title+" 料号："+getQueryString("pn")+" 数量："+getQueryString("qty");
+		$("#search-panel").omPanel({title : title,collapsed:true});
+		var vo={};
+		vo["productId"]=getQueryString("productId");
+		vo["customerId"]=getQueryString("customerId");
+		vo["wh"]=getQueryString("wh");
+		var params=convertParamToUrl(vo);
+		var url= "warehouse/ProductStock/0/getProductStockDetail?"+params;
+        $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			 var mutitable=$(".mutitable");
+			 $(".tbody_item").remove();
+			 var html="";
+			 for(var i=0;i<json.rows.length;i++){
+				 var vpsi=json.rows[i];
+				 html=html+"<div class='tbody_item'>";
+				 html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+				 html=html+" <tr> ";
+				 html=html+"   <td width='50'><span>"+vpsi.indexNo+"</span></td>";
+				 html=html+"   <td width='140'><span>"+vpsi.inTime+"</span></td>";
+				 html=html+"   <td width='120'><span>"+vpsi.stockInNo+"</span></td>";
+				 html=html+"   <td width='80'><span>"+Dictionary.getDictName(Dictionary.Warehouse,vpsi.wh)+"</span></td>";
+				 html=html+"   <td width='80'><span>&nbsp;"+vpsi.dateCode+"</span></td>";
+				 html=html+"   <td width='80' style='text-align:right;margin-right:2px;'>";
+				 html=html+"       <span >"+vpsi.qty+"</span>";
+				 html=html+"   </td>";
+				 html=html+"   <td class='tbody_product' width='560'>";
+				 var vpsoList=vpsi.vwProductStockOutList;
+				 for(var j=0;j<vpsoList.length;j++){
+					 var vpso=vpsoList[j];
+					 html=html+"    <dl>"; 
+					 html=html+"      <dd style='float:left;text-align:center;width:140px; color:#0000FF'>";
+					 html=html+"          <span>"+vpso.outTime+"</span>";
+					 html=html+"      </dd>";
+					 html=html+"      <dd style='float:left;text-align:center;width:120px; color:#0000FF'>";
+					 html=html+"          <span>"+vpso.stockOutNo+"</span>";
+					 html=html+"      </dd>";
+					 html=html+"      <dd style='float:left;text-align:center;width:80px; color:#0000FF'>";
+					 html=html+"          <span>"+Dictionary.getDictName(Dictionary.Warehouse,vpso.wh)+"</span>";
+					 html=html+"      </dd>";
+					 html=html+"      <dd style='float:left;text-align:right;margin-right:2px;width:80px;color:#0000FF'>";
+					 html=html+"          <span>"+vpso.outQty+"</span>";
+					 html=html+"      </dd>";
+					 html=html+"      <dd style='float:left;text-align:center;width:140px; color:#0000FF'>";
+					 html=html+"          <span>&nbsp;"+vpso.receiverName+"</span>";
+					 html=html+"      </dd>";
+					 html=html+"	</dl>";
+				 }
+				 html=html+"  </td>";
+				 html=html+"<td width='80' style='text-align:right;'>"+vpsi.productStockQty+"</td>";	 
+				 html=html+"<td></td>";	 
+				 html=html+"</tr>";
+				 html=html+"</table></div>";
+			 } 
+			 mutitable.append(html);
+		  }			
+		 });	
+	});		
+	
+	function viewProductStock(){
+	}
+	</script>
+</head>
+<body class="dfbody">	
+	<div id="search-panel"></div>
+	<div id="nav_productstock" style="height:550px;" >
+		<div class="mutitable">
+			<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+				<thead>
+				   <tr>
+					  <td width="50" >序号</td>
+					  <td width="140">入仓日期</td>
+					  <td width="120">入仓编号</td>
+					  <td width="80">仓库</td>
+ 					  <td width="80">DateCode</td>
+					  <td width="80" style="text-align:right;">入仓数量</td>
+					  <td width="140" style=" color:#0000FF">出仓日期</td>
+					  <td width="120" style=" color:#0000FF">出仓编号</td>
+					  <td width="80" style=" color:#0000FF">仓库</td>
+					  <td width="80" style=" color:#0000FF">出仓数量</td>
+					  <td width="140" style=" color:#0000FF">收货公司</td>
+					  <td width="80">库存数量</td>
+					  <td ></td>
+				   </tr>
+				</thead>
+			</table>
+		</div>
+	</div>
+</body>
+</html>

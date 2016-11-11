@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---储位产品库存情况</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+     <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {
+	    var storageLocationId=getQueryString("storageLocationId");
+		var wh=getQueryString("wh");
+		$("#slno").html(getQueryString("slno"));
+		if (storageLocationId !="" && wh!=""){
+		     var url="warehouse/StorageLocation/0/viewProducts?storageLocationId="+storageLocationId+"&wh="+wh;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){				   
+				   var vcTb=$("#tbItems");
+				   var siList=json.rows;
+				   var items="";
+				   var cartonNo = 0;
+				   var totalQty=0,totalGw=0.0,totalNw=0.0;
+					for(var i=0;i<siList.length;i++){
+					   var si=siList[i];
+					   var sicList=si.sicList;
+					   for(var j=0;j<sicList.length;j++){
+						   var sic=sicList[j];						   
+						   sipList=sic.stockInPackings;
+						   for(var k=0;k<sipList.length;k++){
+							   var sip=sipList[k];						 
+							   items=items+"<tr><td height='15' align='left'>"+(k==0?si.customerName:"")+"</td>";
+							   items=items+"<td height='15' align='left'>"+(k==0?si.stockInNo:"")+"</td>";
+							   items=items+"<td height='15' align='left'>"+(k==0?sic.cartonNo:"")+"</td>";
+							   items=items+"<td height='15' align='left'>"+sip.product.productName+"</td>";
+							   items=items+"<td height='15' align='left'>"+sip.product.pn+"</td>";
+							   items=items+"<td height='15' align='center'>"+sip.product.brand+"</td>";
+							   items=items+"<td height='15' align='center'>"+sip.product.origin+"</td>";
+							   items=items+"<td height='15' align='right'>"+toThousands(sip.qty)+"</td>";
+							   items=items+"<td height='15' align='right'>"+toThousands(sip.outQty)+"</td></tr>";
+						   }
+					   }
+				  }				 
+				  vcTb.append(items);	
+				}			
+			 });
+ 		 }else{
+		 }
+	});	
+	
+	function getSic(sicList,index,cartonNo){
+	    var sic=sicList[index];
+		sic["index"]=index;
+		var sip=sic.stockInPackings[0];
+		var qty=sip.qty;
+		var cartons=0;
+		for(var i=index+1;i<sicList.length;i++){
+		    var tempSic=sicList[i];
+			var tempSip=tempSic.stockInPackings[0];
+            if ((tempSic.stockInPackings.length>1) || (sip.productId!=tempSip.productId) || (qty!=tempSip.qty) ){
+			  break;
+			}
+			if (tempSic.stockInPackings.length==1){
+			   sic.nw=sic.nw.add(tempSic.nw);
+			   sic.gw=sic.gw.add(tempSic.gw);    
+			   sic.stockInPackings[0].qty=sic.stockInPackings[0].qty.add(tempSip.qty);
+			   cartons++;
+			}
+		}
+		if (cartons>0){
+		   sic["cartonNo"]=cartonNo+"~"+(cartonNo+cartons);
+		   sic["index"]=index+cartons;
+		}
+		return sic;
+	}
+	</script>
+</head>
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px;">	
+<div style="width:98%;text-align:center;padding-top:20px; padding-left:20px;">
+<div> 储位号 <b><span id="slno"></span></b> 的库存情况</div>
+<div style=" margin-top:5px;">
+    <table id="tbItems" class="listContent" width="95%">
+	    <tbody>
+		    <tr>
+				<td class="clsInvoice" height="15" align="center" width="100"><b>客户</b></td>
+				<td class="clsInvoice" height="15" align="center" width="90"><b>入库单</b></td>
+				<td class="clsInvoice" height="15" align="center" width="40"><b>箱号</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="100"><b>品名</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="100"><b>型号</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="60"><b>品牌</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="60"><b>原产地</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="80" style="font-weight: bold;"><b>数量</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="80" style="font-weight: bold;"><b>已出库数量</b></td>
+			</tr>
+	 	 </tbody>
+	</table>
+</div>
+</div>
+</body>
+</html>

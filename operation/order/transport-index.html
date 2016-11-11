@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+    <script type="text/javascript">
+         $(document).ready(function() {
+			$("#search-panel").omPanel({
+            	title : "搜索",collapsible:true
+            });
+			  $('#grid').omGrid({
+				autoFit:true,
+				height:380,
+				limit:10,
+                title : '功能列ba表',
+                dataSource :"function-data.json",
+                colModel : [  
+                             {header : '功能名称', name : 'funcName', width : 120, align : 'left'}, 
+							 {header : '功能编码', name : 'funcCode', width : 120, align : 'left'}, 
+                             {header : '所属菜单', name : 'menu', align : 'left', width : 'autoExpand'} ]
+            });
+			 $('span#button-search').omButton({
+          	    icons : {left : '/images/icon/search.png'},width : 50
+       	 	});
+			$('input[rel=date]').omCalendar({editable : false}); //初始化Calendar
+		 });
+    </script>
+<style>
+
+html{ overflow-y:auto;}
+</style>
+</head>
+<body class="dfbody">
+<div id="search-panel">
+	<div>
+	<span class="label">功能名称：</span>
+	<input type="text" class="input-text" />
+	<br/><br />
+	<span id="button-search">搜索</span>
+	<input id="setDate" name="setDate" rel="date" class="ui-textbox"/>
+    </div>
+</div>
+<div id="grid"></div>
+</body>
+</html>

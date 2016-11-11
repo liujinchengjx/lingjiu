@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---委托单数据预览</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+   <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {
+	    var etOrderId=getQueryString("etOrderId");
+		if (etOrderId !=""){
+		     var url="order/EntrustTemplate/"+etOrderId+"/previewStockIn";
+		  	 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   var vTb=$("#tbHeader");
+				   var vcTb=$("#tbItems");
+				   var vheader="<tr><td class='label'>入库单编码:</td>";
+				   vheader=vheader+"<td class='field'><span>"+json.entity.stockOutInNo+"</span></td>";
+				   vheader=vheader+"<td class='label'>入货仓库:</td>";
+				   vheader=vheader+"<td class='field'><span>"+json.entity.wh+"</span></td></tr>";						   
+				   vheader=vheader+"<tr><td class='label'>入库时间:</td>";
+				   vheader=vheader+"<td class='field'><span>"+json.entity.outInTime+"</span></td>";
+				   vheader=vheader+"<td class='label'>客户:</td>";
+				   vheader=vheader+"<td class='field'><span>"+json.entity.customerName+"</span></td></tr>";						   
+				 
+				   vTb.append(vheader);	
+				   var val=json.entity.itemlist;
+				   var itemTable="";
+				   for(var i=0;i<val.length;i++){
+						  itemTable=itemTable+"<tr><td height='20' align='left'>"+val[i].cartonNo+"</td>";
+						  itemTable=itemTable+"<td height='20' align='left'>"+val[i].productName+"</td>";
+						  itemTable=itemTable+"<td height='20' align='left'>"+val[i].pn+"</td>";
+						  itemTable=itemTable+"<td height='20' align='center'>"+val[i].brand+"</td>";
+						  itemTable=itemTable+"<td height='20' align='right'>"+val[i].qty+"</td>";
+						  itemTable=itemTable+"<td height='20' align='center'>"+val[i].org+"</td></tr>";
+					}
+					vcTb.append(itemTable);	
+				}			
+			 });
+ 		 }else{
+		 }
+	});	
+	</script>
+</head>
+<body class="dfbody" style="margin:0;padding:35px;width:90%; height:100%;" >	
+<div>
+	<table id="tbHeader" class="edit-table">	
+	</table>
+</div>
+<div style=" margin-top:5px;">
+    <table id="tbItems" class="listContent" width="100%">
+	    <tbody>
+		    <tr>
+				<td class="clsInvoice" height="20" align="center" width="20"><b>箱号</b></td>
+				<td class="clsInvoiceRBT" height="20" align="center" width="22%"><b>品名</b></td>
+				<td class="clsInvoiceRBT" height="20" align="center" width="120"><b>型号</b></td>
+				<td class="clsInvoiceRBT" height="20" align="center" width="12%"><b>品牌</b></td>
+				<td class="clsInvoiceRBT" height="20" align="center" width="12%" style="font-weight: bold;"><b>数量</b></td>
+				<td class="clsInvoiceRBT" height="20" align="center" width="12%"><b>原产地</b></td>
+			</tr>
+	 	 </tbody>
+	</table>
+</div>
+</body>
+</html>

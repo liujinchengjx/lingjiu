@@ -1,0 +1,327 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---备货单</title>
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<style type="text/css">
+	  html, body{width: 100%; height: 100%; 
+	      padding: 0; margin: 0;font-family:"宋体", "";
+	  }
+	  td{font-size: 12px;color: #000000;text-decoration: none;line-height: 18px;td-layout:fixed;word-break:break-all;}
+	  .listContent{
+		       background-color: #FFFFFF;
+		       border-collapse:collapse;
+			   font-family: font-family: "宋体","";
+			   font-size: 12px;
+			   border: #000000 1px solid;
+		}
+	 .listContent td{background-color: #ffffff;border:1px solid #000000;;height:18px;padding:0px}
+	 .listContent1 td{background-color: #ffffff;border:1px solid #000000;;height:22px;padding:0px}
+    </style>
+    <script type="text/javascript">
+	$(function() {
+	    var stockInId=getQueryString("id");
+	    //获取委托单ID
+	    var enorderId=getQueryString("enoderIds");
+		if (stockInId !=""){
+		     var url="warehouse/StockIn/0/packingStockIn?stockInId="+stockInId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   json.entity.wh=Dictionary.getDictName(Dictionary.Warehouse,json.entity.wh);
+				   json.entity.businessType=Dictionary.getDictName(Dictionary.BusinessType,json.entity.businessType);
+				   json.entity.manageModel=Dictionary.getDictName(Dictionary.ManageModel,json.entity.manageModel);
+				   $("#tbHearder").initializeInput({"vo":json.entity}); //初始化
+				   var vcTb=$("#tbItems");
+				   var sicList=json.entity.stockInCartons;
+				   var items="";
+				   var cartonNo = 0;
+				   var totalQty=0,totalGw=0.0,totalNw=0.0;
+					for(var i=0;i<sicList.length;i++){
+					   var sic=sicList[i];
+					   var sipList=sic.stockInPackings;
+					   cartonNo=sic.cartonNo;
+					   for(var j=0;j<sipList.length;j++){
+						  var sip=sipList[j];
+						  if (sipList.length==1){//如果只有一条数据
+							 sic = getSic(sicList,i,cartonNo);
+							 i=sic.index;
+							 cartonNo=sic.cartonNo;
+							 sip=sic.stockInPackings[0];
+						  }
+						   var slno="";
+						   if (j==0){
+						      if (sic.storageLocation!=null){
+							     slno = sic.storageLocation.slno;
+								 if (sic.storageLocation.functionUse>0){
+								    slno=slno+"("+Dictionary.getDictName(Dictionary.FunctionUse,sic.storageLocation.functionUse)+")";
+								 }
+							  }
+						   }
+						   items=items+"<tr><td height='15' align='left'>"+(j==0?cartonNo:"")+"</td>";
+						   items=items+"<td height='15' align='left'>"+(j==0?sic.orgCartonNo:"")+"</td>";
+						   items=items+"<td height='15' align='left'>"+Dictionary.getMulDictName(Dictionary.SpecialFlag,sip.specialFlag)+"</td>";
+						   items=items+"<td height='15' align='left'>"+slno+"</td>";
+
+						   items=items+"<td height='15' align='left'>"+sip.product.productName+"</td>";
+						   items=items+"<td height='15' align='left'>"+sip.product.pn+"</td>";
+						   items=items+"<td height='15' align='center'>"+sip.product.brand+"</td>";
+						   items=items+"<td height='15' align='right'>"+toThousands(sip.qty)+"</td>";
+						   items=items+"<td height='15' align='right'>"+(j==0?sic.nw.toFixed(2):"")+"</td>";
+						   items=items+"<td height='15' align='right'>"+(j==0?sic.gw.toFixed(2):"")+"</td>";
+						   items=items+"<td height='15' align='center'>"+sip.product.origin+"</td>";
+						   items=items+"<td height='15' align='center'>"+sip.dateCode+"</td>";
+						   items=items+"<td height='15' align='center'>"+sip.lotNum+"</td>";
+						   items=items+"<td height='15' align='center'>"+sip.customerOrderNo+"</td></tr>";
+						   totalQty=totalQty.add(sip.qty);
+						   totalGw=totalGw+(j==0?sic.gw:0.0);
+						   totalNw=totalNw+(j==0?sic.nw:0.0);
+					   }
+				  }
+				  items=items+ "<tr><td height='15' align='left' colspan='7'>total:</td>";
+				  items=items+"<td height='15' align='right'>"+toThousands(totalQty)+"</td>";
+				  items=items+"<td height='15' align='right'>"+totalNw.toFixed(2)+"</td>";
+				  items=items+"<td height='15' align='right'>"+totalGw.toFixed(2)+"</td>";
+				  items=items+"<td height='15' align='center' colspan='4' ></td></tr>";
+				  vcTb.append(items);	
+				  var creditGrade=getQueryString("creditGrade");
+				  var title=getQueryString("customerName")+"("+Dictionary.getDictName(Dictionary.CreditGrade,creditGrade)+") ";
+				  title=title+" 请根据货物实际情况对货物进行验核：";
+				  if (creditGrade==1){ //A类
+					  title=title+" 存在商检：要求全检（100%）,否则要求外箱抽检（20%）";
+				  }else{ //B类
+					  title=title+" 存在商检：要求全检（100%），否则要求外箱全检（100%）、内箱抽检（20%）";
+				  }
+				  $("#remark").html(title);
+				}			
+			 });
+			 
+			    //获取工作单信息
+			 var url1="business/ValueAddedServices/0/loadValueAddedServicesTree?refOrderId="+enorderId+"&type="+1;
+			 $.ajaxPost({url:url1,msg:false,success:function(json,textStatus){
+			  //确认的工作信息
+			  var rowsDatas=json.rows;
+			  if(json.entity!=null){
+			  	var workOrderDetailList=json.entity.workOrderDetailList;
+			  	var len=json.entity.workOrderDetailList.length;
+			  	var wtable=$("#workTable tbody");
+			  	html="";
+			  	for(var i=0;i<len;i++){
+			   	html=html+"<tr>"
+				    +"<td style='width: 30%'>"+workOrderDetailList[i].serviceName+"</td>"
+				    +"<td style='width: 10%'>"+workOrderDetailList[i].count+"</td>"
+				    +"<td style='width: 10%'>"+workOrderDetailList[i].feeUnit+"</td>"
+				    +"<td style='width: 30%'>"+workOrderDetailList[i].variableName+"</td>"
+				    +"<td style='width: 20%'>"+workOrderDetailList[i].scode+"</td>"
+				    +"</tr>"
+			  }
+			  wtable.append(html);
+			  }
+			  getunCheckWork(rowsDatas);
+			 }
+			 });
+ 		 }else{
+		 }
+	});	
+	
+	//绘制未选择数据信息
+	function getunCheckWork(rows){
+		var table2=$("#workTable2 tbody");
+		var html="";
+		for(var i=0;i<rows.length;i++){
+			if((rows[i].addValueId>0)&&(rows[i].workOrderDetailId==0)){
+				    html=html+"<tr>"
+					   +"<td style='width: 30%'>"+rows[i].pidName+"</td>"
+					   +"<td style='width: 10%'>"+rows[i].count+"</td>"
+					   +"<td style='width: 10%'>"+rows[i].feeUnit+"</td>"
+					   +"<td style='width: 30%'>"+rows[i].text+"</td>"
+					   +"<td style='width: 20%'>"+rows[i].id+"</td>"
+					   +"</tr>"
+			}
+		}
+		table2.append(html);
+	}
+	function getSic(sicList,index,cartonNo){
+	    var sic=sicList[index];
+		sic["index"]=index;
+		var sip=sic.stockInPackings[0];
+		var qty=sip.qty;
+		var cartons=0;
+		for(var i=index+1;i<sicList.length;i++){
+		    var tempSic=sicList[i];
+			var tempSip=tempSic.stockInPackings[0];
+            if ((tempSic.stockInPackings.length>1) || (sip.productId!=tempSip.productId) || (qty!=tempSip.qty) ){
+			  break;
+			}
+			if (tempSic.stockInPackings.length==1 && tempSip.lotNum == sip.lotNum && tempSip.dateCode == sip.dateCode && tempSic.orgCartonNo == sic.orgCartonNo){
+			   sic.nw=sic.nw.add(tempSic.nw);
+			   sic.gw=sic.gw.add(tempSic.gw);    
+			   sic.stockInPackings[0].qty=sic.stockInPackings[0].qty.add(tempSip.qty);
+			   cartons++;
+			}
+		}
+		if (cartons>0){
+		   sic["cartonNo"]=cartonNo+"~"+(cartonNo+cartons);
+		   sic["index"]=index+cartons;
+		}
+		return sic;
+	}
+	</script>
+</head>
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px;">	
+<div style="width:98%;text-align:center;padding-top:20px; padding-left:10px;">
+<div>
+	<table  class="listContent1" id="tbHearder" width="100%" style='border-collapse: collapse; table-layout: fixed;'>
+		<tbody>
+		    <tr>
+			   <td style="text-align:left; width:10%">入库单编码:</td>
+			   <td style="text-align:left;30%"><span name="stockOutInNo"></span></td>			   
+			   <td style="text-align:left;10%">入货仓库:</td>
+			   <td style="text-align:left;50%"><span  name="wh"></span></td>
+			 </tr>
+			 <tr>
+			   <td style="text-align:left;10%">入库时间:</td>
+			   <td style="text-align:left;30%"><span  name="outInTime"></span></td>
+			   <td style="text-align:left;10%">业务类型</td>
+			   <td style="text-align:left;50%"><span name='businessType'></span></td>
+			 </tr>
+			 <tr>
+			   <td style="text-align:left;10%">委托单refNo:</td>
+			   <td style="text-align:left;30%"><span name="etRefNo"></span></td>
+			   <td style="text-align:left;10%">管理模式:</td>
+			   <td style="text-align:left;50%"><span  name="manageModel"></span></td>
+			 </tr>
+			 <tr>
+			   <td style="text-align:left;10%">客户:</td>
+			   <td style="text-align:left;30%"><span  name="customerName"></span></td>
+			   <td style="text-align:left;10%">供应商:</td>
+			   <td style="text-align:left;50%"><span  name="supplierName"></span></td>
+			 </tr>
+			 <tr>
+			   <td style="text-align:left;100%" colspan="4"><b>注：<span id="remark"></span></b></td>
+			 </tr>	   
+		</tbody>
+	</table>
+</div>
+<div style=" margin-top:5px;"> 
+		<table class="listContent1" width="100%" style='border-collapse: collapse; table-layout: fixed;'>
+			<tr>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%">入库接货员</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%">接货时间</td>				
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%">板数/箱数</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%">仓位</td>
+			</tr>
+			<tr>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%"></td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%"></td>				
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%"></td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%"></td>
+			</tr>
+			<tr>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%">理货员</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%">理货完毕时间</td>				
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%">IPPC板/箱数</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%">备注</td>
+			</tr>
+			<tr>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%"></td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%"></td>				
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%"></td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%"></td>
+			</tr>
+		</table>	
+	</div>
+<div style=" margin-top:5px;">
+    <table id="tbItems" class="listContent" width="100%" style='border-collapse: collapse; table-layout: fixed;'>
+	    <tbody>
+		    <tr>
+				<td class="clsInvoice" height="15" align="center" width="40"><b>箱号</b></td>
+				<td class="clsInvoice" height="15" align="center" width="60"><b>客户箱号</b></td>
+				<td class="clsInvoice" height="15" align="center" width="60"><b>特殊标识</b></td>
+				<td class="clsInvoice" height="15" align="center" width="30"><b>储位</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="80"><b>品名</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="160"><b>型号</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="100"><b>品牌</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="60" style="font-weight: bold;"><b>数量</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="50" style="font-weight: bold;"><b>净重</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="50" style="font-weight: bold;"><b>毛重</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="60"><b>原产地</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="120"><b>DateCode</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="120"><b>Lot Num</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="60"><b>客户识别号</b></td>
+			</tr>
+	 	 </tbody>
+	</table>
+</div>
+<!--<div style="margin-top:5px;" >
+   <table id="workTable" class="listContent1"  width="100%" style='border-collapse: collapse;'>
+        <tbody>
+            <tr>
+                <td colspan="6" class="clsInvoice" height="15" align="center">
+                    	工作记录表
+                </td>
+            </tr>
+            
+            <tr>
+                <td height="15" align="left" style="width:10%">开箱验货</td>
+                <td height="15" align="right" style="width:20%;padding-right:5px;">箱</td>
+                <td height="15" align="left" style="width:10%">量尺寸/磅重</td>
+                <td height="15" align="right" style="width:25%;padding-right:5px;">箱</td>
+                <td height="15" align="left" style="width:10%">更换包装</td>
+				<td height="15" align="right" style="width:25%;padding-right:5px;">箱</td>
+            </tr>
+			<tr>
+                <td height="15" align="left" style="width:10%" >撕标签</td>
+                <td height="15" align="right" style="width:20%; padding-right:5px;" >箱</td>
+                <td height="15" align="left" style="width:10%" >贴标签</td>
+                <td height="15" align="right" style="width:25%;padding-right:5px;" >箱</td>
+                <td height="15" align="left" style="width:10%" >拆/拼箱</td>
+				<td height="15" align="right" style="width:25%;padding-right:5px;" >箱</td>
+            </tr>
+        
+        	<tr>
+        	<td style="width: 30%" >收费项目名称</td>
+        	<td style="width: 10%">数量</td>
+        	<td style="width: 10%">计费单位</td>
+        	<td style="width: 40%">计费说明</td>
+        	<td >编码code</td>
+        	</tr>
+        </tbody>
+	</table>
+</div>
+--><!--
+<div style="margin-top:5px;">
+	<table id="workTable2" class="listContent1"  width="100%" style='border-collapse: collapse;'>
+		<tbody>
+			 <tr>
+                <td colspan="6" class="clsInvoice" height="15" align="center">
+                    	未选工作记录表
+                </td>
+            </tr>
+            <tr>
+        	<td style="width: 30%" >收费项目名称</td>
+        	<td style="width: 10%">数量</td>
+        	<td style="width: 10%">计费单位</td>
+        	<td style="width: 40%">计费说明</td>
+        	<td >编码code</td>
+        	</tr>
+		</tbody>
+	</table>
+</div>
+-->
+<div style="margin-top:5px;">
+</div>
+</div>
+</body>
+</html>

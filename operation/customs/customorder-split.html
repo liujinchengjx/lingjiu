@@ -1,0 +1,398 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>贸易订单拆单</title>
+    <link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<script type="text/javascript">			
+		var isBatch = 0;  //0否  1是
+	    $(function(){		
+		      $("#nav_customordersplit").omPanel({title : "<label style='font-weight:bolder'>贸易订单拆单:"+
+			      getQueryString("coOrderNo")+"</label>&nbsp;总数量：<span id='totalCoQty'></span>&nbsp;<span id='splitmode'></span>",
+			  collapsed:false});
+			  loadCustomorderPacking();
+			 $('#buttonbar').omButtonbar({
+				 width : "100%",
+				 btns : [{label:"拆单",
+						 id:"btnSave" ,
+						 icons : {left : '/images/icon/add.png'},
+						 //disabled: parseFloat(getQueryString("status"))>=20?true:false,
+						 onClick: saveCustoms
+						 },
+						 {separtor:true},
+						 {label:"批量操作",id:"batch", 
+						  icons : {left : '/images/icon/edit.png'},
+						  onClick:function(){
+							  isBatch = 1;
+							  $("#splitmode").html("<b>选择模式：批量模式</b>");
+						  }
+						 },
+						 {separtor:true},
+						 {label:"取消批量",id:"cancelBatch", 
+						  icons : {left : '/images/icon/edit.png'},
+						  onClick:function(){
+							  isBatch = 0;
+							  $("#splitmode").html("<b>选择模式：单选模式</b>");
+						  }
+						 },
+						 {separtor:true},
+						 {label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							   var coOrderNo=getQueryString("coOrderNo");  
+						       var url='order/CustomOrder/0/unlockCustomOrder?coOrderNo='+coOrderNo;
+							   $.ajaxPost({url:url,msg:true,asynced:false,success:function(json,textStatus){
+									if(json.msgCode!=1){
+									    alert("解锁失败");
+									}   
+									window.close();
+								}
+							   });	   
+							  
+						  }
+						 }				
+					 ]
+             });	 
+		});
+		function loadCustomorderPacking(){
+		     var customOrderId=getQueryString("customOrderId"); 
+			 var coOrderNo=getQueryString("coOrderNo");  
+		     var url="order/CustomOrder/0/getCustomOrderCartonsBySplit?limit=10000&customOrderId="+customOrderId+"&coOrderNo="+coOrderNo;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					 var mutitable=$(".mutitable");
+					 var html="";
+					 var products=[];
+					 var index=0;
+					 var index1 = 1;
+					 var vtype = 0;
+					 var totalCoQty=0.0;
+					 for(var i=0;i<json.rows.length;i++){
+						 vtype = 0;
+						 var carton=json.rows[i];
+						 var html1="<div class='tbody_item'>";
+						 html1=html1+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+						 html1=html1+" <tr name='"+carton.id+"'> ";
+						 html1=html1+"   <td width='50'><strong><span name='cartonNo'>"+carton.cartonNo+"</span></strong></td>";
+						 html1=html1+"   <td width='50' style=' display:none'><strong> ";
+						 html1=html1+" 	 <span  name='orgCartonNo' >"+carton.orgCartonNo+"</span></strong></td>";
+						 html1=html1+"   <td width='80' style='text-align:right;margin-right:2px;'><strong>";
+						 html1=html1+"     <span name='nw'>"+carton.nw+"</span>";
+						 html1=html1+"     </strong></td>";
+						 html1=html1+"   <td width='80' style='text-align:right;margin-right:2px;'><strong>";
+						 html1=html1+"     <span name='gw'>"+carton.gw+"</span>";
+						 html1=html1+"     </strong></td>";
+						 html1=html1+"  <td class='tbody_product' width='1000'>";
+						 var packings=carton.customOrderPackings;
+						 for(var j=0;j<packings.length;j++){
+							 var packing=packings[j];
+							 totalCoQty = totalCoQty + packing.qty;
+							 if(packing.tearQty == 0){
+							 	 continue;
+							 }
+							 if(vtype == 0){
+							 	 html = html + html1;
+								 vtype = 1;
+							 }
+							 if (products.in_array(packing.productId)==false){
+							     products.push(packing.productId); 
+								 index++;
+							 }
+							 var sep=Dictionary.getMulDictName(Dictionary.SpecialFlag,packing.specialFlag);
+							 if (sep=="") sep="&nbsp;";
+							 html=html+"    <dl>"; 
+							 html=html+"      <dd style='display:none'>";
+							 html=html+"          <span name='customOrderPackingId'>"+packing.id+"</span>";
+							 html=html+"          <span name='productId'>"+packing.productId+"</span>";
+							 html=html+"          <span name='unit'>"+packing.unit+"</span>";
+							 html=html+"          <span name='price'>"+packing.price+"</span>";
+							 html=html+"      </dd>";
+							 html=html+"      <dd style='float:left;text-align:center;width:150px;'>";
+							 html=html+"          <span name='productName'>"+packing.product.productName+"</span>";
+							 html=html+"      </dd>";
+							 html=html+"      <dd style='float:left;text-align:center;width:150px;'>";
+							 html=html+"          <span name='pn'>"+packing.product.pn+"</span>";
+							 html=html+"      </dd>";
+							 html=html+"      <dd style='float:left;text-align:center;width:80px;'>";
+							 html=html+"          <span name='brand'>"+packing.product.brand+"</span>";
+							 html=html+"      </dd>";
+							 html=html+"      <dd style='float:left;text-align:center;width:70px;'>";
+							 html=html+"          <span name='origin'>"+packing.product.origin+"</span>";
+							 html=html+"      </dd>";
+							 html=html+"      <dd style='float:left;text-align:center;width:50px;'>";
+							 html=html+"          <span >"+sep+"</span>";
+							 html=html+"         <span name='specialFlag' style='display:none'>"+packing.specialFlag+"</span>";
+							 html=html+"      </dd>";
+							 html=html+"      <dd style='float:left;text-align:right;width:140px;'>";
+							 html=html+"          <span name='qty'>"+packing.qty+"</span>";
+							 html=html+"      </dd>";
+							 html=html+"      <dd style='float:left;text-align:right;width:140px;'>";
+							 html=html+"          <span name='tearQtyYet'>"+(packing.qty-packing.tearQty)+"</span>";
+							 html=html+"       </dd>";
+							 if (parseFloat(packing.tearQty)<0){
+							    $.omMessageTip.show({content :"出现已拆数量为负数的情况重大失误情况，请修正后再拆单！",timeout :4000,type : 'error'});
+								throw new Error("出现已拆数量为负数的情况重大失误情况"); 
+							 }
+							 html=html+"      <dd style='float:left;text-align:right;width:140px;'>";
+							 html=html+"	     <input type='text' value='"+packing.tearQty+"' ";
+							 html=html+"         style='width:90%;margin-right:2px;' ";
+							 html=html+"          validate="+"rules:['required']"+" name='tearQty' />";
+							 html=html+"       </dd>";
+							 html=html+"      <dd style='float:left;text-align:center;width:50px;'>";
+							 html=html+"         <input type='checkbox' value='checkbox1' name='subBox' index1='"+index1+"' ";
+							 html=html+"           tearQty='"+packing.tearQty+"' style='width:20px; height:20px;' />";
+							 html=html+"         <span name='cartonId' style='display:none' >"+packing.cartonId+"</span>";
+							 html=html+"	 </dd>";
+							 html=html+"      <dd style='float:left;text-align:center;width:30px;'>";
+							 html=html+"         <span style='' ><b>"+index+"</b></span>";
+							 html=html+"	 </dd>";
+							 html=html+"	</dl>";
+							 if (index>=20){
+							   index=0;
+							   index1++;
+							 }
+						  }
+						  if(vtype == 1){
+							 html=html+"  </td>";
+							 html=html+"<td></td>";	 
+							 html=html+"</tr>";
+							 html=html+"</table></div>";
+						  }
+					 }
+					 $("#totalCoQty").html(totalCoQty);
+					 mutitable.append(html);
+					 var $subBox = $("input[name='subBox']");
+					 $('#checkAll').click(function (){ 
+						 $('input[name="subBox"]').attr("checked",this.checked);
+						 if(this.checked){
+							$subBox.parent().parent().addClass("highlight");
+						 }else{
+						   $subBox.parent().parent().removeClass("highlight");
+						 }
+					 });
+					 $subBox.click(function(){
+						if(isBatch == 1){
+							var $this = $(this);
+							var inputChk = this;
+							$.omMessageBox.confirm({title:'选择',content:'是否同时操作所在的20行数据，确定吗？',
+								 onClose:function(v){
+									 if (v){
+										 var index1 = $this.attr("index1");
+										 $("input[index1!='"+index1+"']").attr("checked",false);
+										 $("input[index1!='"+index1+"']").parent().parent().removeClass("highlight");
+										 $("input[index1='"+index1+"']").each(function(i){
+											 var tearQty = $(this).attr("tearQty");
+											 if(tearQty>0){
+												 $(this).attr("checked",inputChk.checked);
+												 inputChk.checked?$(this).parent().parent().addClass("highlight"):
+													$(this).parent().parent().removeClass("highlight");	
+											 }	
+										});
+									 }	
+							}});
+						}
+						
+						$("#checkAll").attr("checked",$subBox.length == $("input[name='subBox']:checked").length ? true : false);
+						this.checked?$(this).parent().parent().addClass("highlight"): 
+						   $(this).parent().parent().removeClass("highlight");
+		
+					 });
+					 initValidateForm("customordersplit");
+					 $("input[name=tearQty]").omNumberField({allowDecimals:false});
+			  }			
+			 });
+		}
+		
+		function saveCustoms(){
+		    if(validateForm("customordersplit")==false)return false;  
+			var len=$("input[name='subBox']:checked").length;
+			if (len<=0){
+			    $.omMessageTip.show({content :"对不起,没有选择的记录！",timeout : 2000,type : 'error'});
+			   return false;
+			}
+			if (checkCustomFormDetails()){ 
+				var cf={};
+				cf["cf.customOrderId"]=getQueryString("customOrderId");
+				var cfds = getCustomFormDetails();
+				var productIds=[];
+				var totalTearQty=0.0;
+				for(var i=0;i<cfds.length;i++){
+				   totalTearQty=totalTearQty+parseFloat(cfds[i].qty);
+				   if (productIds.in_array(cfds[i].productId)==false){ //不存在
+				      productIds.push(cfds[i].productId);
+				   }
+				}
+				var totalCoQty = parseFloat($("#totalCoQty").text());
+				$.omMessageBox.confirm({title:'拆单确认',content:'你现在选择了'+productIds.length+'项产品，你确定要拆单吗？',
+		        onClose:function(v){
+				if(v){
+					cf["cf.nw"]=countCartonGwNw(true);
+					cf["cf.gw"]=countCartonGwNw(false);
+					cf["cf.itemCount"]=countCartons();
+					var str=JSON.stringify(cfds);
+					cf["cf.customFormDetails"]=str;
+					cf["isAll"]=(totalCoQty==totalTearQty)?0:1;
+					var url="customs/CustomForm/0/splitCustomForm";
+					$.ajaxPost({data:cf,url:url,msg:false,success:function(json,textStatus){
+						 $(".tbody_item").remove();
+						 loadCustomorderPacking();		
+						 $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});	 
+					   }			
+					});
+				 }
+       			 }});
+			}
+		}
+		function checkCustomFormDetails(){ //检测选中的产品是否会超过20项，拆分的数量是否合法
+		   var productIds=[];
+		   var ret=true;
+		   $("input[name='subBox']:checked").each(function(i){
+			     var $this=$(this);
+				 var $dl=$(this).parent().parent("dl");
+				 var vo=$dl.getVo();
+				 if (productIds.length>20){
+					ret=false;
+					$.omMessageTip.show({content :"选择产品超过了20项，请重新选择",timeout : 2000,type : 'error'}); 
+					throw '选择产品超过了20项，请重新选择！';
+				 }
+				 var productId=parseInt(vo.productId);
+                 if (productIds.in_array(productId)==false){ //不存在
+				     productIds.push(productId);
+				 }
+				 var orgQty=parseInt(vo.qty);
+				 var tearQtyYet=parseInt(vo.tearQtyYet);
+				 if (vo.qty==vo.tearQtyYet){
+					ret=false;
+				    var cartonId=parseInt(vo.cartonId);
+				    $.omMessageBox.alert({type:'error', title:'失败',content:"箱号为："+cartonId+" 的已拆分完毕，不可以再拆分！"});
+				 }	
+				 if (ret){
+					 var tempQty=tearQtyYet + parseInt(vo.tearQty);
+					 if (tempQty>orgQty){
+						ret=false;
+						var cartonId=parseInt(vo.cartonId);
+						var qty=parseInt(vo.qty)-parseInt(vo.tearQtyYet);
+						$.omMessageBox.alert({type:'error', title:'失败',content:"箱号为："+cartonId+" 的拆分数量不能大于！"+qty});
+					 }	
+				 }
+				 if (ret==false){
+				    return false;
+				 }	
+            });
+			return ret;
+		}
+		function getCustomFormDetails(){
+		    var customFormDetails=[];		  
+			$("input[name='subBox']:checked").each(function(i){
+			     var $this=$(this);
+				 var $dl=$(this).parent().parent("dl");
+				 var vo=$dl.getVo();
+				 vo["qty"]=vo.tearQty;
+				 customFormDetails.push(vo);				
+            });
+			return customFormDetails;
+		}
+		function countRowCartonQty(flag,$this){
+		    var totalQty=0;
+			if (flag){ //计算原始数量
+				 var $td = $this.parents(".tbody_product");
+				 $td.find("dl").each(function(i){
+					 var $dl=$(this);
+					 totalQty=totalQty+$dl.find("span[name='qty']").text();					     
+				 });
+			}else{ //计算拆分数量
+				 var $dl=$this.parent().parent("dl");
+				 totalQty=totalQty+$dl.find("input[name='tearQty']").val();
+			}
+			return totalQty;
+		}
+		function countCartonGwNw(flag){
+		    var totalWeight=0.0,rate=0.0,weight=0.0;
+			var orgQty=0,tearQty=0;
+			$("input[name='subBox']:checked").each(function(i){
+				 var $this=$(this);
+				 orgQty=countRowCartonQty(true,$this);
+				 tearQty=countRowCartonQty(false,$this);
+				 rate=tearQty.div(orgQty);
+				 var $tr = $this.parents("tr");
+				 if (flag){
+					 weight=parseFloat($tr.find("span[name=nw]").html());					 
+					 totalWeight=totalWeight+rate.mul(weight);
+				 }else{
+					 weight=parseFloat($tr.find("span[name=gw]").html());
+					 totalWeight=totalWeight+rate.mul(weight);					     
+				 }
+			});
+			return totalWeight;
+		}
+		function countCartons(){ //统计箱数 
+			var cartonIds=[];
+			var count=0;
+			var cartonId=0;
+			$("input[name='subBox']:checked").each(function(i){
+				 var $this=$(this);
+				 cartonId=parseInt($this.next("span").html());
+				 if (cartonIds.in_array(cartonId)==false){//如果不存在
+					 cartonIds.push(cartonId);
+					 count=count+1;
+				 }
+			});
+			return count;
+		}
+	</script>
+</head>
+
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px;
+ background-color: #EEEEEE">
+<div id="nav_customordersplit">
+	<div id="buttonbar"></div>
+	<form id="customordersplit">	
+		<div class="mutitable" style="height:750px">
+			<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+				<thead>
+				   <tr>
+					  <td width="50">箱号</td>
+					  <!--<td width="50">客户箱号</td>-->
+					  <td width="80" style="text-align:right;">净重</td>
+					  <td width="80" style="text-align:right;">毛重</td>
+					  <td width="150">品名</td>
+					  <td width="150">型号</td>
+					  <td width="80">品牌</td>
+					  <td width="70">原产地</td>
+					  <td width="50" >特殊标识</td>
+					  <td width="140" style="text-align:right">数量</td>
+					  <td width="140" style="text-align:right">已拆分数量</td>
+					  <td width="140">未拆分数量</td>
+					  <td width="50" style="text-align: center;">
+					    <input type="checkbox" name="checkAll" id="checkAll"  style="width:20px; height:20px;" /><label for="selectAll"></label>
+					  </td>
+					  <td width="30">拆分</td>
+					  <td></td>
+				   </tr>
+				</thead>
+			</table>
+		</div>
+	</form>	
+</div>
+</body>
+</html>

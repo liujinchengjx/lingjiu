@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	 <script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null;
+         $(document).ready(function() {
+			initValidateForm("producttaxcode");
+			$("#search-panel").omPanel({title : "搜索",collapsible:true});
+			$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+			$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+				   onClick : function(event){
+				         searchData();
+				   }
+			});						
+			$('#buttonbar').initToolBar();
+			dialog=$( "#nav_producttaxcode").omDialog({autoOpen:false,draggable:false,resizable : false,height: 450,width:900,modal: true,
+				buttons: [{
+					text : "确定", 
+					click : saveProductTaxCode
+				}, {
+					text : "取消", 
+					click : function () {                   
+						dialog.omDialog("close");
+					}
+				}]
+			});				
+			
+			$('#grid').omGrid({
+				autoFit:true,
+				limit:20,
+                title : '商品编码列表',
+                dataSource : "business/ProductTaxCode/0/searchProductTaxCode",
+                colModel : [  
+                             {header : '名称', name : 'productName', width : 80, align : 'left'}, 
+							 {header : '海关编码', name : 'codeTs', width : 30, align : 'left'},							
+							 {header : '单位1', name : 'unit1Name', width : 30, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+										 return colValue+"("+rowData.unit1+")";
+								}
+							 },
+							 {header : '单位2', name : 'unit2Name', width : 30, align : 'left',
+								 renderer : function(colValue, rowData, rowIndex) {
+								     if (colValue==""){
+									     return colValue;
+									 }else{
+										 return colValue+"("+rowData.unit2+")";
+									 }
+								 }
+							 },
+						     {header : '最低税', name : 'lowRate', width : 25,align : 'right'},
+							 {header : '普通税', name : 'commRate', width : 25,align : 'right'},
+							 {header : '出口退税', name : 'expReTaxRate', width : 25,align : 'right'},
+							 {header : '增值税', name : 'addRate', width : 25,align : 'right'},
+							 {header : '消费税', name : 'consumeRate', width : 25,align : 'right'},
+							 {header : '监管条件', name : 'controlMa', width : 30, align : 'left'},
+							 {header : '检疫类', name : 'quarantineMa', width : 30, align : 'left'},
+							 {header : '最后修改人', name : 'lastModifyBy', width : 40, align : 'left'},
+							 {header : '申报要素', name : 'criterionDeclare', width : 180, align : 'left'}
+                        ]
+            });
+		 });
+	 function searchData(){
+	     var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#grid').omGrid('setData', "business/ProductTaxCode/0/searchProductTaxCode?"+params);
+	 }
+	 function saveProductTaxCode(){	
+	 	if(validateForm("producttaxcode")==false)return false;	    
+		var url = $("#id").val()=="" ? "business/ProductTaxCode/0/add" : "business/ProductTaxCode/0/edit";	
+		var vo=$("#producttaxcode").getVo();
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){	
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   $('#grid').omGrid('reload');
+			}
+		 });
+		 dialog.omDialog("close");         	            
+	}	
+	function addProductTaxCode(){
+	    dialog.initializeInput(); //初始化
+		dialog.omDialog("option", "title", '新增');
+		dialog.omDialog("open");//显示dialog
+	}
+	function editProductTaxCode(){
+	  var rowDatas = $('#grid').omGrid('getSelections',true);
+      if(rowDatas.length <= 0 ){
+         $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+         return;
+      }		
+	  dialog.initializeInput({"vo":rowDatas});
+      dialog.omDialog('open');	       	     
+	}	
+	function updateProductTaxCodeOnLine(){//在线更新商品编码信息
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			 return;
+		}
+		var url = "business/ProductTaxCode/0/updateOnLine?productTaxCodeId="+rowDatas[0].id;		
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   $('#grid').omGrid('reload');
+		   }
+		 });
+	}
+	function viewProductTaxCode(){
+	  
+	}
+    </script>
+</head>
+<body class="dfbody">
+<div id="search-panel">
+   <table class="edit-panel">
+	<tr>
+		<td>关键字：</td>    
+		<td><input id="searchValue" name="searchValue" onFocus="myFocus(this,'#f4eaf1')" onBlur="myblur(this,'white')" tip="输入关键字" /></td>
+		<td>第一单位：</td>    
+		<td><input id="unit1" name="unit1"  pattern='combo' editable='false' remote='units' /></td>
+		<td>第二单位：</td>    
+		<td><input id="unit2" name="unit2"  pattern='combo' editable='false' remote='units' /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>
+  </table> 	 
+</div>		
+
+	<div id="nav_producttaxcode" title="商品编码信息" style="display:none;">
+ 	    <form id="producttaxcode">
+		<input  type="hidden" id="id" name="ptc.id"  />
+		<input  type="hidden" id="flag" name="ptc.flag"  />
+		<input type="hidden" id="lastModifyTime" name="ptc.lastModifyTime" />
+		<input type="hidden" id="createTime" name="ptc.createTime" />
+		<input type="hidden" id="lastModifyBy" name="ptc.lastModifyBy" />
+ 		<input type="hidden" id="createTime" name="ptc.createBy" />
+		<table class="edit-table">
+			<tr>
+				<td class="label">商品名称：</td>
+				<td class="field">
+				<input  id="productName" name="ptc.productName" validate="rules:['required']" /></td>				
+				<td class="label"></td>
+				<td class="field">
+				</td>
+			</tr>
+			<tr>
+				<td class="label">申报要素：</td>
+				<td class="field" colspan="3">
+				<input id="criterionDeclare" name="ptc.criterionDeclare" validate="rules:['required']" /></td>   			    
+			</tr>
+			<tr>
+				<td class="label">商品编码（8位）：</td>
+				<td class="field">
+				<input id="codet" name="ptc.codet"  validate="rules:['required']" pattern='int' /></td>
+   			    <td class="label">附加编码（2位，默认是00）：</td>
+				<td class="field" >
+				<input id="codes" name="ptc.codes"  validate="rules:['required']" /></td>
+			</tr>				
+			<tr>   			    		
+				<td class="label">第一单位：</td>
+				<td class="field" >
+				 <input id="unit1" name="ptc.unit1" validate="rules:['required']"
+				  pattern='combo' editable='false' remote='units' /></td>	
+				<td class="label">第二单位：</td>
+				<td class="field" ><input id="unit2" name="ptc.unit2" pattern='combo' editable='false' remote='units' /></td> 		
+			</tr>			
+			<tr>				
+
+				<td class="label">增值税率：</td>
+				<td class="field" ><input id="addRate" name="ptc.addRate"  pattern='float' /></td> 	
+				<td class="label"> 最低税率：</td>
+				<td class="field" ><input id="lowRate" name="ptc.lowRate" pattern='float' /></td>	  			    
+			</tr>
+			<tr>
+				<td class="label">普通税率：</td>
+				<td class="field" ><input id="commRate" name="ptc.commRate" pattern='float'  /></td> 
+				<td class="label">出口退税率：</td>
+				<td class="field" ><input id="expReTaxRate" name="ptc.expReTaxRate"  pattern='float' /></td>	  			    
+			</tr>
+			<tr>
+				<td class="label">消费税：</td>
+				<td class="field" ><input id="consumeRate" name="ptc.consumeRate" pattern='float'  /></td> 
+				<td class="label">国别税：</td>
+				<td class="field" ><input id="countryTax" name="ptc.countryTax"  pattern='float' /></td>	  			    
+			</tr>	
+			<tr>
+				<td class="label"> 最高税率：</td>
+				<td class="field" ><input id="highRate" name="ptc.highRate" pattern='float' /></td>	 
+				<td class="label"></td>
+				<td class="field" ></td>	  			    
+			</tr>	
+			<tr> 	
+				<td class="label">监管条件：</td>
+				<td class="field" ><input id="controlMa" name="ptc.controlMa"  /></td>			    				
+				<td class="label">检验类别：</td>
+				<td class="field" ><input id="quarantineMa" name="ptc.quarantineMa" /></td>	  			    
+			</tr>									
+			<tr>				
+				<td class="label">注明信息：</td>
+				<td class="field" colspan="3" ><input id="notes" name="ptc.notes"  /></td>	  			    
+			</tr>				
+		</table>
+		</form>		
+	</div>
+	<div id="buttonbar"></div>	
+	<div id="grid"></div>
+</body>
+</html>

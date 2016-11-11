@@ -1,0 +1,198 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---价格检查</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+	<script type="text/javascript" src="/js/ajaxfileupload.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>  
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dgRecord=null;
+	$(function() {
+	    dgRecord=$("#nav_record").omDialog({autoOpen:false,draggable:false,resizable:false,height:500,width:750,modal:true,
+		    onClose : function(event) {}
+		});
+	    var customOrderId=getQueryString("id");
+		var url="order/CustomOrder/0/checkPrice?customOrderId="+customOrderId;
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   var vcTb=$("#tbItems");
+			   $("#tbHeader").initializeInput({"vo":json.entity}); //初始化
+			   var index=1;
+			   var items=json.entity.items;
+			   var html="",tips="";
+			   var customsPrice=0;
+			   for(var i=0;i<items.length;i++){
+				  var it=items[i];
+				  if (it.checkflag==0){
+					 tips="正常";
+				  }else if(it.checkflag==1){
+					 tips=" &nbsp; <img src='/images/icon/alertsendcustom.gif'>&nbsp; 低于10%"
+				  }else if(it.checkflag==2){
+					 tips=" &nbsp; <img src='/images/icon/alertsendcustom.gif'>&nbsp; 高于10%"
+				  }else if (it.checkflag==3){
+					 tips=" &nbsp; <img src='/images/icon/alertsendcustom.gif'>&nbsp; 第一次报关"
+				  }
+				  var customsPrice=it.customsPrice;
+			      if (customsPrice>0){
+				     customsPrice=customsPrice+"("+Dictionary.getDictName(Dictionary.Currency,it.currency)+")";
+					 if (it.orderidFrom==2){
+					    tips=tips+" <a href='#' class='opt' atid='"+it.orderId+"'>"+it.orderNo+"</a>&nbsp;";
+					 }else{
+					    tips=tips+" <span >"+it.orderNo +"(旧数据)</span> &nbsp;";
+					 }
+				  }
+				  html=html+"<tr><td height='20' align='center'>"+ index +"</td>";
+				  html=html+"<td height='20' align='left'>"+it.productName+"</td>";
+				  html=html+"<td height='20' align='left'>";
+				  if (it.checkflag==3 || it.orderidFrom==1){ //第一次报关，或是来自旧数据库
+					 html=html+""+it.pn;
+				  }else{
+					 html=html+"<a href='#' class='optRecord' atid='"+it.productId+"'> "+it.pn+" </a>";
+				  }
+				  html=html+"</td>";
+				  html=html+"<td height='20' align='center'>"+it.brand+"</td>";
+				  html=html+"<td height='20' align='right'>"+it.qty+"</td>";
+				  html=html+"<td height='20' align='right'>"+it.price+"</td>";
+				  html=html+"<td height='20' align='right'>"+customsPrice+"</td>";
+				  html=html+"<td height='20' align='left'>"+tips+"</td>";
+				  html=html+"<td height='20' align='right'>"+it.amt+"</td>";
+				  html=html+"<td height='20' align='center'>"+it.org+"</td></tr>";
+				  index++;
+				}
+				vcTb.append(html);	
+				$(".opt").bind("click",function(){
+				    $this=$(this);
+				    var url="/customs/customs-preview.html?customFormId="+$this.attr("atid");
+					showFullScreen(url);   
+				});
+				$(".showRecord").live("click",function(){
+				    $this=$(this);
+				    var url="/customs/customs-preview.html?customFormId="+$this.attr("atid");
+					showFullScreen(url);   
+				});
+				$(".optRecord").bind("click",function(){
+				    $this=$(this);
+					var params=[];
+					params.push("productId="+$this.attr("atid"));
+					$('#recordGrid').omGrid('setData',"customs/CustomForm/0/getCustomFormRecord?"+params.join("&"));
+				    dgRecord.omDialog("option", "title",'报关申报记录');
+					dgRecord.omDialog("open");//
+				});
+			}			
+		 });
+		 
+		 $('#recordGrid').omGrid({				
+				limit:50,
+				height:350,
+				autoFit:true,
+                title : '申报记录',
+                dataSource :"",
+                colModel : [
+							 {header : '子单号', name : 'cfOrderNo', width : 90, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return "<a href='#' class='showRecord' atid='"+rowData.id+"' >"+colValue+"</a>";
+								 }
+							 },
+							 {header : '客户', name : 'receiveCompanyName', width : 150, align : 'left'},
+							 {header : '报关单号', name : 'customOrderNo', width : 100, align : 'left'},
+							 {header : '状态', name : 'status', width : 50, align : 'left',
+								 renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.CusomFormStatus,colValue);
+								 }
+							 },
+							 {header : '金额', name : 'actualAmt', width : 60, align : 'right'},
+							 {header : '币种', name : 'currency', width : 40, align : 'left',
+								 renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.Currency,colValue);
+								 }
+							 },
+							 {header : '操作模式', name : 'opType', width : 40, align : 'left',
+									renderer : function(colValue, rowData, rowIndex) {
+										  return Dictionary.getDictName(Dictionary.OpType,colValue);
+									}
+							 },
+							 {header : '报关日期', name : 'customDate', align : 'left', width :'autoExpand'}
+							 ],
+            });
+			
+	});	
+	</script>
+</head>
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px;">	
+	<div id="tbHeader" style="width:98%;text-align:center;padding-top:20px; padding-left:20px;">
+		<div >
+			<table cellpadding="0" cellspacing="0" border="0" width="100%">
+				<tbody>
+				<tr>
+					<td width="100%" align="center" colspan="4" ><b><span style="font-size: 25px">INVOICE</span></b></td>
+				</tr>
+				<tr>
+					<td width="100%" align="center" colspan="4" >&nbsp;</td>
+				</tr>
+				<tr>
+					<td width="10%" align="left" nowrap=""><b>Contract No.:</b></td>
+					<td width="40%" align="left" ><b><span name='contractNo'></span></b></td>
+					<td width="10%" align="left" nowrap=""><b>Invoice No.:&nbsp;<br>Invoice Date:&nbsp;</b></td>
+					<td width="40%" align="left"><b><span name='contractNo'></span><br><span name='invoiceDate'></span></b></td>
+				</tr>
+				<tr>
+					<td width="10%" align="left" nowrap=""><b>Sold To:</b></td>
+					<td colspan="3" align="left"><b><span name='buyerCompany'></span></b></td>
+				</tr>
+				<tr>
+					<td width="10%" align="left" nowrap=""><b>Address:</b></td>
+					<td colspan="3" align="left"><b><span name='buyerAddress'></span></b></td>
+				</tr>
+				<tr>
+					<td width="10%" align="left" nowrap=""><b>Tel:</b></td>
+					<td width="40%" align="left"><b><span name='buyerTel'></span></b></td>
+					<td width="10%" align="left" nowrap=""><b>Fax:</b></td>
+					<td width="40%" align="left" ><b><span name='buyerFax'></span></b></td>
+				</tr>
+				</tbody>
+			</table>
+		</div>
+		<div style=" margin-top:5px;">
+			<table id="tbItems" class="listContent" width="100%">
+				<tbody>
+					<tr>
+						<td class="clsInvoice" height="20" align="center" width="20"><b>Item</b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="120"><b>品名</b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="120"><b>型号</b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="80"><b>品牌</b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="60" style="font-weight: bold;"><b>数量</b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="60" style="font-weight: bold;"><b>单价 /
+						<span name='curreny'></span>/<span name='dealType'></span></b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="60" style="font-weight: bold;"><b>报关价</b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="200" style="font-weight: bold;"><b>报警</b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="100" style="font-weight: bold;"><b>金额</b>/
+						<span name='curreny'></span>/<span name='dealType'></span>
+						</td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="60"><b>原产地</b></td>
+					</tr>
+				 </tbody>
+			</table>
+		</div>
+	</div>
+<div id="nav_record" title="申报记录" style="display:none;">
+	<div id="recordGrid"></div>
+</div>
+</body>
+</html>

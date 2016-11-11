@@ -1,0 +1,311 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>后台管理系统---预览增值税</title>
+ 	<script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<style type="text/css">
+	  html, body{width: 100%; height: 100%; 
+	      padding: 0; margin: 0;font-family:"宋体", "";
+	  }
+	  td{font-size: 12px;color: #000000;text-decoration: none;line-height: 18px;td-layout:fixed;word-break:break-all;}
+	  .listContent{
+		       background-color: #FFFFFF;
+		       border-collapse:collapse;
+			   font-family: verdana, helvetica, arial, sans-serif;
+			   font-size: 12px;
+			   border: #000000 1px solid;
+		}
+	 .listContent td{background-color: #ffffff;border:1px solid #000000;;height:23px;padding:1px 0px 0px 5px}
+    </style>
+	<script type="text/javascript">
+	$(function() {
+	    var customFormId=getQueryString("id");
+		if (customFormId !=""){
+		     var url="finance/SettlementFeeTrade/0/previewTariffVat?flag=1&referOrderId="+customFormId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   $("#customsvat").initializeInput({"vo":json.entity}); //初始化					  
+				   var ptList=json.entity.productTaxList;
+				   var htmlRow="";
+				   for(var i=0;i<ptList.length;i++){
+					   var pt=ptList[i];
+					   htmlRow=htmlRow+"<tr>";
+					   htmlRow=htmlRow+"<td colspan='2' nowrap=''>"+pt.codeTs+"</td>";
+					   htmlRow=htmlRow+"<td colspan='6' nowrap=''>"+pt.productName+"</td>";
+					   htmlRow=htmlRow+"<td colspan='2' nowrap='' align='right'>"+pt.qty+"</td>";
+					   htmlRow=htmlRow+"<td colspan='1' nowrap='' align='center'>"+pt.unit+"</td>";
+					   htmlRow=htmlRow+"<td colspan='3' nowrap='' align='right'>"+pt.payTaxAmt+"</td>";
+					   htmlRow=htmlRow+"<td colspan='2' nowrap='' align='right'>"+pt.addTaxRate+"</td>";
+					   htmlRow=htmlRow+"<td colspan='2' nowrap='' align='right'>"+pt.levyTaxAmt+"</td>";
+					   htmlRow=htmlRow+"</tr>";
+					}
+					addTableRow("items",6,htmlRow);
+				}			
+			 });
+ 		 }
+	 });	
+	 
+	 
+    function addTableRow(tableId,currentRowID,htmlRow){  
+		var $table=$("#"+tableId);
+		var $trs=$table.find("tr");
+        $.each($trs, function(i, tr){  
+            if(i==currentRowID){  
+               var currentRow=$trs.eq(i);
+               currentRow.after(htmlRow);  
+            }  
+        });  
+    }  
+	</script>
+</head>
+<body style="tab-interval:21.0pt;text-justify-trim:punctuation" >
+    <div id="customsvat" align="center">
+        <font style="font-size: 9.0pt; font-family: 宋体" color="red"></font>
+        <table style="width:737.55pt; border-collapse: collapse; border: none" width="850">
+            <tbody>
+                <tr>
+                    <td class="non" align="center" nowrap="">
+                        <span name="customsName"></span>
+                    </td>
+                    <td colspan="2" class="non" align="left" nowrap="">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 海关增值税 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;专用缴款书
+                    </td>
+                </tr>
+                <tr>
+                    <td class="non" nowrap="">
+                        收入系统税务系统
+                    </td>
+                    <td class="non" nowrap="">
+                        填发日期&nbsp;&nbsp;&nbsp;<span name='year'></span>年&nbsp;&nbsp;&nbsp;<span name='month'></span>月&nbsp;&nbsp;&nbsp;<span name='day'></span>日
+                    </td>
+                    <td class="non" nowrap="">
+                        <span style="font-size: 9.0pt; font-family: 宋体" id="ecode"></span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table id="items" style="table-layout: fixed; width: 737.55pt; border-collapse: collapse; border: none;
+            border-top: solid windowtext 1.0pt; border-left: solid windowtext 1.0pt;" border="1"
+            cellpadding="0" cellspacing="0" width="850">
+            <tbody>
+                <tr>
+                    <td colspan="8" nowrap="">
+                        收款单位
+                    </td>
+                    <td colspan="10" nowrap="">
+                        缴款单位
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" nowrap="">
+                        收入机关
+                    </td>
+                    <td colspan="6" nowrap="">
+                        <span name="receivablesUnit"></span>
+                    </td>
+                    <td colspan="2" nowrap="">
+                        代码
+                    </td>
+                    <td colspan="3" nowrap="">
+                        <span name="paymentUnitCode"></span>
+                    </td>
+                    <td nowrap="">
+                        名称
+                    </td>
+                    <td colspan="4" nowrap="">
+                        <span name="paymentUnit"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" nowrap="">
+                        科目
+                    </td>
+                    <td nowrap="">
+                        <span name="receivablesSubject"></span>
+                    </td>
+                    <td colspan="3" nowrap="">
+                        预算次级
+                    </td>
+                    <td colspan="2" nowrap="">
+                        <span name="receivablesLevel"></span>
+                    </td>
+                    <td colspan="2" nowrap="">
+                        帐号
+                    </td>
+                    <td colspan="8" nowrap="">
+                        <span name="paymentUnitAccount"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" nowrap="">
+                        收缴国库
+                    </td>
+                    <td colspan="4" nowrap="">
+                        <span name="receivablesExchequer"></span>
+                    </td>
+                    <td colspan="2" nowrap="">
+                        开户行代码
+                    </td>
+                    <td colspan="3" nowrap="">
+                        <span name="paymentUnitBankCode"></span>
+                    </td>
+                    <td colspan="2" nowrap="">
+                        开户银行
+                    </td>
+                    <td colspan="5" nowrap="">
+                        <span name="paymentUnitBank"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3" nowrap="">
+                        纳税单位代码
+                    </td>
+                    <td colspan="2" nowrap="">
+                        <span name="paymentUnitCode"></span>
+                    </td>
+                    <td nowrap="">
+                        名称
+                    </td>
+                    <td colspan="5" nowrap="">
+                        <span name="paymentUnit"></span>
+                    </td>
+                    <td colspan="2" nowrap="">
+                        税务号
+                    </td>
+                    <td colspan="5" nowrap="">
+                        <span name="paymentUnitTaxNo"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3" nowrap="">
+                        收发货单位代码
+                    </td>
+                    <td colspan="5" nowrap="">
+					   <span name="receivingUnitCode"></span>
+                    </td>
+                    <td colspan="3" nowrap="">
+                        收发货单位名称
+                    </td>
+                    <td colspan="7" nowrap="">
+                        <span name="receivingUnit"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="width: 74.95pt;" nowrap="">
+                        税号
+                    </td>
+                    <td colspan="6" style="width: 187.15pt;" nowrap="">
+                        货物名称
+                    </td>
+                    <td colspan="2" style="width: 37.8pt;" nowrap="" align="right">
+                        数量
+                    </td>
+                    <td colspan="1" style="width: 39.35pt;" nowrap="" align="center">
+                        单位
+                    </td>
+                    <td colspan="3" style="width: 63.65pt;" nowrap="" align="right">
+                        完税价格(￥)
+                    </td>
+                    <td colspan="2" style="width: 72.2pt;" nowrap="" align="right">
+                        税率(%)
+                    </td>
+                    <td colspan="2" style="width: 75.45pt;" nowrap="" align="right">
+                        实征增值税额
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="width: 90.65pt;" nowrap="" width="121">
+                        金额人民币(大写)
+                    </td>
+                    <td colspan="7" style="width: 209.25pt;" nowrap="" width="279">
+                        <span name="amtUppercase"></span>
+                    </td>
+                    <td colspan="2" style="width: 49.35pt;" nowrap="" width="66">
+                        合计(￥)
+                    </td>
+                    <td colspan="6" style="width: 203.3pt;" nowrap="" width="271">
+                        <span name="amtLowercase"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="width: 74.95pt;" nowrap="" width="100">
+                        申报单位编号
+                    </td>
+                    <td colspan="6" style="width: 167.15pt;" nowrap="" width="223">
+                        <span name="reportingUnitCode"></span>
+                    </td>
+                    <td colspan="3" style="width: 76.55pt;" nowrap="" width="102">
+                        报关单统一编号
+                    </td>
+                    <td colspan="7" style="width: 233.9pt;" nowrap="" width="312">
+                        <span name="customsNo"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="width: 74.95pt;" nowrap="" width="100">
+                        合同号
+                    </td>
+                    <td colspan="6" style="width: 167.15pt;" nowrap="" width="223">
+                        <span name="orderNo"></span>
+                    </td>
+                    <td colspan="3" style="width: 76.55pt;" nowrap="" width="102">
+                        运输工具
+                    </td>
+                    <td colspan="7" style="width: 233.9pt;" nowrap="" width="312">
+                      <span name="conveyance"></span> / 提前报关
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="width: 74.95pt;" nowrap="" width="100">
+                        出税单时限
+                    </td>
+                    <td colspan="6" style="width: 167.15pt;" nowrap="" width="223">
+					    <span name="taxBilltimeLimit"></span>
+                    </td>
+                    <td colspan="3" style="width: 76.55pt;" nowrap="" width="102">
+                        提/装货单号
+                    </td>
+                    <td colspan="7" style="width: 233.9pt;" nowrap="" width="312">
+					    <span name="blno"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" rowspan="4" style="width: 74.95pt;" nowrap="" width="100">
+                        备注
+                    </td>
+                    <td colspan="16" style="width: 477.6pt;" nowrap="" width="637">
+                       <span name="remark"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="16" style="width: 477.6pt;" nowrap="" width="637">
+                        440301734147925
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="16" style="width: 477.6pt;" nowrap="" width="637">
+                        免征关税;&nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="16" style="width: 477.6pt;" nowrap="" width="637">&nbsp;
+                        
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

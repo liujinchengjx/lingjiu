@@ -1,0 +1,266 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统--委托单</title>
+	<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var arIdsArray=[];
+	$(document).ready(function(){	
+		$("#search-panel").omPanel({title :"结算主体："+getIframeParm("opCompanyName")+" 客户："+
+		getIframeParm("customerName")+" 订单号："+getIframeParm("referOrderNo"),collapsed:true});
+	    var element = $('#nav_settlement').omBorderLayout({
+            	   panels:[{id:"center-panel",header:true,title:"<b>应收账款列表 </b>",region:"center",width:"60%",height:"98%"},
+            	    {id:"west-panel",resizable:true,collapsible:true,title:"<b>结算费用项</b>",fit:true,hideCollapsBtn:false,
+					 region:"east",width:"39.6%",height:"98%"}
+            	    ]
+        });		
+		$('#leftbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"选择",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick : selectItems
+				},
+				{separtor:true},
+            	{label:"关闭",id:"btnClose", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		       ]
+        });
+		loadSettlementItems();
+		var params=[];
+		params.push("customerId="+getIframeParm("customerId"));
+		params.push("orderId="+getIframeParm("referOrderId"));
+		params.push("orderType="+getIframeParm("type"));
+		//params.push("orderStatus=20");
+	    var url= "finance/AccountReceivable/0/searchAccountReceivable?"+params.join("&");
+		$('#leftGrid').omGrid({
+				autoFit:true,
+				limit:20,
+                title : '',
+				singleSelect :false,
+                dataSource :url,
+                colModel : [						 
+							 {header : '订单号', name : 'orderNo', width : 95, align : 'left'},
+							 {header : '订单类型', name : 'orderType', width : 50, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.OrderType,colValue);	
+								}
+							 }, 
+							 {header : '费用名称', name : 'itemName', width : 150, align : 'left'},
+							 {header : '币种', name : 'receivableCur', width : 40, align : 'center',
+							    renderer : function(colValue, rowData, rowIndex) {
+                                    return Dictionary.getDictName(Dictionary.Currency,colValue);	
+								}
+							 },
+							 {header : '金额', name : 'actualAmt', width : 60, align : 'right'},
+							 {header : '状态', name : 'status', width : 40, align : 'center',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.AccountReceivableStatus,colValue);	
+								}
+							 },
+							 {header : '时间', name : 'createTime', width : 'autoExpand', align : 'center'}
+ 							]
+            });
+		$('#rightbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnItemsSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick : saveItems
+				}					
+		       ]
+        });		
+		
+											
+	});
+	function loadSettlementItems(){
+	    var params=[];
+		params.push("settlementId="+getIframeParm("settlementId"));
+		params.push("limit=1000000");
+	    var url="finance/Settlement/0/searchSettlementItem?"+params.join("&");
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			 	$(".tbody_item").remove();
+				var mutitable=$(".mutitable");
+				var html="";	
+				for(var i=0;i<json.rows.length;i++){
+					var it=json.rows[i];
+					html=html+"<div class='tbody_item'>";
+					html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+					html=html+" <tr> ";
+					html=html+"   <td width='50'>";
+					html=html+"       <input type='checkbox' value='checkbox1' name='subBox' style='width:20px; height:20px;' /></td>";
+					html=html+"   <td width='100'>";
+					html=html+"       <input type='text' name='itemName' style='width:90%;' value='"+it.itemName+"' ";
+					html=html+" 	  validate="+"rules:['required']"+" /></td>";
+					html=html+"   <td width='70'>";
+					html=html+"      <input type='text' name='actualAmt' style='width:90%;margin-right:2px;text-align: right;' ";
+					html=html+"      value='"+it.actualAmt+"' validate="+"rules:['required']"+" /></td>";
+					html=html+"   <td width='250' style='text-align:right;margin-right:2px;'>";
+					html=html+"      <input type='text' name='basis' style='width:90%;margin-right:2px;' value='"+it.basis+"' ";
+					html=html+" 	 validate="+"rules:['required']"+" />";
+					html=html+"   </td>";
+					html=html+"   <td style='display:none'>";
+					html=html+"      <span name='accountReceivableIds'>"+it.accountReceivableIds+"</span>";
+					html=html+"      <span name='id'>"+it.id+"</span>";
+					html=html+"      <span name='settlementId'>"+it.settlementId+"</span>";
+					html=html+"      <span name='remark'>"+it.remark+"</span>";
+					html=html+"      <span name='amt' style='display:none'>"+it.amt+"</span>";
+					html=html+"   </td>";
+					html=html+"<td></td>";	 
+					html=html+"</tr>";
+					html=html+"</table></div>";
+				}
+				mutitable.append(html);
+				iniItems();
+		  }			
+		});
+	}
+	function selectItems(){
+	    var rowDatas = $('#leftGrid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择应收费用项！'});
+			return;
+		}
+		var actualAmt=0;
+		var mutitable=$(".mutitable");
+		var html="";	
+		for(var i=0;i<rowDatas.length;i++){
+		    if (rowDatas[i].status==20){
+			   $.omMessageTip.show({content : "对不起！该应收费用已结算",timeout : 3000,type:'error'}); 
+			   return false; 
+			}
+		    if(arIdsArray.in_array(rowDatas[i].id)==true){
+			   $.omMessageTip.show({content : "对不起！"+rowDatas[i].itemName+" 收费项已选！",timeout : 3000,type:'error'}); 
+			   return false;
+			}
+			arIdsArray.push(rowDatas[i].id);
+			html=html+"<div class='tbody_item'>";
+			html=html+" <table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+			html=html+"  <tr> ";
+			html=html+"   <td width='50'><input type='checkbox' value='checkbox1' name='subBox' style='width:20px; height:20px;' /></td>";
+			html=html+"   <td width='100'><input type='text' name='itemName' style='width:90%;' validate="+"rules:['required']"+"";
+			html=html+"     value='"+rowDatas[i].itemName+"' /></td>";
+			html=html+"   <td width='70'><input type='text' name='actualAmt' style='width:90%;margin-right:2px;text-align: right;' ";
+			html=html+"      value='"+rowDatas[i].actualAmt+"' validate="+"rules:['required']"+" /></td>";
+			html=html+"   <td width='250' style='text-align:right;margin-right:2px;'>";
+			html=html+"      <input type='text' name='basis' style='width:90%;margin-right:2px;' validate="+"rules:['required']"+"" ;
+			html=html+"      value='"+rowDatas[i].basis+"' />";
+			html=html+"   </td>";
+			html=html+"   <td style='display:none'>";
+			html=html+"     <span name='accountReceivableIds'>"+rowDatas[i].id+"</span>";
+			html=html+"     <span name='remark'>"+rowDatas[i].remark+"</span>";
+			html=html+"   </td>";
+			html=html+"   <td></td>";	 
+			html=html+" </tr>";
+			html=html+"</table></div>";	
+		}		
+		mutitable.append(html);
+		iniItems();
+	}
+	function iniItems(){
+		var mutitable=$(".mutitable");
+	    var $subBox = $("input[name='subBox']");
+		$('#checkAll').click(function (){ 
+			 $('input[name="subBox"]').attr("checked",this.checked);
+			 if(this.checked){
+				$subBox.parent().parent().addClass("highlight");
+			 }else{
+				$subBox.parent().parent().removeClass("highlight");
+			 }
+		});
+		$subBox.click(function(){
+			$("#checkAll").attr("checked",$subBox.length == $("input[name='subBox']:checked").length ? true : false);
+			this.checked?$(this).parent().parent().addClass("highlight"): 
+			$(this).parent().parent().removeClass("highlight");
+		});
+		mutitable.find("input[name='actualAmt']").omNumberField({allowDecimals:true,decimalPrecision:2});
+		initValidateForm("settlement");
+	}
+	function saveItems(){//
+	   if(validateForm("settlement")==false)return false; 
+	   var settlementId=getIframeParm("settlementId");
+	   if (parseInt(settlementId)<=0){
+	      $.omMessageTip.show({content : "结算主档没有找到！",timeout : 2000,type:'error'}); 
+	      return false;
+	   }
+	   var settlementItems=[];
+	   var $chk=$("input[name='subBox']");
+	   $chk.each(function(i){
+			var $this=$(this);
+			var $tr=$(this).parent().parent("tr");
+			var vo=$tr.getVo();
+			vo["settlementId"]=settlementId;
+			settlementItems.push(vo);
+       });
+	   if (settlementItems.length<=0) return false;
+	   var temp = JSON.stringify(settlementItems); 
+	   var url = "finance/Settlement/0/saveItems";
+	   $.ajaxPost({data:{"items":temp},url:url,msg:false,success:function(json,textStatus){
+		   $('#leftGrid').omGrid('reload');//刷新grid
+		   loadSettlementItems();
+		   arIdsArray=[];
+		   $.omMessageTip.show({content : json.msg,timeout : 2000,type:'success'});	
+		}
+	   }); 
+	}
+	</script>
+</head>
+<body class="dfbody">	
+	<div id="search-panel"></div>
+	<div id="nav_settlement" title="" style="width:100%; height:90.6%;">
+	<div id="center-panel">
+	    <div id="leftbar"></div>
+		<div id="leftGrid"></div>	
+	</div>
+	<div id="west-panel">
+		<div id="rightbar"></div>
+		<div class="mutitable" id="settlement">
+				<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+					<thead>
+					   <tr>
+						  <td width="50" style="text-align: center;">
+							<input type="checkbox" name="checkAll" id="checkAll"  style="width:20px; height:20px;" />
+							<label for="selectAll"></label>
+						  </td>
+						  <td width="100">项目名</td>
+						  <td width="70" style="text-align:right;">金额</td>
+						  <td width="250">依据</td>
+						  <td></td>
+					   </tr>
+					</thead>
+				</table>
+		</div>	
+	</div>	
+</div>
+	
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	 <script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script
+    ><script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-ajaxsubmit.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null;	
+	$(function() {
+	    $("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("charge");		
+		iniOperArea();		
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"button1" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveCharges
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }	
+		 ]
+        });
+		
+		  var chargesId=getIframeParm("chargesId");        
+		  if (chargesId !=""){	
+			 var url="business/Charges/0/get?chargesId="+chargesId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					 $("#charge").initializeInput({"vo":json.entity,"pre":"charge"}); //初始化
+					 $('#businessType').omCombo("value",json.entity.businessType);// 初始化值
+   			     }			
+			 });
+		  }else{
+			 $("#charge").initializeInput(); //初始化
+		  }	 
+		
+		 $('#otherFormula').omCombo({
+                dataSource :  "",              
+                width:200,               
+                listMaxHeight:'300',           
+                inputField : 'feeName',              
+                valueField : 'fcode',
+				forceSelection:true,               
+                listProvider : function(container,records){
+                    var html='<table cellpadding="2" cellspacing="0"><thead>';
+						html +='<tr><th width="60">名称</th><th width="80">公式代码</th></tr>';
+						html +='</thead>';
+                        html +='<tbody>';
+                    $(records).each(function(){
+                        html += '<tr><td>' + this.feeName + '</td><td>' + this.fcode + '</td></tr>';
+                    });
+                    html +='</tbody></table>';				
+                    $(html).appendTo(container);					
+                    return container.find('tbody>tr');
+                },           
+                filterStrategy:function(text,record){
+                    var text=text.toLowerCase();
+                    return record.feeName.toLowerCase().indexOf(text)>-1 || record.fcode.toLowerCase().indexOf(text)>-1;
+                },
+                onValueChange:function(target, newValue, oldValue){
+                   $.insertAtCursor($('#formula').get(0),newValue);
+                }
+            });
+			
+		   $('#businessType').omCombo({			//
+					dataSource :Dictionary. BusinessType,
+					optionField:'dictName',
+					valueField: "dictCode",
+					editable: false,
+					onValueChange:function(target,newValue,oldValue,event){ 
+                        var url= + "business/Charges/0/getchargebybtype1?charge.businessType="+newValue;
+					  	$('#otherFormula').omCombo('setData',url);	
+					}																																					
+			});		
+	});
+	function saveCharges(){	
+		if(validateForm("charge")==false)return false;	
+		 var url = $("#id").val()=="" ? "business/Charges/0/add" : "business/Charges/0/edit";
+		 var vo=$("#charge").getVo();
+		 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			}
+		 });	
+	}	
+	//初始化操作区	
+	function iniOperArea(){
+	   $('.opt').omButton({
+	       onClick : function(event){		     
+			 $.insertAtCursor($('#formula').get(0),this.html());
+		   }
+	   });	  
+	   $('#aBbtnclear').omButton({
+	       onClick : function(event){
+		     var $this=$('#formula');
+			 var selectedText=getFieldSelection($this.get(0));
+			 $this.val("");			 
+		   }
+	   }); 
+	   $('#aBbtncheck').omButton({
+	       onClick : function(event){
+ 		     var fm=$('#formula').val();
+			 if (checkFormula(fm)){
+			     var url="business/Charges/0/checkFormula";
+				 $.ajaxPost({data:{"charge.formula":$('#formula').val()},url:url,msg:false,success:function(json,textStatus){
+			 		   $.omMessageTip.show({content :json.msg,timeout : 2000,type :(json.msgCode==1 ? 'success':'error')});
+				   }
+			     });
+			 }
+		   }
+	   }); 	   	     
+	}
+	
+	</script>	
+</head>
+<body class="dfbody">	
+<div id="search-panel"> 		
+</div>		
+	<div id="nav_charge" title="新增收费项">
+     	<form id="charge">
+		<input  type="hidden" id="id" name="charge.id"  />
+		<input  type="hidden" id="fcode" name="charge.fcode"  />
+		<input  type="hidden" id="flag" name="charge.flag"  />
+		<input type="hidden" id="lastModifyTime" name="charge.lastModifyTime" />
+		<input type="hidden" id="createTime" name="charge.createTime" />
+		 <input type="hidden" id="lastModifyBy" name="charge.lastModifyBy" />
+	 	 <input type="hidden" id="createTime" name="charge.createBy" />
+		<table class="edit-table">
+			<tr>
+  			    <td class="label">费用名称：</td>
+				<td class="field" >
+				  <input id="feeName" name="charge.feeName" validate="rules:['required']" /></td>							
+				<td class="label">业务类型：</td>
+				<td class="field">
+				<input id="businessType" name="charge.businessType" validate="rules:['required']" pattern='combo'  /></td>							
+			</tr>
+			<tr>   			   
+				<td class="label">公式类型：</td>
+				<td class="field" >
+				<input id="formulaType" name="charge.formulaType"  pattern='combo' validate="rules:['required']" editable='false' remote='OpType' value="1" /></td>	
+				<td class="label">计算币种：</td>
+				<td class="field">
+				 <input id="currency" name="charge.currency" pattern='combo' validate="rules:['required']" editable='false' remote='Currency' value="502"/></td>			
+			</tr>
+			<tr>   			   
+				<td class="label">操作区：</td>
+				<td class="field" colspan="3" >
+				 <span><a id="aBbtnadd" class="opt" href="javascript:void(0)">+</a>
+				 <a id="aBbtnsub" class="opt" href="javascript:void(0)">-</a>
+				 <a id="aBbtnmul" class="opt" href="javascript:void(0)">*</a>
+				 <a id="aBbtndiv" class="opt" href="javascript:void(0)">/</a>
+				 <a id="aBbtnkhleft" class="opt" href="javascript:void(0)">(</a>
+				 <a id="aBbtnkhright" class="opt" href="javascript:void(0)">)</a>
+				 <a id="aBbtn0" class="opt" href="javascript:void(0)">0</a>
+				 <a id="aBbtn1" class="opt" href="javascript:void(0)">1</a>
+				 <a id="aBbtn2" class="opt" href="javascript:void(0)">2</a>
+				 <a id="aBbtn3" class="opt" href="javascript:void(0)">3</a>
+				 <a id="aBbtn4" class="opt" href="javascript:void(0)">4</a>
+				 <a id="aBbtn5" class="opt" href="javascript:void(0)">5</a>
+				 <a id="aBbtn6" class="opt" href="javascript:void(0)">6</a>
+				 <a id="aBbtn7" class="opt" href="javascript:void(0)">7</a>
+				 <a id="aBbtn8" class="opt" href="javascript:void(0)">8</a>
+				 <a id="aBbtn9" class="opt" href="javascript:void(0)">9</a>
+				 <a id="aBbtnpoint" class="opt" href="javascript:void(0)">.</a>			 
+				 <a id="aBbtncheck" class="optclear" href="javascript:void(0)">检测公式</a>
+				 <a id="aBbtnclear" class="optclear" href="javascript:void(0)">清除公式</a></span>
+			     </td>				
+			</tr>
+			<tr>   	
+				<td class="label">其他公式：</td>		   
+				<td class="field" colspan="3" >
+				 <span><input id="otherFormula" name="otherFormula"  style="width:160;"/>				
+				 </span>
+				 </td>				
+			</tr>
+			<tr>
+   			    <td class="label">公式设置（<span style="color:red;">请从操作区和其他公式设置此处</span>）：</td>
+				<td class="field" colspan="3">
+					 <textarea id="formula" name="charge.formula" validate="rules:['required']"  onkeydown="noPermitInput(event)" style="ime-mode:disabled;height:50px;"></textarea>	            </td>								
+			</tr>			
+			<tr>
+			    <td class="label">计算条件：</td>
+				<td class="field"  colspan="3"><textarea id="requirement" name="charge.requirement"  ></textarea></td>				
+			</tr>	
+			<tr>				
+				<td class="label">公式使用说明：</td>
+				<td class="field" colspan="3"><textarea id="description" name="charge.description"  style="height:50px;"></textarea></td>			    		</tr>			
+			<tr>
+				<td class="label">最低费用：</td>
+				<td class="field" >
+				<input id="minFee" name="charge.minFee"  pattern='float' validate="rules:['required']" /></td>
+				<td class="label"></td>
+				<td class="field"></td>   			   
+			</tr>			
+		</table>
+		</form>		
+	</div>
+	<div id="buttonbar"></div>		
+</body>
+</html>

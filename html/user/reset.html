@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>百加商城 设置新密码</title>
+<meta content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
+<meta content="手机版百加商城客户端可以随时随地参与预约抢购百加手机，轻松下单购买，实时查询订单信息掌握物流状态，百加商城app手机客户端还有新品信息通知推送功能，所有商品信息随身掌握。" name="description">
+<meta content="百加商城,百加V6手机,百加V6,百加手机,百加商城app,百加商城app下载" name="keywords">
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+<link href="/css/style.css" rel="stylesheet">
+<script type="text/javascript" src="/js/jquery.min.js"></script>
+<script type="text/javascript" src="/js/jquery.form.js"></script>
+<script type="text/javascript" src="/js/common.js"></script>
+<style type="text/css">
+.login_view{padding:1em 3em;}
+.login_view .login_container{overflow:hidden; margin:auto;}
+.login_container h2{font-size:18px; margin:1em 0; font-weight:normal;}
+.input_container{margin-bottom:0.6em;}
+.input_container input{border:none; border-bottom:1px solid #6c6c6c; height:40px; line-height:20px; padding:10px 10px 10px 45px; display:block; font-size:14px; width:100%; display:block;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box;}
+.input_box{position:relative; margin:1em 0;}
+.input_container .username{ background:url(/images/module/icon_12.png) -4px center no-repeat;}
+.input_container .password{ background:url(/images/module/icon_10.png) -4px center no-repeat;}
+.tips_login {color:#999999;font-size:1em;line-height: 1.5;margin: 20px 0;}
+.tips_login a{ color:#2695fd;}
+.login_btn{border:none; width:100%;display:block;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box; }
+.error_ico{position:absolute; width:19px; height:19px; background:url(/images/module/icon_14.png) -16px -16px no-repeat; right:0; top:12px;}
+.error_tips{ position:absolute;right:10px;bottom:35px;color:#fff;font-size:1em;}
+.et_con{ position:relative;}
+.et_con p{padding:6px 10px;min-height:16px;line-height:1.5;background:#fb6f7d;border-radius:3px;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box;}
+.et_con em{position:absolute;bottom:-6px;right:3px;width:9px;height:7px;background:url(/images/module/icon_15.png) no-repeat;}
+.login_reg{ padding:1em 0;line-height:1; font-size:1em;}
+.login_reg a{ color:#2695FD;}
+.mr1{ margin-right:1em;}
+</style>
+</head>
+
+<body>
+<div class="header">
+	<div class="back"><a href="/"><span class="icon-23"></span></a></div>
+	<div class="tit">
+		<h3>设置新密码</h3>
+	</div>
+</div>
+<div class="login_view">
+	<form method="POST" name="loginForm" id="loginForm">
+		<div class="login_container">
+			<h2>设置新密码</h2>
+		</div>
+		<div class="input_container">
+			<div class="input_box">
+				<input type="password" class="username" id="newpwd" placeholder="输入新密码"> 
+				<em class="error_ico"></em>
+				<div class="error_tips">
+					<div class="et_con">
+						<p id="errorMsg"></p>
+						<em></em>
+					</div>
+				</div>
+			</div>
+			<input type="password" class="password" id="surepwd" placeholder="确认新密码">
+		</div>
+		<p class="h_box m20"><a href="javascript:;" onClick="btnSubmit();" class="button active_button flex_1">确定</a></p>
+	</form>
+</div>
+<script type="text/javascript">
+function btnSubmit(){
+	if(!checknewpwd()){
+		return false;
+	}
+	if(!checksurpwd()){
+		return false;
+	}
+	var pwd = trim($("#newpwd").val());
+	var surepwd = trim($("#surepwd").val());
+	var param = getUrlParam("param");
+	var params= [];
+	params.push('userVO.password='+pwd);
+	params.push('param='+param);
+	$.ajax({
+        type:"post",
+        dataType: "json",
+        data:params.join('&'),
+        async:false,//非必须.默认true
+        url: TERMINAL_URL+"/jsonrest/userlogin/Retrieve/0/updatePassword",
+        success: function(data){
+			if(data.msgCode != 1){
+				showTips(data.msg);
+				return;
+			}
+			showTips(data.msg);
+			window.setTimeout(function(){
+				window.location.href = '/user/user-center.html';
+			},1000);
+        }
+	});
+}
+function checknewpwd(){
+	var pwd = trim($("#newpwd").val());
+	var regx =	/^[\S]{6,18}$/;
+	if(pwd == ''){
+		$(".error_ico,.error_tips").show();
+		$("#errorMsg").html("密码不能为空");
+		return false;
+	}
+	if(!regx.test(pwd)) {
+		$(".error_ico,.error_tips").show();
+		$("#errorMsg").html("密码不小于6位数,不多于18位");
+		return false;
+	}
+	$(".error_ico,.error_tips").hide();
+	return true;
+}
+
+function checksurpwd(){
+	var pwd = trim($("#newpwd").val());
+	var surepwd = trim($("#surepwd").val());
+	if(pwd != surepwd){
+		$(".error_ico,.error_tips").show();
+		$("#errorMsg").html("两次密码不一致");
+		return false;
+	}
+	$(".error_ico,.error_tips").hide();
+	return true;
+}
+(function(){
+	 $(".error_ico,.error_tips").hide();
+})();
+</script>
+<p class="hide">
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F27a6edda23c8cced290e66d76fc16a71' type='text/javascript'%3E%3C/script%3E"));
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-55764976-1', 'auto');ga('send', 'pageview');
+</script>
+</p>
+</body>
+</html>

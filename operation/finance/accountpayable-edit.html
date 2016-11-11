@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var params={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+         };
+	$(function() {	
+		$("#search-panel").omPanel({title : "",collapsed:true});	
+	    initValidateForm("accountpayable");
+		var accountPayableId=getIframeParm("accountPayableId");	
+	    if (accountPayableId !=""){
+		     var url="finance/AccountPayable/0/get?accountPayableId="+accountPayableId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					$("#accountpayable").initializeInput({"vo":json.entity}); //初始化
+					$("#customerId").attr("disabled", "disabled"); 
+			   }			
+			 });
+ 	    }else{
+			$("#accountpayable").initializeInput(); //初始化			
+			$("#customerId").initGridDropList(params);
+	    }
+		$('#buttonbar').omButtonbar({
+            	 width : "100%",
+            	 btns : [{label:"保存",
+            		     id:"btnSave" ,
+            		     icons : {left : '/images/icon/add.png'},
+            	 		 onClick: saveAccountPayable
+            			},
+						{separtor:true},
+						{label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);
+						  }
+						 }	           			
+            	 ]
+          });
+	});
+	
+	function saveAccountPayable(){	 
+		if(validateForm("accountpayable")==false)return false;		
+		var url = $("#id").val()=="" ? "finance/AccountPayable/0/add" : "finance/AccountPayable/0/edit";
+		var vo=$("#accountpayable").getVo();
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $("#id").val(json.entity);
+			   $("#btnSave").attr("disabled", "disabled");
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   $('#grid').omGrid('reload');
+		 }});
+	}
+	</script>
+</head>
+<body class="dfbody">
+<div id="search-panel"></div>			
+	<div id="nav_accountpayable" title="新增应收款">
+        <form id="accountpayable">	
+		<input id="id" name="ar.id" type="hidden" />
+		<input id="status" name="ar.status" type="hidden" />
+		<input id="orderId" name="ar.orderId" type="hidden" />
+		<input id="orderNo" name="ar.orderNo" type="hidden" />
+		<input id="payAmt" name="ar.payAmt" type="hidden" />
+		<table class="edit-table">		
+			<tr>
+			    <td class="label">客户：</td>
+				<td class="field"><input id="customerId" name="ar.customerId" validate="rules:['required']"  showtext="ar.customerName" />
+				</td>							
+				<td class="label">币种：</td>
+				<td class="field">
+				   <input id="receivableCur" name="ar.receivableCur" validate="rules:['required']" pattern='combo' editable='false' remote='Currency'/>
+				</td>	
+			</tr>
+			<tr>
+   			    <td class="label">金额：</td>
+				<td class="field"><input id="actualPayAmt" validate="rules:['required']" name="ar.actualPayAmt" pattern='float'/></td>
+				<td class="label">订单类型：</td>
+				<td class="field" >
+				  <input id="orderType" name="ar.orderType" validate="rules:['required']" width="150" pattern='combo' editable='false' 
+				  remote='AccountReceivableOrderType'/>
+				</td>				
+			</tr>
+			<tr>
+   			    <td class="label">费用名称：</td>
+				<td class="field"><input id="itemName" validate="rules:['required']" name="ar.itemName" /></td>
+				<td class="label"></td>
+				<td class="field" ></td>								
+			</tr>
+		</table>
+		</form>	
+	</div>
+	<div id="buttonbar"></div>	
+</body>
+</html>

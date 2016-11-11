@@ -1,0 +1,294 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var params={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+         };
+    var companyID="";     
+	$(document).ready(function(){
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("supplier");
+		var supplierId=getIframeParm("supplierId");
+		if (supplierId !=""){ //编辑状态
+		     var url="business/Supplier/0/get?customerCompanyId="+supplierId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					$("#supplier").initializeInput({"vo":json.entity}); //初始化
+					$("#customerCompanyId").attr("disabled", "disabled");
+					companyID=json.entity.company.id;
+					//加载表格信息
+					reloadTable(json.rows);									
+				}			
+			 });
+ 		 }else{
+			$("#supplier").initializeInput(); //初始化								
+			$("#customerCompanyId").initGridDropList(params);
+		 }
+		
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveSupplier
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }
+				 ,
+				{separtor:true},
+            	{label:"添加银行信息",id:"button3", 
+				  icons : {left : '/images/icon/add.png'},
+				  onClick:function(){
+				      addBankInfo();
+				  }
+				 }	
+		 ]
+        });
+	});
+	
+	//添加银行信息
+	function addBankInfo(){
+		var bTable=$("#bank");
+		var html="";
+		var num=$("#bank tr").length;
+		html=html+"<tr>";
+		html=html+"<td><input type='checkbox' checked='true' name='subBox'></input></td>";
+		html=html+"<td class='field'><input id='id' name='id' type='hidden'/></td>";
+		html=html+"<td class='field'><input id='id' name='id' type='hidden'/></td>";
+		html=html+"<td class='label'>SWIFT CODE：</td>";
+		html=html+"<td class='field' ><input id='swiftCode' name='SwifCode' /></td>";
+		html=html+"<td class='label'>开户行：</td>";
+		html=html+"<td class='field' >";
+		html=html+"<input id='bank' name='BankName'  style='color:gray;' value='填写不能为空' onfocus=javascript:if(this.value=='填写不能为空'){this.style.color='#000';this.value=''};></td>";
+		html=html+"<td class='label'>银行账户：</td>";
+		html=html+"<td class='field' >";
+		html=html+"<input id='bankAccount' name='bankAccount' style='color:gray;'  value='填写不能为空' onfocus=javascript:if(this.value=='填写不能为空'){this.style.color='#000';this.value=''}; /></td>";
+		html=html+"<td class='label'>开户人：</td>";
+		html=html+"<td class='field' ><input id='bankAcountName' name='BankUserName'  /></td>";
+		html=html+"<td class='label'>银行地址：</td>";
+		html=html+"<td class='field'><input id='bankAddress' name='BankAddress'  /></td>";
+		html=html+"<td class='label'>公司地址：</td>";
+		html=html+"<td class='field'>";
+		html=html+"<input id='address' name='CompanyAddress' style='color:gray;' value='填写不能为空' onfocus=javascript:if(this.value=='填写不能为空'){this.style.color='#000';this.value=''}; /></td>";
+		html=html+"<td ><button id='delBtn' onclick=del("+num+")>删除</button></td>"
+		html=html+"</tr>";
+		bTable.append(html);
+	}
+	//重新加载数据
+	function reloadTable(obj){
+		var bTable=$("#bank");
+		var html="";
+		bTable.html('');
+		for(var i=0;i<obj.length;i++){
+			html=html+"<tr>";
+			html=html+"<td><input type='checkbox' checked='true' name='subBox'></input></td>";
+			html=html+"<td class='field' ><input id='SupCompanyId' name='SupCompanyId' type='hidden' value='"+obj[i].supCompanyId+"' /></td>";
+			html=html+"<td class='field' ><input id='id' type='hidden' name='id' value='"+obj[i].id+"'/></td>";
+			html=html+"<td class='label'>SWIFT CODE：</td>";
+			html=html+"<td class='field' ><input id='swiftCode' name='SwifCode' value='"+obj[i].swifCode+"'/></td>";
+			html=html+"<td class='label'>开户行：</td>";
+			html=html+"<td class='field' >";
+			html=html+"<input id='bank' name='BankName'  value='"+obj[i].bankName+"' validate='rules:['required']'/></td>";
+			html=html+"<td class='label'>银行账户：</td>";
+			html=html+"<td class='field' >";
+			html=html+"<input id='bankAccount' name='bankAccount' value='"+obj[i].bankAccount+"' validate='rules:['required']'/></td>";
+			html=html+"<td class='label'>开户人：</td>";
+			html=html+"<td class='field' ><input id='bankAcountName' value='"+obj[i].bankUserName+"' name='BankUserName' /></td>";
+			html=html+"<td class='label'>银行地址：</td>";
+			html=html+"<td class='field'><input id='bankAddress' name='BankAddress'  value='"+obj[i].bankAddress+"'/></td>";
+			html=html+"<td class='label'>公司地址：</td>";
+			html=html+"<td class='field'>";
+			html=html+"<input id='address' name='CompanyAddress'   value='"+obj[i].companyAddress+"' validate='rules:[required]'/></td>";
+			html=html+"<td ><button id='delBtn' onclick=deleteDate("+obj[i].supCompanyId+",+"+obj[i].id+","+i+")>删除</button></td>"
+			html=html+"</tr>";
+		}
+		bTable.append(html);
+	}
+	
+	//删除方法
+	function del(obj){
+		bTable=$("#bank tr").eq(obj).remove();
+	}
+	//后台删除数据方法
+	function deleteDate(num,id,i){
+		var url="business/Supplier/0/delBankInfo?customerCompanyId="+num+"&supplierId="+id;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					$("#supplier").initializeInput({"vo":json.entity}); //初始化
+					$("#customerCompanyId").attr("disabled", "disabled");
+					//加载表格信息
+					$("#bank tr").eq(i).remove();
+					//reloadTable(json.rows);									
+				}			
+			 });
+	}
+	var checkCode="0000";
+	//转换银行填写数据信息
+	function saveBankInfo(){
+		var arrCoin=[];
+		//获取table
+		$(".tableBank input[name='subBox']:checked").each(function(i){
+		   var BankInfo=new Object;
+		   var $this=$(this);
+		   var $tr=$this.parents("tr");
+		   var vo=$tr.getVo();
+		   if (vo["id"]==0){ //新增数据
+		       vo["id"]="";
+		   }
+		   //校验填写是否为空
+		   //开户行
+		   var bankName=vo["BankName"];
+		   //银行账户
+		   var acount=vo["bankAccount"];
+		   //公司地址
+		   var bankAddress=vo["CompanyAddress"];
+		   if((bankName==""||bankName=="填写不能为空")||(acount==""||acount=="填写不能为空")||(bankAddress==""||bankAddress=="填写不能为空")){
+		   	 checkCode="0001";
+		   	 return;
+		   }else{
+		   	 arrCoin.push(vo);
+		   }
+		});
+		return arrCoin;
+	}
+	
+	//保存
+	function saveSupplier(){	 
+	    if(validateForm("supplier")==false)return false;
+		var vo=	$("#supplier").getVo();
+		var bTvo=saveBankInfo();
+		if(checkCode=="0000"){
+			vo["supplerJason"]=JSON.stringify(bTvo);
+			var url = $("#id").val()=="" ? "business/Supplier/0/add" : "business/Supplier/0/edit";
+			if(companyID!=""){
+				vo["customerCompanyId"]=companyID;
+			}
+			$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+				   if(json.rows!=null){
+				   		reloadTable(json.rows);
+				   }
+				   $("#id").val(json.entity.id);
+				   $("#ccode").val(json.entity.ccode);
+				   $("#companyType").val(json.entity.companyType);
+				   $("#createTime").val(json.entity.createTime);
+				   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+				 }
+			});
+		}else{
+			 $.omMessageTip.show({
+                type:'error',
+                title:'注意',
+                content:'请检查保存数据是否为空！'
+            });
+		}
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>
+	<div id="nav_supplier" title="新增供应商">
+        <form id="supplier">	
+		<input id="id" name="sup.id" type="hidden" />
+		<input id="companyType" name="sup.companyType" type="hidden" />
+		<input type="hidden" id="flag" name="sup.flag" />
+		<input type="hidden" id="status" name="sup.status" />
+		<input type="hidden" id="lastModifyTime" name="sup.lastModifyTime" />
+		<input type="hidden" id="createTime" name="sup.createTime" />
+		<input type="hidden" id="lastModifyBy" name="sup.lastModifyBy" />
+ 		<input type="hidden" id="createTime" name="sup.createBy" />
+		<table class="edit-table">		
+			<tr>
+				<td class="label">档案编号(只读)：</td>
+				<td class="field"><input  id="ccode" name="sup.ccode" disabled="" /></td>				
+				<td class="label">客户：</td>
+				<td class="field">
+				 <input id="customerCompanyId" name="customerCompanyId" showtext="sup.company.cname" validate="rules:['required']" />
+				</td>
+			</tr>
+			<tr>
+   			    <td class="label">中文名称：</td>
+				<td class="field" >
+				<input id="cname" name="sup.cname" validate="rules:['required']" /></td>
+				<td class="label">英文名称：</td>
+				<td class="field" >
+				<input id="ename" name="sup.ename" validate="rules:['required']" /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">中文简称：</td>
+				<td class="field" >
+				<input id="csname" name="sup.csname" validate="rules:['required']" /></td>
+				<td class="label">英文简称：</td>
+				<td class="field" >
+				<input id="esname" name="sup.esname" validate="rules:['required']" /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">拼音：</td>
+				<td class="field" ><input id="pinyin" name="sup.pinyin" /></td>
+				<td class="label">邮政编码：</td>
+				<td class="field" ><input id="pcode" name="sup.pcode"  /></td>				
+			</tr>
+			<tr>
+				<td class="label">联系人：</td>
+				<td class="field"><input id="linkMan" name="sup.linkMan"  /></td>
+   			    <td class="label">联系电话：</td>
+				<td class="field" ><input id="tel" name="sup.tel"  /></td>
+			</tr>
+			<tr>
+   			    <td class="label">客户手机号：</td>
+				<td class="field" ><input id="phone" name="sup.phone"  /></td>
+				<td class="label">传真：</td>
+				<td class="field" ><input id="fax" name="sup.fax"  /></td>
+			</tr>
+			<tr>
+   			    <td class="label">备注：</td>
+				<td class="field" colspan="3" ><textarea id="remark" name="sup.remark" style="height:50px;" ></textarea></td>				
+			</tr>
+		</table>
+		</form>	
+	</div>
+	<div class="tableBank">
+	<table id="bank">
+		<tbody></tbody>
+	</table>
+	</div>
+	<div id="buttonbar"></div>	
+</body>
+</html>
+

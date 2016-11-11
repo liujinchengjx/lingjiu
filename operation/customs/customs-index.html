@@ -1,0 +1,639 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-grid-sort.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/jquery.cookie.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	var dialog=null,actualLoadWeight=0.0;
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#customerId").initGridDropList(cusParams);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+					searchData(); 
+			   }
+		});				
+		$('span#button-search-truckbind').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+		             var searchval=$('#txtBlNo').val();
+					 var date = $('#bindDate').val();
+					 var url= "customs/TruckBind/0/searchTruckBind?bindDate="+date+"&blNo="+encodeURI(searchval);
+					 $('#truckGrid').omGrid('setData',url);
+			   }
+		});				
+		dialog=$("#nav_pickTruck").omDialog({autoOpen:false,draggable:false,resizable:false,height: 600,width:880,modal: true,
+				buttons: [
+				{text : "保存", 
+				 click : function(){
+				       $.omMessageBox.confirm({title:'提交确认',content:'您现在选择了捆绑报关单，此动作将生成装车单，确定吗？',
+							   onClose:function(v){if (v){saveEntrucking();}	
+						}});					   
+				 }
+				},{
+					text : "取消", 
+					click : function () {                   
+						dialog.omDialog("close");
+					}
+				}]
+		});	
+		$("#searchTruckBind").initializeInput(); //初始化
+		$('#btnbar').initToolBar();
+					
+		$('#grid').omGrid({
+			limit:20,
+			autoFit:true,
+			singleSelect:false,
+			title : '报关单列表',
+			dataSource :"customs/CustomForm/0/searchCustomForm?useType=3",
+			colModel : [
+						 {header : '子单号', name : 'cfOrderNo', width : 70, align : 'left'},
+						 {header : '原单号', name : 'coOrderNo', width : 70, align : 'left'},
+						 {header : '客户', name : 'receiveCompanyName', width : 110, align : 'left'},
+						 {header : '车辆', name : 'truckName', width : 80, align : 'left'},
+						 {header : '提运单号', name : 'truckBind.blNo', width : 60, align : 'left'},
+						 {header : '报关单号', name : 'customOrderNo', width : 60, align : 'left'},
+						 {header : '状态', name : 'status', width : 60, align : 'left',
+							 renderer : function(colValue, rowData, rowIndex) {
+								return Dictionary.getDictName(Dictionary.CusomFormStatus,colValue);
+							 }
+						 },
+						 {header : '金额', name : 'actualAmt', width : 60, align : 'right'},
+						 {header : '币种', name : 'currency', width : 40, align : 'left',
+							 renderer : function(colValue, rowData, rowIndex) {
+								 return Dictionary.getDictName(Dictionary.Currency,colValue);
+							 }
+						 },
+						 {header : '操作模式', name : 'opType', width : 40, align : 'left',
+								renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.OpType,colValue);
+								}
+						 },
+						 {header : '关税', name : 'actualCustomsAmt', width : 50, align : 'right'},
+						 {header : '增值税', name : 'actualAddAmt', width : 50, align : 'right'},
+						 {header : '报关日期', name : 'customDate', width : 90, align : 'left'}, 	
+						 {header : '成交方式', name : 'dealType', width : 40, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.DealType,colValue);
+								}
+						 },						 
+						 {header : '特殊标识', name : 'specialFlag', width : 100, align : 'left',
+						    renderer : function(colValue, rowData, rowIndex) {
+							    var sep="";
+								if (colValue==""){
+								   return "无";
+								}else{
+								   return Dictionary.getMulDictName(Dictionary.SpecialFlag,colValue);
+								}								
+							}
+						 },
+						 {header : '制单人', name : 'makeOrderMan', width : 60, align : 'center'},
+						 {header : '能否发送', name : 'qpPostFlag', width : 35, align : 'left',sort:'clientSide',
+							renderer : function(colValue, rowData, rowIndex) {
+								return Dictionary.getDictName(Dictionary.QpPostFlag,colValue);
+							}
+						  },
+						  {header : '备注', name : 'remark1', width : 60, align : 'left',
+						     renderer : function(colValue, rowData, rowIndex) {
+								return "<span title='"+colValue+"'> "+colValue+"</span>";
+							 }
+						  }
+						]
+		});	
+		
+		$('#truckGrid').omGrid({
+			height:220,
+			limit:15,
+			autoFit:true,
+			title : '卡车列表',
+			dataSource :"customs/TruckBind/0/searchTruckBind?bindStatus=30",
+			colModel : [
+						 {header : '绑定时间', name : 'bindDate', width : 120, align : 'left'}, 
+						 {header : '车牌(香港)', name : 'truck.carnoHk', width : 100, align : 'left'},
+						 {header : '车牌(大陆)', name : 'truck.carnoCh', width : 100, align : 'left'},
+						 {header : '最新六联单', name : 'blNo', width : 100, align : 'left'},
+						 {header : '状态', name : 'status', width : 50, align : 'left',
+								renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.TruckBindStatus,colValue);
+								}
+						 },
+						 {header : '车辆性质', name : 'purpose', width : 60, align : 'left',
+								renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.TruckBindPurpose,colValue);
+								}
+						 },
+						 {header : '实际载重', name : 'truck.actualLoadWeight', width : 50, align : 'left'},
+						 {header : '配送司机', name : 'driverName', width : 80, align : 'left'}, 
+						 {header : '车辆类型', name : 'truck.type', width : 30, align : 'left',
+							 renderer:function(colValue, rowData, rowIndex) {
+								return Dictionary.getDictName(Dictionary.TruckType,colValue);
+							}
+						 },
+						 {header : '车次', name : 'type', width : 60, align : 'left',
+							   renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.TruckBindType,colValue);
+							   }
+						  }, 
+						 {header : '创建时间', name : 'createTime', width : 100, align : 'left'}
+						],
+			onRowClick:function(rowIndex,rowData,event){
+			     actualLoadWeight=rowData.truck.actualLoadWeight;
+				 $("#actualLoadWeight").html(actualLoadWeight);
+				 selectedBgs(rowData);
+			}
+		});	
+	});
+	function searchData(){
+	    var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#grid').omGrid('setData',"customs/CustomForm/0/searchCustomForm?"+params);
+	}
+	function productClassify(){ 
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！',timeout : 2000});
+			 return;
+		}	
+		if(rowDatas.length > 1 ){
+			$.omMessageTip.show({title : '提示',content : '请选择单行！',timeout : 2000});
+			return false;
+		}	
+		var customOrderIds=rowDatas[0].customOrderId;		
+		if (rowDatas[0].customOrderId<=0){
+		    customOrderIds =rowDatas[0].customOrderIds;
+		}
+	    var paras={customFormId:rowDatas[0].id,customOrderId:customOrderIds,
+		type:1,orderNo:rowDatas[0].cfOrderNo,tabId:"productClassify001"};
+ 	    addNewTab("产品分类","/customs/product-classify.html",paras,function(){
+		   
+	   });     	     
+	}
+	function editCustomForm(){//编辑报关单
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if (rowDatas.length <= 0 ){
+		  $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择编辑行！'});
+		  return;
+	   }		
+	   var paras={customFormId:rowDatas[0].id,tabId:"editCustomForm001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	   addNewTab("编辑报关单","/customs/customs-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });       	
+	}
+	//装车
+	function bindTruck(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择报关单记录！'});
+			 return;
+		}
+		var towh="";
+		for(var i=0;i<rowDatas.length;i++){
+		  if (towh==""){
+		     towh=rowDatas[i].toWh;
+		  }else if (towh != rowDatas[i].toWh){
+		     $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起，到货仓库不相等，请选择到货仓库相等的报关单！'});
+			 return false;
+		  }
+		}
+	    var divshow = $("#currBgs");
+        divshow.text("");// 清空数据
+		var html="<b>当前选择的报关单:</b>";
+		var len=rowDatas.length;
+		var totalGw=0.0;
+		for(var i=0;i<rowDatas.length;i++){
+		   if (rowDatas[i].status<=10){
+			   html=html+"<input type='checkbox' name='currCheckBox' id='"+rowDatas[i].id+"' value='"+rowDatas[i].id;
+			   html=html+"' _trueGw='"+rowDatas[i].gw+"' /><label name='"+rowDatas[i].cfOrderNo+"' for='"+rowDatas[i].id+"' ><b>"+rowDatas[i].cfOrderNo+"</b></label> ";
+			   totalGw=totalGw+rowDatas[i].gw;
+		   }
+		}
+		if ((len>0) && (totalGw>0.0)){
+		     totalGw=totalGw.toFixed(2);
+			 html=html+" <a href='javascript:void(0);' id='delCurrBgs'>删除</a>";
+			 html=html+" <br/> <b>总毛重：<span id='currGw'>"+totalGw+"</span></b>";
+			 divshow.append(html);
+			 $("#delCurrBgs").omButton({
+			     onClick : function(event){		     
+				     deleteCurrBgs();
+			    }
+	         });	  
+		}
+	    dialog.omDialog('open');	
+	}
+	function sendCustomForm(){ //发送
+	     var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			 return;
+		 }	
+		 var orderStatus=25;
+		 if (rowDatas[0].status!=20){
+		 	$.omMessageTip.show({content : "对不起！该报关单必须是审核通过可以生成报关单！",timeout : 2000,type : 'error'});
+			return false;
+		 }
+		 if (rowDatas[0].qpPostFlag!=2){
+			$.omMessageTip.show({content : "对不起！该报关单不能发送！",timeout : 2000,type : 'error'});
+			return false;
+		 }
+	 	 $.omMessageBox.confirm({title:'确认发送',content:'你确定要这样做吗？',onClose:function(v){
+		 if(v){	
+		    var params=[];
+			params.push("customFormId="+rowDatas[0].id);
+			params.push("orderStatus="+orderStatus);
+			var url= "customs/CustomForm/0/auditCustomForm?"+params.join("&");
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+				   $('#grid').omGrid('reload');
+				 }
+			});
+		 }							        
+		}});
+	}
+	
+	function canelCustomForm(){ //发送
+	     var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			 return;
+		 }	
+		 var orderStatus=60;
+		 if (rowDatas[0].status!=10){
+		 	$.omMessageTip.show({content : "对不起！报关单必须是未审核通过才可以撤单！",timeout : 2000,type : 'error'});
+			return false;
+		 }		
+	 	 $.omMessageBox.confirm({title:'确认撤单',content:'你确定要这样做吗？',onClose:function(v){
+		 if(v){
+		    var params=[];
+			params.push("customFormId="+rowDatas[0].id);
+			params.push("orderStatus="+orderStatus);
+			var url= "customs/CustomForm/0/auditCustomForm?"+params.join("&");
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+				   $('#grid').omGrid('reload');
+				 }
+			});
+		 }							        
+		}});
+	}
+	function makeCustoms(){ //生成报关单
+	     var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			 return;
+		 }	
+		 var orderStatus=30;
+		 if (rowDatas[0].status!=25){
+		 	$.omMessageTip.show({content : "对不起！必须是已发送状态才能生成报关单！",timeout : 2000,type : 'error'});
+			return false;
+		 }
+		 if (rowDatas[0].truckId<=0 || rowDatas[0].blNo==""){
+			$.omMessageTip.show({content : "对不起！该报关单还未绑定车辆！",timeout : 2000,type : 'error'});
+			return false;
+		 }
+	 	 $.omMessageBox.confirm({title:'生成报关单确认',content:'生成报关单之后，订单（不可恢复），你确定要这样做吗？',onClose:function(v){
+		 if(v){	
+		    var params=[];
+			params.push("customFormId="+rowDatas[0].id);
+			params.push("orderStatus="+orderStatus);
+			var url= "customs/CustomForm/0/auditCustomForm?"+params.join("&");
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+				   $('#grid').omGrid('reload');
+				 }
+			});
+		 }							        
+		}});
+	}
+	function sortCustomForm(){ //产品排序
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+        if(rowDatas.length <= 0 ){
+        	$.omMessageTip.show({title : '提示',content : '请选择编辑行！',timeout : 2000});
+        	return false;
+        }
+		if(rowDatas[0].status >=40 ){
+        	$.omMessageTip.show({title : '提示',content : '对不起！修改订单的产品必须是通关之前的状态下才可以！',
+			timeout : 2000,type : 'error'});
+        	return false;
+        }
+	    var paras={customFormId:rowDatas[0].id,coOrderNo:rowDatas[0].coOrderNo,
+	    customerName:rowDatas[0].customerName,status:rowDatas[0].status,tabId:"editProduct001"}; //
+	    addNewTab("报关单排序","/customs/customs-sort.html",paras,function(){
+	    });			
+	}
+
+	function selectedBgs(data){ //从数据库里面读取出来
+	   var divshow = $("#selectedBgs");
+       divshow.text("");// 清空数据   
+	   var url="customs/CustomForm/0/getCustomFormByTruckBind?truckBindId="+data.id;
+	   $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+		   var html="<b>"+data.truck.carnoHk+" 已绑捆的报关单：</b>";
+		   var len=json.rows.length;
+		   var totalGw=0.0;
+		   for(var i=0;i<len;i++){
+			   html=html+"<input type='checkbox' name='selectCheckBox' id="+json.rows[i].id;
+			   html=html+" value='"+json.rows[i].id+"' _trueGw='"+json.rows[i].gw+"' /><label for='"+json.rows[i].id+"' >";
+			   html=html+" <b>"+json.rows[i].cfOrderNo+"</b></label>";
+			   totalGw=totalGw+json.rows[i].gw;
+		   }
+		   if(len>0){
+			  totalGw=totalGw.toFixed(2);
+			  html=html+"<br /> <b>总毛重：<span id='gw'>"+totalGw+"</span></b>";
+			  divshow.append(html);
+		   }
+			
+	   	  }
+	   });
+	}
+	function saveEntrucking(){ //装车，这个会提交到数据库中
+	    var rowDatas = $('#truckGrid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起，没有选择车辆，装车失败！'});
+			 return;
+		}
+		if (rowDatas[0].status==30){
+		   $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起，该车辆已装车完毕！'});
+		   return;
+		}
+        var bgsWeight=0.0;
+		if(!isNaN($("#currGw").html())) bgsWeight += parseFloat($("#currGw").html()); 
+		if(!isNaN($("#gw").html())) bgsWeight += parseFloat($("#gw").html()); 
+		if(bgsWeight>actualLoadWeight){
+		    $.omMessageBox.confirm({title:'超载提示',content:'装车的报关单总毛重已经超过'+(actualLoadWeight-bgsWeight)+"实际载重，你确定要继续吗？",
+			    onClose:function(v){
+				if (!v){
+				   return ;
+				}
+		    }});
+		   $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起，报关单总毛重已超载！'});
+		}
+		var cfRecords = $('#grid').omGrid('getSelections',true);
+		var cfOrderIds=new Array();
+		var ids = document.getElementsByName('currCheckBox');
+		if (ids.length<=0) return false;
+        for(var i = 0; i < ids.length; i++){
+            cfOrderIds.push(ids[i].value);
+        }  
+		var vo={"cfe.tranId":rowDatas[0].truck.tranId,"cfe.truckBindId":rowDatas[0].id,
+		"cfe.fromWh":cfRecords[0].fromWh,"cfe.toWh":cfRecords[0].toWh,"cfOrderIds":cfOrderIds.join(",")};
+		var url="customs/CustomFormEntrucking/0/bindEntrucking";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			$('#grid').omGrid('reload');
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});					  											
+			dialog.omDialog("close");
+		  }			
+		 });
+	}
+	function deleteCurrBgs(){
+	   var totalGw=parseFloat($("#currGw").html());
+	   var tempGw=0.0;
+	   $('#currBgs input:checked').each(function(i){
+	       tempGw=parseFloat($(this).attr("_trueGw"));
+		   totalGw=totalGw-tempGw;		   
+ 	       $(this).next('label').remove(); 
+		   this.remove();
+        });
+		$("#currGw").html(totalGw.toFixed(2));
+	}
+	
+	function subInvoice(){ //子发票
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		}	 
+		$.omMessageBox.confirm({title:'是否需要公章',content:'选择是，发票将打上公章，选择否发票则不会打上公章',onClose:function(v){
+			var needSeal=true;
+			if (!v){
+			   needSeal=false;
+			}							            
+			var url=baseUrl+"customs/CustomForm/0/outInvoce?customFormId="+rowDatas[0].id+"&needSeal="+needSeal;
+			showFullScreen(url);
+		}});
+	}	
+	function subContract(){ //子合同
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			return;
+		}	
+		$.omMessageBox.confirm({title:'是否需要公章',content:'选择是，发票将打上公章，选择否发票则不会打上公章',onClose:function(v){
+			var needSeal=true;
+			if (!v){
+			   needSeal=false;
+			}							            
+			var url=baseUrl+"customs/CustomForm/0/outContract?customFormId="+rowDatas[0].id+"&needSeal="+needSeal;
+			showFullScreen(url);
+		}});   
+	}
+	function subPacking(){ //子箱单
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			return;
+		}
+		$.omMessageBox.confirm({title:'是否需要公章',content:'选择是，发票将打上公章，选择否发票则不会打上公章',onClose:function(v){
+			var needSeal=true;
+			if (!v){
+			   needSeal=false;
+			}							            
+			var url=baseUrl+"customs/CustomForm/0/outPacking?customFormId="+rowDatas[0].id+"&needSeal="+needSeal;
+			showFullScreen(url);
+		}}); 
+	}
+	
+	function previewCustomForm(){//预览报关单
+ 		rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,timeout : 2000,content : '请选择记录！'});
+			 return;
+		}	
+	    var url="/customs/customs-preview.html?customFormId="+rowDatas[0].id
+	    showFullScreen(url);
+	}	
+	function epidemicFlag(){ //标记消毒
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content:'请选择记录！'});
+			 return;
+		}
+		var url ="customs/CustomForm/0/specialFlag?customFormId="+rowDatas[0].id;
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+		   $('#grid').omGrid('reload');
+		   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		 }
+		});
+	}
+	function delayCustomForm(){ //暂缓上货
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+	    if(rowDatas.length <= 0 ){
+		   $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+		   return false;
+		}
+		if(rowDatas[0].status == 50 ){
+			$.omMessageTip.show({content : "对不起！该货物正在暂缓",timeout : 2000,type : 'error'});
+			return false;
+		}
+	   $.omMessageBox.confirm({title:'暂缓确认',content:'报关订单暂缓之后，将可能需要重新选定车辆，你确定要这样做吗？',onClose:function(v){
+		 if(v){
+			var url ="customs/CustomForm/0/delayCustomForm?customFormId="+rowDatas[0].id;
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   $('#grid').omGrid('reload');
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			  }
+			});			
+		 }							        
+		}});
+	}
+		
+	function restoreCustomForm(){ //继续上货
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length != 1 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content:'请选择记录(选择单行)！'});
+			return false;
+		}
+		if(rowDatas[0].status != 50 ){
+			$.omMessageTip.show({content : "对不起！必须是暂缓上货状态下才可以继续上货！",timeout : 2000,type : 'error'});
+			return false;
+		}
+	   $.omMessageBox.confirm({title:'继续上货确认',content:'报关订单上货之后，订单（不可恢复），你确定要这样做吗？',onClose:function(v){
+		 if(v){ 	
+			var url ="customs/CustomForm/0/restoreCustomForm?customFormId="+rowDatas[0].id;
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   $('#grid').omGrid('reload');
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			  }
+			});
+		  }							        
+		}});
+	}
+	function previewTariff(){ //预览关税
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		var url="/customs/customs-tariff-preview.html?id="+rowDatas[0].id;
+	    showFullScreen(url);	
+	}
+	function previewVat(){//预览增值税
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		var url="/customs/customs-vat-preview.html?id="+rowDatas[0].id;
+	    showFullScreen(url);	
+	}
+	/**********预览公路舱单***********/
+	function previewRoadOrder(){ 
+		 var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		var url="/customs/customs-roadorder-preview.html?customFormId="+rowDatas[0].id;
+	    showFullScreen(url);	
+	}
+	//子状态
+	function getStatus(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+	   }
+	   var paras={ids:rowDatas[0].id,eoOrderNo:rowDatas[0].cfOrderNo,tabId:"orgStatus001"};
+ 	   addNewTab("定单状态列表","/order/orderSatePage.html", paras,function(){
+	   });       
+	}
+	</script>
+	
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">		
+	<tr >
+	    <td>合同号：</td>    
+		<td><input id="cfOrderNo" name="cfOrderNo"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>报关单号：</td>    
+		<td><input id="customOrderNo" name="customOrderNo"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>提运单号：</td>    
+		<td><input id="blNo" name="blNo"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>客户：</td>   
+		<td><input id="customerId" name="customerId"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  showtext="" /></td>
+		<td>操作模式：</td>   
+	    <td colspan="2"><input id="opType" name="opType" pattern='combo' editable='false' width="130" remote="OpType" /></td>
+	</tr>
+	<tr >	
+	   <td>成交方式：</td>   
+	   <td><input id="dealType" name="dealType" pattern='combo' editable='false' remote="DealType" /></td>
+	   <td>订单状态：</td>   
+	   <td><input id="orderStatus" name="orderStatus" pattern='combo' editable='false'  width="120" remote="CusomFormStatus" /></td>
+	   <td>币种：</td>
+	   <td><input id="currency" name="currency" pattern='combo' editable='false' width="120" remote="Currency"/></td>
+	   <td>报关时间：</td>
+	   <td><input id="startTime" name="startTime" pattern='date' editable='false' /></td>
+	   <td>到：</td>
+	   <td><input id="endTime" name="endTime" pattern='date' editable='false' /></td>
+	   <td colspan="2"><span id="button-search">搜索</span></td>
+	</tr>	
+  </table> 	 
+</div>			
+	<div id="nav_customs" title="报关单">
+       <div id="btnbar"></div>	
+       
+	   <div id="grid"></div>	  
+	</div>	
+	<div id="nav_pickTruck" title="捆绑车辆" style="display:none;">
+	    <div id="searchTruckBind">
+		     <table class="edit-panel">		
+				<tr>   	
+					<td><img src="/images/icon/search.png" border="0"></td>		    
+					<td><input type="text" id="txtBlNo" class="ui-textbox" /></td>
+					<td ><input id="bindDate" name="bindDate"  pattern='date' /></td>
+					<td ><span id="button-search-truckbind">搜索</span></td>						
+				</tr>	
+			 </table> 	 
+		</div>
+		<div style="margin:10px 0px 10px 0px;background-color:#FFFFCC; height:50px;" id="currBgs">
+		</div>
+		<div style="margin:10px 0px 10px 0px;height:50px;" id="selectedBgs">
+		</div>
+		<div style=" font-style:normal; font-weight:bold;">车辆实际载重：<span id="actualLoadWeight"></span></div>
+		<div id="truckGrid"></div>		
+	</div>
+</body>
+</html>

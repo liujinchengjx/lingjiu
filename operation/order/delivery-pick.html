@@ -1,0 +1,365 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>  
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(document).ready(function(){   
+		 $("#search-panel").omPanel({title :"客户："+getIframeParm("customerName")+" 仓库："+
+		 Dictionary.getDictName(Dictionary.Warehouse,getIframeParm("wh")),collapsible:true});
+		 $("#search-panel").initializeInput(); //初始化	
+		 $("#abtnSearch").omButton({onClick : function(event){
+			  searchData();
+		 }});		
+		searchData();
+		$(".mutitable").omPanel({title : "<span id='tips' ></span>&nbsp;<b>当前选择的数量：<span id='selectQty' ></span></b>",
+		collapsible:true, collapsed: false,collapsible: true, closable: false,height:'560px'});
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"暂存",
+				 id:"btnAdd" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveStockOutToCache
+				},
+				{separtor:true},
+            	{label:"清除暂存",id:"btnCollect", 
+				  icons : {left : '/images/icon/op-edit.png'},
+				  onClick: function(){
+				      $.omMessageBox.confirm({title:'清除缓存',content:'您现在选择了清除缓存，确定要清除吗？',
+							   onClose:function(v){
+							       if (v){removeStockOut();}							        
+							   }});
+					}
+				 },
+				{separtor:true},
+            	{label:"关闭",id:"btnClose", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		       ]
+        });									
+	});
+	function searchData(){
+		 var vo=$("#search-panel").getVo();	
+		 var params=[];		 
+		 params.push("customerId="+getIframeParm("customerId"));
+		 params.push("associatedId="+getIframeParm("customerId"));
+		 params.push("refOrderId="+getIframeParm("refOrderId"));
+		 params.push("wh="+getIframeParm("wh"));
+		 params.push("stockInNo="+vo.gsinNo);
+		 params.push("pn="+vo.pn);
+		 params.push("customerOrderNo="+vo.customerOrderNo);
+ 		 params.push("orgCartonNo="+vo.orgCartonNo);
+		 params.push("businessType="+getIframeParm("businessType"));
+		 params.push("manageModel="+1);
+		 var searUrl="warehouse/StockIn/0/searchCartonAndPacking?"+params.join("&");
+		 var param={callback:loadStockInData,url:searUrl};
+		 $('#pageingbar').iniGscmGrid(param);
+	}
+	function loadStockInData(json){
+		 var mutitable=$(".mutitable");
+		 $(".tbody_item").remove();
+		 var html="";
+		 for(var i=0;i<json.rows.length;i++){
+			 var carton=json.rows[i];
+			 html=html+"<div class='tbody_item'>";
+			 html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+			 html=html+" <tr> ";
+			 html=html+"   <td width='30'><strong><span name='cartonNo'>"+carton.cartonNo+"</span>";
+			 html=html+"       <span name='cartonId' style='display:none' >"+carton.id+"</span></strong></td>";
+			 html=html+"   <td width='50' style='text-align:left;><strong><span name='orgCartonNo'>"+carton.orgCartonNo+"</span></strong></td>";
+			 html=html+"   <td width='115'><span name='stockInNo'>"+carton.stockInNo+"</span></td>";
+			 html=html+"   <td width='60' style='text-align:right;margin-right:2px;'>";
+			 html=html+"     <span name='nw'>"+carton.nw+"</span>";
+			 html=html+"   </td>";
+			 html=html+"   <td width='60' style='text-align:right;margin-right:2px;'>";
+			 html=html+"     <span name='gw'>"+carton.gw+"</span>";
+			 html=html+"   </td>";
+			 html=html+"   <td class='tbody_product' width='950'>";
+			 var packings=carton.stockInPackings;
+			 var currOutQty=0;
+			 for(var j=0;j<packings.length;j++){
+				 var packing=packings[j];
+				 html=html+"    <dl>"; 
+				 html=html+"      <dd style='display:none'>";
+				 html=html+"          <span name='stockInPackingId'>"+packing.id+"</span>";
+				 html=html+"          <span name='productId'>"+packing.productId+"</span>";
+				 html=html+"      </dd>";
+				 html=html+"      <dd style='float:left;text-align:left;width:110px;'>";
+				 html=html+"          <span name='productName'>";
+				 html=html+        ""+ (packing.product.productName==""?"&nbsp":packing.product.productName)+"</span>";
+				 html=html+"      </dd>";
+				 html=html+"      <dd style='float:left;text-align:left;width:110px;'>";
+				 html=html+"          <span name='pn'>"+packing.product.pn+"</span>";
+				 html=html+"      </dd>";
+				 html=html+"      <dd style='float:left;text-align:left;width:80px;'>";
+				 html=html+"          <span name='brand'>"+packing.product.brand+"</span>";
+				 html=html+"      </dd>";
+				 html=html+"      <dd style='float:left;text-align:center;width:70px;'>";
+				 html=html+"          <span name='origin'>"+packing.product.origin+"</span>";
+				 html=html+"      </dd>";
+				 html=html+"      <dd style='float:left;text-align:center;width:70px;'>";
+				 html=html+"          <span name='customerOrderNo'>";
+				 html=html+              (packing.customerOrderNo==""?"&nbsp":packing.customerOrderNo)+"</span>";
+				 html=html+"      </dd>";
+				 html=html+"      <dd style='float:left;text-align:right;width:80px;'>";
+				 html=html+"          <span name='inQty'>"+packing.inQty+"</span>";
+				 html=html+"      </dd>";
+				 html=html+"      <dd style='float:left;text-align:right;width:80px;'>";
+				 html=html+"          <span name='outQty'>"+packing.outQty+"</span>";
+				 html=html+"       </dd>";
+				 html=html+"      <dd style='float:left;text-align:right;width:80px;'>";
+				 html=html+"          <span name='tempOutQty'>"+packing.tempOutQty+"</span>";
+				 html=html+"       </dd>";
+				 currOutQty = packing.inQty-packing.tmpOutQty-packing.tempOutQty;
+				 currOutQty = currOutQty<=0?0:currOutQty;
+				 html=html+"      <dd style='float:left;text-align:right;width:80px;'>";
+				 html=html+"	     <input type='text' value='"+currOutQty+"' ";
+				 html=html+"         style='width:90%;margin-right:2px;text-align: right;' ";
+				 html=html+"          validate="+"rules:['required']"+" name='currOutQty' />";
+				 html=html+"      </dd>";
+				 html=html+"     <dd style='float:left;text-align:right;width:80px;'>";
+				 html=html+"          <span name='dateCode'>"+(packing.dateCode==""?"&nbsp":packing.dateCode)+"</span>";
+				 html=html+"     </dd>";
+				 html=html+"     <dd style='float:left;text-align:right;width:60px;'>";
+				 html=html+"          <span name='lotNum'>"+(packing.lotNum==""?"&nbsp":packing.lotNum)+"</span>";
+				 html=html+"     </dd>";
+				 html=html+"     <dd style='float:left;text-align:center;width:50px;'>";
+				 html=html+"         <input type='checkbox' value='checkbox1' name='subBox' style='width:20px; height:20px;' onclick='setIndex(this)'/>";
+				 html=html+"         <input type='hidden' name='currenctIndex' />";
+				 html=html+"         <span name='cartonId' style='display:none' >"+packing.cartonId+"</span>";
+				 html=html+"	 </dd>";				 
+				 html=html+"	</dl>";
+			 }
+			 html=html+"  </td>";
+			 html=html+"</tr>";
+			 html=html+"</table></div>";
+		 } 
+		 mutitable.append(html);
+		 var $subBox = $("input[name='subBox']");
+		 $('#checkAll').click(function (){ 
+			 $('input[name="subBox"]').attr("checked",this.checked);
+			 this.checked?$subBox.parent().parent().addClass("highlight"):$subBox.parent().parent().removeClass("highlight");
+			 currenySelectQty();
+		 });
+		 $subBox.click(function(){
+			$("#checkAll").attr("checked",$subBox.length == $("input[name='subBox']:checked").length ? true : false);
+			this.checked ?$(this).parent().parent().addClass("highlight"):$(this).parent().parent().removeClass("highlight");
+			currenySelectQty();
+		 });
+		 initValidateForm("deliverydetail");
+		 $("input[name=currOutQty]").omNumberField({allowDecimals:false});
+		 $("#tips").html(json.entity);
+	}
+	//给赋值
+	var currenctIndex = 1;
+	//记录被选中的ID们    
+	function setIndex(obj){
+		//先获取
+		if(obj.checked==true){
+			//获取对应的input
+			var d= $(obj).parent();
+			var c=d.children('[name="currenctIndex"]');
+			c.val(currenctIndex);
+			currenctIndex++;
+		}
+	}
+	function saveStockOutToCache(){//保存到服务端的session缓存
+	    if(validateForm("deliverydetail")==false) return false;  
+		var len=$("input[name='subBox']:checked").length;
+		if (len<=0){
+			$.omMessageTip.show({content :"对不起,没有选择的记录！",timeout : 2000,type : 'error'});
+		   return false;
+		}
+		if (checkStockInData()){//checkStockInData() 
+			customerId=getIframeParm("customerId");
+			wh=getIframeParm("wh");
+			var tempStockInCartonInfos=getTempStockInCartonInfos(customerId,wh);
+			var temp = JSON.stringify(tempStockInCartonInfos); 
+			var url = "warehouse/StockIn/0/stockOutToCache";
+			$.ajaxPost({data:{"stockInPackings":temp,refOrderId:getIframeParm("refOrderId")},url:url,msg:false,success:function(json,textStatus){
+			    $("#tips").html(json.entity);
+				currenySelectQty();
+				$.omMessageTip.show({content : json.msg,timeout : 2000,type:'success'});	 		  
+			 }
+			}); 
+		}
+	}
+	function getTempStockInCartonInfos(customerId,wh){
+		var tempStockInCartonInfos=[];
+		var cartonIds=[];		   
+		$("input[name='subBox']:checked").each(function(i){
+			 var $this=$(this);
+			 var $tr=$(this).parents("tr");
+			 var cartonId=$tr.find("span[name='cartonId']").html();
+			 if (cartonIds.in_array(cartonId)==false){
+			    cartonIds.push(cartonId);
+				$tr.find("dl").each(function(i){
+					var $dl=$(this);
+					var chk=$dl.find("input[name='subBox']")[0];
+					if(chk.checked){
+					   var tempStockInCartonInfo={};
+					   tempStockInCartonInfo.customerId=customerId;
+					   tempStockInCartonInfo.wh=wh;
+					   tempStockInCartonInfo.cartonId=cartonId;
+					   tempStockInCartonInfo.stockInPackingId=$dl.find("span[name='stockInPackingId']").html();
+					   var currOutQty=parseInt($dl.find("input[name='currOutQty']").val());
+					   //设置当前下标
+					   tempStockInCartonInfo.index=parseInt($dl.find("input[name='currenctIndex']").val());
+					   tempStockInCartonInfo.qty=currOutQty;
+					   var tempOutQty=parseInt($dl.find("span[name='tempOutQty']").html());
+					   tempOutQty=tempOutQty+currOutQty;
+					   $dl.find("span[name='tempOutQty']").html(tempOutQty);
+					   var inQty=parseInt($dl.find("span[name='inQty']").html());
+					   var outQty=parseInt($dl.find("span[name='outQty']").html());
+					   currOutQty=inQty-outQty-tempOutQty;
+					   $dl.find("input[name='currOutQty']").val(currOutQty);
+					   tempStockInCartonInfos.push(tempStockInCartonInfo);
+					}
+			 	});
+			 }
+		});
+		return tempStockInCartonInfos;
+	}
+	//检测拆分数量
+	function checkStockInData(){ 
+		var tempStockInCartonInfos=[];
+		var cartonIds=[];
+		var ret=true;		   
+		$("input[name='subBox']:checked").each(function(i){
+			 var $this=$(this);
+			 var $dl=$(this).parent().parent("dl");
+			 var cartonId=parseInt($this.next("span").html());
+			 var inQty=parseInt($dl.find("span[name='inQty']").html());
+		     var outQty=parseInt($dl.find("span[name='outQty']").html());
+		     var currOutQty=parseInt($dl.find("input[name='currOutQty']").val());
+		     var tempOutQty=parseInt($dl.find("span[name='tempOutQty']").html());
+			 if (currOutQty<=0){
+			     $.omMessageBox.alert({type:'error', title:'失败',content:"箱号："+cartonId+" 数量不能为负数或是0"});
+			     ret=false; 
+			 }
+			 if (ret){
+				 var qty=(inQty-outQty-tempOutQty); // inQty-outQty-tempOutQty-currOutQty;
+				 if (qty<=0){
+					$.omMessageBox.alert({type:'error', title:'失败',content:"箱号："+cartonId+" 已无数量已用完！"});
+					ret=false; 
+				 }
+			 }
+			 if (ret){
+				 qty=inQty-outQty-tempOutQty-currOutQty;
+				 if (qty<0){
+					$.omMessageBox.alert({type:'error', title:'失败',content:"箱号："+cartonId+" 已超出可拆分数量！"});
+					ret=false; 
+				 }
+			 }
+			 if (ret==false){
+				return false;
+			 }	
+		});
+		return ret;
+	}
+	function removeStockOut(){ //清除暂存
+	    var url = "warehouse/StockIn/0/removeStockOutInfo";
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+		     $("#tips").html("");
+			 currenySelectQty();
+			$('#pageingbar').refreshData();
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type:'success'});
+		}
+		});   
+	}
+	function currenySelectQty(){
+	    var selectedQty=0.0;
+	    var countIndex=0.0;	   
+	   $("input[name='subBox']:checked").each(function(i){
+	         var $this=$(this);
+			 var $dl=$(this).parent().parent("dl");
+			 var currOutQty=parseInt($dl.find("input[name='currOutQty']").val());
+			 selectedQty=selectedQty.add(currOutQty);
+	   });
+	   $("#selectQty").html(selectedQty); 
+	}
+</script>
+</head>
+<body class="dfbody">	
+	<div id="search-panel">
+        <form id="delivery">	
+		 <table class="edit-panel">		
+			<tr>
+				<td>入库单号：</td>	    
+				<td ><input id="gsinNo" name="gsinNo" onfocus="myFocus(this,'#f4eaf1')" 
+				      onblur="myblur(this,'white')" tip="这里输入GSIN号" /></td>
+				<td>型号/品名：</td>
+				<td ><input id="pn" name="pn" onfocus="myFocus(this,'#f4eaf1')" 
+				      onblur="myblur(this,'white')" tip="这里输入品名/型号" /></td>
+				<td>客户识别号：</td>
+				<td ><input id="customerOrderNo" name="customerOrderNo" onfocus="myFocus(this,'#f4eaf1')" 
+				      onblur="myblur(this,'white')" /></td>
+				
+				<td>客户箱号：</td>
+				<td ><input id="orgCartonNo" name="orgCartonNo" onfocus="myFocus(this,'#f4eaf1')" 
+				      onblur="myblur(this,'white')" /></td>
+				<td ><span id="abtnSearch">搜索</span></td>						
+			</tr>	
+		 </table>		
+		</form>	
+	</div>
+	<div id="buttonbar"></div>	
+		<form id="deliverydetail">	
+			<div class="mutitable">
+				<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+					 <thead>
+						   <tr>
+							  <td width="30">箱号</td>
+							  <td width="50">客户箱号</td>
+							  <td width="115">入仓单号</td>
+							  <td width="60" style="text-align:right">净重</td>
+							  <td width="60" style="text-align:right">毛重</td>
+							  <td width="110">品名</td>
+							  <td width="110">型号</td>
+							  <td width="80">品牌</td>
+							  <td width="70">原产地</td>
+							  <td width="70">客户识别号</td>
+							  <td width="80" style="text-align:right">数量</td>
+							  <td width="80" style="text-align:right">已出库数量</td>
+							  <td width="80" style="text-align:right">暂存数量</td>
+							  <td width="80">可出库数量</td> 
+							  <td width="80">DateCode</td> 
+							  <td width="60">LotNum</td> 
+							  <td width="50" style="text-align: center;">
+								<input type="checkbox" name="checkAll" id="checkAll" style="width:20px; height:20px;" />
+								<label for="selectAll"></label>
+							  </td>
+						   </tr>
+						</thead>
+					</table>
+			 </div>
+			 <div id="pageingbar"></div>
+		</form>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---增值服务订单</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {
+	    var workOrderId=getQueryString("id");
+		if (workOrderId !=""){
+		     var url="order/WorkOrder/0/previewWorkOrder?workOrderId="+workOrderId;
+		  	 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){	
+				   var vcTb=$("#tbItems");
+				   $("#workOrderNo").html(json.entity.workOrderNo);
+				   $("#customerName").html(json.entity.customerName);
+				   $("#workInfo").html(json.entity.workInfo);
+				  // $("#etOrderId").html(json.entity.etOrderId);
+				  // $("#deliverId").html(json.entity.deliverId);
+				   $("#refOrderNo").html(json.entity.refOrderNo);
+				    $("#stockOutRemark").html(json.entity.stockOutRemark);
+				   
+				   var html="";
+				   var workList=json.entity.workOrderDetailList;
+				   for(var i=0;i<workList.length;i++){
+						var work=workList[i];
+						html=html+"<tr><td height='20' align='left'>"+work.serviceName+"</td>";
+						html=html+"<td height='20' align='center'>"+work.feeUnit+"</td>";
+						html=html+"<td height='20' align='left'>"+work.variableName+"</td>";
+						html=html+"<td height='20' align='right'>"+work.count+"</td></tr>";
+				   }
+				   html=html+"<tr><td height='20' align='left' colspan='4' ></td></tr>";
+				   html=html+"<tr><td height='20' align='left' colspan='4' >以下是未收费用:</td></tr>";
+				   var addList=json.entity.notInDetailAdValueList;
+				   for (var i=0;i<addList.length;i++){
+						var av=addList[i];
+						html=html+"<tr><td height='20' align='left' colspan='2' >"+addList[i]+"</td>";
+						i=i+1;
+						html=html+"<td height='20' align='left' colspan='2' >"+addList[i]+"</td></tr>";
+				   }
+				   vcTb.append(html);	
+				}			
+			 });
+ 		 }
+	});	
+	</script>
+</head>
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin:0px;">	
+	<div style="width:80%;text-align:center;padding-top:20px; padding-left:20px; margin-left:40px;">
+		<div>
+			<table id="tbHeader" class="listContent"  style='border-collapse: collapse; table-layout: fixed;width: 760pt;'>
+			  <col style='mso-width-source: userset; mso-width-alt: 3360; width: 50pt'>
+			  <col style='mso-width-source: userset; mso-width-alt: 3808; width: 70pt'>	
+			  <col style='mso-width-source: userset; mso-width-alt: 3360; width: 50pt'>
+			  <col style='mso-width-source: userset; mso-width-alt: 3808; width: 70pt'>	
+			  <tbody>
+			     <tr>
+				    <td class="clsInvoiceRBT">订单编码:</td>
+					<td class="clsInvoiceRBT" align="left"><span id="workOrderNo"></span></td>
+					<td class="clsInvoiceRBT">客户:</td>
+					<td class="clsInvoiceRBT" align="left"><span  id="customerName"></span></td>
+				 </tr>
+				 <tr>
+					<td class="clsInvoiceRBT">引用号码:</td>
+					<td class="clsInvoiceRBT" colspan="3" align="left"><span  id="refOrderNo"></span></td>
+				 </tr>
+                  <tr>
+				    <td class="clsInvoiceRBT">工作单事项:</td>
+					<td class="clsInvoiceRBT" colspan="3" align="left"><span  id="workInfo"></span></td>
+				 </tr> 
+				 <tr>
+				    <td class="clsInvoiceRBT">发货单注意事项:</td>
+					<td class="clsInvoiceRBT" colspan="3" align="left"><span  id="stockOutRemark"></span></td>
+				 </tr>            
+				 </tbody>
+			  </table>			
+		</div>
+		<div style=" margin-top:5px;">
+			<table id="tbItems" class="listContent"  style='border-collapse: collapse; table-layout: fixed;width: 760pt;'>
+			  <col style='mso-width-source: userset; mso-width-alt: 3360; width: 50pt'>
+			  <col style='mso-width-source: userset; mso-width-alt: 3808; width: 70pt'>	
+			  <col style='mso-width-source: userset; mso-width-alt: 3360; width: 50pt'>
+			  <col style='mso-width-source: userset; mso-width-alt: 3808; width: 70pt'>	
+				<tbody>
+					<tr>
+						<td class="clsInvoice" height="20" align="center" width="20%"><b>费用名称</b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="22%"><b>单位</b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="12%"><b>收费方式</b></td>
+						<td class="clsInvoiceRBT" height="20" align="right" width="12%"><b>数量</b></td>
+					</tr>
+				 </tbody>
+			</table>
+		</div>
+	</div>
+</body>
+</html>

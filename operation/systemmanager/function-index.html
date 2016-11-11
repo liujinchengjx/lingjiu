@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+    	 var dialog=null;
+         $(document).ready(function() {
+			  $("#search-panel").omPanel({title : "搜索",collapsible:true});
+			  $('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		          onClick : function(event){
+		            var searchval=$('#txtFunction').val();
+					 $('#grid').omGrid('setData',"systemmanager/FrameworkButtons/0/searchButtons?searchValue="+encodeURI(searchval));
+			   	  }
+			  });
+			 
+			  $('#grid').omGrid({
+				autoFit:true,
+				height:580,
+				width:'100%',
+				limit:20,
+                title : '功能列表',
+                dataSource :"systemmanager/FrameworkButtons/0/searchButtons",
+                colModel : [  
+                             {header : '功能名称', name : 'text', width : 120, align : 'left'}, 
+							 {header : '功能编码', name : 'hander', width : 120, align : 'left'}, 
+                             {header : '所属菜单', name : 'menu', width : 200,align : 'left'} ]
+            });				
+		}); 
+    </script>
+</head>
+<body class="dfbody">
+<div id="search-panel">
+ 	 <span><input type="text" class="input-text" id="txtFunction" /><span id="button-search">搜索</span></span>	
+</div>		
+	<div id="nav_function" title="新增功能">
+		<div class="separator"></div>		
+	</div>
+	<div id="buttonbar"></div>	
+	<div id="grid"></div>
+</body>
+</html>

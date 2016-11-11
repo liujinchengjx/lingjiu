@@ -1,0 +1,222 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+	<script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>  
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript"><!--
+	var typeName="";	
+	var refOrder=getIframeParm("etOrderId");
+	var workOrderId=getIframeParm("workOrderId");		
+	var deliverId=getIframeParm("deliverId");
+	var refOrderId=(refOrder>0)?refOrder:(deliverId>0)?deliverId:workOrderId;
+	$(document).ready(function() {
+	    $("#search-panel").omPanel({title : "",collapsed:true});
+	    $("#panel").omPanel({title : "",collapsible:true, collapsed: false,collapsible: true, closable: false,height:'410'});
+		initValidateForm("workorder");		
+		loadValueAddService(refOrder);
+		if (workOrderId !=""){
+		     var url="order/WorkOrder/0/getWorkOrder?workOrderId="+workOrderId;
+		  	 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				  $("#workorder").initializeInput({"vo":json.entity}); //初始化
+				  //判断仓库
+				  var wh=json.entity.wh;
+				  if(wh=="WH0001"){
+				  	$("#wh").val("香港仓");
+				  	$("#coinValue").val("港币");
+				  }else if(wh=="WH0002"){
+				  	$("#wh").val("南山仓");
+				  	$("#coinValue").val("人民币");
+				  }else{
+				  	$("#wh").val("上海仓");
+				  	$("#coinValue").val("人民币");
+				  }
+                }			
+			 });
+ 		 }else{
+			$("#workorder").initializeInput(); //初始化			
+		 }
+		
+		$('#buttonbar').omButtonbar({
+            	 width : "100%",
+            	 btns : [{label:"保存",
+            		     id:"btnSave" ,
+            		     icons : {left : '/images/icon/add.png'},
+            	 		 onClick:  saveWorkOrder
+            			},
+            			{separtor:true},
+						{label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);
+						  }
+						 }	           
+					]
+          }); 	  
+		
+		var params={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:test,
+                dataSource : "business/Customer/0/searchCusCompany?searchValue=",
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+         };
+		 $("#customerId").initGridDropList(params);
+		 
+	});	
+	function test(){
+	   $("#customerId").setData( "business/Customer/0/searchCusCompany?searchValue=");
+	}
+	function saveWorkOrder(){	     
+		 if(validateForm("workorder")==false)return false;
+		 var vo=$("#workorder").getVo();
+		 var selectedNodes = addValueTree.omTree('getChecked',true);
+		 selectedNodes=getSelectedValueAddService(selectedNodes);
+		 var woDetails=[],tempscodeArr=[];
+		 for (var i=0;i<selectedNodes.length;i++){ 
+			var woDetail={};
+			if(selectedNodes[i].workOrderDetailId>0){
+			   woDetail["id"]=selectedNodes[i].workOrderDetailId;
+			   woDetail["flag"]=1; 
+			}else{
+			   woDetail["flag"]=2; 
+			}
+			woDetail["workOrderId"]=vo["wo.id"];
+			woDetail["serviceName"]=selectedNodes[i].pidName;
+			woDetail["feeUnit"]=selectedNodes[i].feeUnit;
+			woDetail["valueAddedServicesId"]=selectedNodes[i].addValueId;
+			woDetail["variableName"]=selectedNodes[i].text;
+			woDetail["scode"]=selectedNodes[i].id;
+			woDetail["count"]= selectedNodes[i].count;
+			woDetail["remark"]= selectedNodes[i].remark;
+			tempscodeArr[i]=selectedNodes[i].id;
+			woDetails.push(woDetail);
+		}
+		for (var i=0;i<currValueAddArr.length;i++){
+		    if(tempscodeArr.in_array(currValueAddArr[i])==false){
+			   var woDetail={};
+			   woDetail["scode"]=currValueAddArr[i]; 
+			   woDetail["flag"]=3; //表示要删掉的意思
+			   woDetails.push(woDetail);
+			}
+		}
+		if(woDetails.length<=0) return false;
+		 
+		 var woDetailList= JSON.stringify(woDetails); 
+		 vo["workOrderDetails"]=woDetailList;
+		 var url ="order/WorkOrder/0/saveWorkOrder";
+		 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){					
+		       $("#btnSave").attr("disabled", "disabled");
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		   }
+		 });
+	}
+	function getSelectedValueAddService(selectedNodes){//获取选中的子节点
+	     var tempArr=[];
+		 for (var i=0;i<selectedNodes.length;i++){ 
+			  var addValueId=selectedNodes[i].addValueId;
+			  if (addValueId>0){
+				 tempArr.push(selectedNodes[i]);
+			  }
+		  }
+		  return tempArr;
+	}
+	function loadValueAddService(refOrder){
+		var params=[];
+		//refOrderId=(rowData.etOrderId>0)?rowData.etOrderId:(rowData.deliverId>0)?rowData.deliverId:rowData.id;
+		params.push("type="+getIframeParm("type"));
+		params.push("refOrderId="+refOrderId);
+	    var url="business/ValueAddedServices/0/loadValueAddedServicesTree?"+params.join("&");
+		currValueAddArr=[];
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+		   addValueTree=$("#addValueTree").omTree({
+					dataSource : json.rows,
+					showCheckbox:true,
+					showIcon:false,
+					simpleDataModel: true,
+					onCheck : function(nodeData){
+						chkSingleNodes(nodeData);
+						   addValueTree.omTree('expand',nodeData);
+					}
+			}); 
+			if (json.entity!=null){
+			   //$("#workorder").initializeInput({"vo":json.entity}); //初始化
+			   $.each(json.entity.workOrderDetailList, function(i, obj){
+					currValueAddArr.push(obj.scode);
+					var target = addValueTree.omTree("findNode", "id", obj.scode);
+					addValueTree.omTree('check',target);
+			   });
+		   }
+		 }
+		});
+	 }
+	--></script>	
+</head>
+<body class="dfbody">
+<div id="search-panel"></div>
+<div id="nav_workorder" title="新增工作单">
+   <form id="workorder">	
+	 <input type="hidden" id="id" name="wo.id" />
+	 <input type="hidden" id="status" name="wo.status" />
+	 <input type="hidden" id="deliverId" name="wo.deliverId" />
+	 <input type="hidden" id="etOrderId" name="wo.etOrderId" />
+	 <input type="hidden" id="type" name="wo.type" />
+	 <input type="hidden" id="refOrderNo" name="wo.refOrderNo" />
+	 <input type="hidden" id="lastModifyTime" name="wo.lastModifyTime" />
+	 <input type="hidden" id="createTime" name="wo.createTime" />
+	 <input type="hidden" id="lastModifyBy" name="wo.lastModifyBy" />
+	 <input type="hidden" id="serviceMan" name="wo.serviceMan" />
+	 <input type="hidden" id="createBy" name="wo.createBy" />
+	 <input type="hidden" id="createBy" name="wo.makeDate" />
+	 <table class="edit-table">		
+		<tr>   			    
+			<td class="label">订单编号(只读)：</td>
+			<td class="field" ><input id="workOrderNo" name="wo.workOrderNo" disabled="" /></td>
+			<td class="label" >客户：</td>
+			<td class="field" ><input id="customerId" name="wo.customerId" showtext="customerName" validate="rules:['required']" /></td>
+		</tr>	
+		<tr>   			    
+			<td class="label">仓库：</td>
+			<td class="field" ><input id="wh"  disabled='true'/></td>
+			<td class="label" >报价币种</td>
+			<td class="field" ><input id="coinValue" disabled="true"/></td>
+		</tr>			
+	</table>
+	</form>		
+</div>
+<div id="buttonbar"></div>
+<div id="panel" >
+		<div style="width:400px;height:auto;float:left;margin:0 0 0 5px;display:inline; ">
+			<ul id="addValueTree"></ul>
+		</div>
+		<div id="workorder" style="width:500px;height:auto;float:left;margin:0 0 0 5px;display:inline;"> 
+			<span style="font-size:12px;"><b>工作事项：</b></span><br />
+			<textarea id="workInfo" name="wo.workInfo"  style="width:100%;height:350px;"></textarea>
+		</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,59 @@
+*{margin:0;padding:0}
+input,textarea,select{-webkit-appearance:none;border:none;outline: none;background: transparent;border-radius:0;}
+
+@media screen and (min-width: 320px) and (max-width: 359px) {
+    html{font-size: 10px;}
+}
+@media screen and (min-width: 360px) and (max-width: 375px) {
+    html{font-size: 12px;}
+}
+@media screen and (min-width: 375px) and (max-width: 640px) {
+    html{font-size: 13px;}
+}
+.page-wrap{width: 100%;min-width: 320px;max-width: 640px;margin:0 auto;}
+.menu{width: 100%;}
+.menu img{width: 100%;display: block}
+.goods-name{padding-left: 1.6rem;box-sizing: border-box}
+.btn-default{position: absolute;left:7rem;width: 14px;top:1.2rem}
+.order-head{width: 100%;height: 4rem;line-height: 4rem;padding: 0 1rem;font-size: 1.4rem;color: #fff;background: #91c1a1;box-sizing: border-box}
+.order-list{height:3.5rem;position: relative;background: #fff;padding:0 1rem;box-sizing: border-box;border-top: 1px solid #ecedee;}
+.order-item .mb{margin-bottom: 1rem;}
+.order-list dt{position: absolute;left:10px;top:0;height: 3.5rem;line-height:3.5rem;font-size:1.2rem;color: #000;width:6rem; }
+.order-list dd{width: 100%;padding-left:6rem;box-sizing: border-box;height: 100%}
+.order-list  input[type="text"]{width: 100%;height: 100%;font-size: 1.2rem;}
+.order-list input{color: #868686}
+.order-list .cost,.order-sub .cost{color: #f23030;}
+.border-bg{display: block;width: 100%;}
+.order-spec{height:auto;padding:1rem;border-bottom: 1px solid #ecedee;}
+.payway{position: relative}
+.payway img{width: 14px;position: absolute;left:6rem;top:.2rem;}
+.payway p{width: 100%;padding-left: 2rem;box-sizing: border-box;line-height: 2rem}
+.order-spec dd{color: #868686}
+.order-spec p{line-height: 1.5rem;font-size: 1.2rem}
+.order-sub{height: 3.5rem;background: #fff;border-top: 1px solid #ecedee;border-botton: 1px solid #ecedee;}
+.order-sub .cost{margin-left: 1rem;}
+.order-sub span{display: inline-block;height: 3.5rem;line-height: 3.5rem;float:right;font-size: 1.2rem;}
+.btn-sub{float: right;width: 40%;background: #f23030;color: #fff;font-size: 1.4rem;text-align: center;line-height: 3.5rem;height: 3.5rem}
+.mt25{margin-top: 2.5rem;}
+/*发货通知*/
+.fahuo{padding: 1.5rem 1rem;background: #fff;}
+.fahuo dl{margin-top: 2rem;font-size: 1rem;}
+.fahuo dl:first-child{margin-top: 0;}
+.fahuo dt{color: #000}
+.fahuo dd{color: #868686}
+/*订单查询*/
+.phone-query img{width: 1.5rem;display: block;margin-top:1rem }
+.phone-query dt{width: 2.5rem;}
+.phone-query dd{padding-left: 2.5rem}
+.btn-query{width: 70%;margin: 0 auto;height: 2.6rem;line-height: 2.6rem;border-radius: 5px;background: #f23030;color: #fff;text-align: center;
+    margin-top: 1.5rem;margin-bottom: 1rem;}
+.query-tip{font-size: 1.2rem;color: #808082;padding: 0 1rem;line-height: 2rem;}
+.mb25{margin-bottom: 2.5rem}
+.mr20{margin-right: 2rem}
+/*关注微信公众号*/
+.qcode-content{background: #fff;padding: 3rem 0;}
+.qcode-content img{display: block;width: 50%;margin: 0 auto;}
+.qcode-content p{font-size: 1.2rem;line-height: 2.5rem;text-align: center}
+.code-txt-top{color: #8e8e8e}
+.code-txt-bt{coloe:#000;}
+.code-txt-bt span{color: #56ae46}

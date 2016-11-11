@@ -1,0 +1,670 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>百加商城 商品结算</title>
+<meta content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
+<meta content="手机版百加商城客户端可以随时随地参与预约抢购百加手机，轻松下单购买，实时查询订单信息掌握物流状态，百加商城app手机客户端还有新品信息通知推送功能，所有商品信息随身掌握。" name="description">
+<meta content="百加商城,百加V6手机,百加V6,百加手机,百加商城app,百加商城app下载" name="keywords">
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+<script type="text/javascript" src="/js/jquery.min.js"></script>
+<script type="text/javascript" src="/js/common.js"></script>
+<script type="text/javascript" src="/js/jquery.form.js"></script>
+<link href="/css/style.css" rel="stylesheet">
+<style type="text/css">
+.sepa{background-color:#f4f4f4;height:.9em;border:0 solid #eee;border-width:1px 0}
+.checkout_address .item{position:relative;padding:1.7em 3em 1.7em 1.5em}
+.checkout_address .item .p{line-height:2em}
+.checkout_address .item .p span{font-size:1.5em;color:#666}
+.checkout_address .edit:after{content:'\0020';display:block;position:absolute;top:50%;right:1.5em;margin:-.5em 0 0 -.5em;width:1em;height:1em;border-top:.2em solid #9b9b9b;border-right:.2em solid #9b9b9b;-webkit-transition:.2s ease;-webkit-transition-delay:0s;-moz-transition:.2s ease;-o-transition:.2s ease;transition:.2s ease;	-webkit-transform:rotate(45deg);-moz-transform:rotate(45deg);-ms-transform:rotate(45deg);-o-transform:rotate(45deg);transform:rotate(45deg)}
+.checkout_info{padding:1em 0}
+.checkout_info .item{position:relative;padding:0 1.5em .5em;line-height:2.5em}
+.checkout_info .item .tit{display:inline-block;font-size:1.5em;color:#999;width:6em}
+.checkout_info .item .val{font-size:1.5em;color:#666}
+.checkout_info .item .edit{position:absolute;right:0;top:0;width:5em;text-align:center}
+.checkout_info .item .edit span{font-size:1.2em;color:#f60}
+.checkout_info .item .tips{position:absolute;right:1.5em;top:0;color:#999}
+.checkout_info .item .tips span{vertical-align:middle;font-size:1.1em}
+.checkout_info .item .ico-ques:before{content:'?';display:inline-block;font-size:1.1em;line-height:1.27273em;text-align:center;width:1.09091em;height:1.09091em;margin-right:.27273em;background-color:#ddd;color:#fff;vertical-align:middle;-webkit-border-radius:1em;-moz-border-radius:1em;-ms-border-radius:1em;-o-border-radius:1em;border-radius:1em}
+.checkout_info .body .inner{display:inline-block}
+.checkout_info .body .child{display:inline-block;margin:0 .7em .7em 0;border:1px solid #ccd1d9;padding:1px;text-align:center;-webkit-transition:border-color .2s;-webkit-transition-delay:ease;-moz-transition:border-color .2s ease;-o-transition:border-color .2s ease;transition:border-color .2s ease}
+.checkout_info .body .child span{margin:0 1.3em;display:inline-block;font-size:1.5em;line-height:2.53333em;color:#999}
+.checkout_info .body .child:last-child{margin-right:0}
+.checkout_info .body .active{border:2px solid #f60;padding:0}
+.checkout_info .body .input{display:block;padding:0 1.2em}
+.checkout_info .body .input input{width:100%;border:0 none;font-size:1.4em;line-height:2.42857em;color:#333}
+.checkout_info .body .input input::-webkit-input-placeholder{color:#ccc}
+.checkout_list .item{border-top:1px solid #eee}
+.checkout_list .item:first-child{border-top:0 none}
+.checkout_list .head{position:relative;padding:0 0 0 1.7em}
+.checkout_list .head span{font-size:1.5em;color:#666;line-height:2.66667em}
+.checkout_list .head:after{content:'\0020';display:block;position:absolute;top:50%;right:1.5em;margin:-.8em 0 0 -.5em;width:1em;height:1em;border-top:2px solid #9b9b9b;border-left:2px solid #9b9b9b;-webkit-transition:.2s ease;-webkit-transition-delay:0s;-moz-transition:.2s ease;-o-transition:.2s ease;transition:.2s ease;-webkit-transform:scaleY(1) rotate(225deg);-moz-transform:scaleY(1) rotate(225deg);-ms-transform:scaleY(1) rotate(225deg);-o-transform:scaleY(1) rotate(225deg);transform:scaleY(1) rotate(225deg)}
+.checkout_list .head.active:after{margin-top:-.3em;-webkit-transform:scaleY(-1) rotate(225deg);-moz-transform:scaleY(-1) rotate(225deg);-ms-transform:scaleY(-1) rotate(225deg);-o-transform:scaleY(-1) rotate(225deg);transform:scaleY(-1) rotate(225deg)}
+.checkout_list .body{border-top:1px solid #eee}
+.checkout_list .coupon .child{display:block;margin:.7em;border:1px solid #ccd1d9;padding:1px;text-align:center;-webkit-transition:border-color .2s;-webkit-transition-delay:ease;-moz-transition:border-color .2s ease;-o-transition:border-color .2s ease;transition:border-color .2s ease}
+.checkout_list .coupon .child span{margin:0 1.3em;display:block;font-size:1.5em;text-overflow:ellipsis;white-space:nowrap; overflow:hidden;line-height:2.53333em;color:#999}
+.checkout_list .coupon .active{border:2px solid #f60;padding:0}
+.checkout_list .coupon .inputBox{padding:.7em;}
+.checkout_list .coupon .btn_box{ width:9em; float:right;}
+.checkout_list .coupon .input_box{ margin-right:10em;}
+.checkout_list .coupon .input_box .input{ width:100%; font-size: 1.235em;}
+.checkout_list .coupon .btn_box .hide{ display:none;} 
+.checkout_list .product .child{border-top:2px dotted #e5e5e5;position:relative;margin:0 1.5em;padding:2em 0 1.8em 7.5em}
+.checkout_list .product .child:first-child{border-top:0 none}
+.checkout_list .product .child .pic{position:absolute;left:.5em;top:1em;width:6em; height:6em;}
+.checkout_list .product .child .pic img{width:100%; height:100%;}
+.checkout_list .product .child .tit,.checkout_list .product .child .attr{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.checkout_list .product .child .tit span,.checkout_list .product .child .attr span{font-size:1.5em;line-height:1.4em;color:#666;vertical-align:middle}
+.checkout_list .product .child .tit .ico,.checkout_list .product .child .attr .ico{display:inline-block;padding:0 .7em;background-color:#f66;-webkit-border-radius:.2em;-moz-border-radius:.2em;-ms-border-radius:.2em;-o-border-radius:.2em;border-radius:.2em;margin-right:.5em;font-size:1em;line-height:1.4em;color:#fff}
+.checkout_list .product .child .attr span{font-size:1.2em;line-height:1.75em;color:#87888c}
+.checkout_settle{padding:1.2em 1.5em 4em}
+.checkout_settle .pt{line-height:2.4em}
+.checkout_settle .pt span{font-size:1.5em;color:#666}
+.checkout_settle .pt .right{float:right}
+.checkout_settle .hot span{color:#f60}
+.checkout_settle .btn{margin:1.4em 0 0}
+</style>
+</head>
+
+<body>
+<div class="header">
+	<div class="back"><a href="/"><span class="icon-23"></span></a></div>
+	<div class="tit">
+		<h3>提交订单</h3>
+	</div>
+	<div class="right">
+		<ul>
+			<li class="cart"><a title="购物车" href="/order/cart-index.html"><span class="icon-2"></span><span class="tip hide" id="ShoppingCartNum"></span></a></li>
+		</ul>
+	</div>
+</div>
+<form method="post" name="dataForm" id="dataForm">
+<input id="FormReset" type="reset" class="hide"/>
+<input id="resource1" type="hidden" name="resource" value="3">
+<input id="resource" type="hidden" name="orderVO.resource" value="3">
+<input type="hidden" name="orderVO.invoiceTitle" id="invoiceTitle" value="">
+<input type="hidden" name="orderVO.invoiceType" id="invoiceType" value="0">
+<div class="checkout_address">
+	<ul id="addr_list"></ul>
+</div>
+<div class="sepa"></div>
+<div class="checkout_info">
+	<div class="item">
+		<div class="head">
+			<span class="tit">支付方式</span><span class="val">在线支付</span>
+		</div>
+	</div>	
+	<div class="item">
+		<div class="head">
+			<span class="tit">配送方式</span>
+			<span class="val" id="transWay"></span>
+		</div>
+	</div>
+	<div class="item">
+		<div class="head">
+			<span class="tit">送货时间</span>
+			<span class="val">周一至周五可配送</span>
+			<div class="edit" id="change_delivery"><span>修改</span></div>
+		</div>
+		<div class="body hide">
+			<div class="child active" id="delivery_1"><span>周一至周五可配送</span></div>
+			<div class="child" id="delivery_2"><span>周一至周五、周末均可配送</span></div>
+			<div class="child" id="delivery_3"><span>仅周末配送</span></div>
+		</div>
+		<input type="hidden" name="orderVO.deliveryPeriod" id="deliveryPeriod" value="1">
+	</div>
+	<div class="item">
+		<div class="head">
+			<span class="tit">发票信息</span>
+			<span class="val">不开发票</span>
+			<div class="edit" id="change_invoice"><span>修改</span></div>
+		</div>
+		<div class="body hide">
+			<div class="child active" id="invoice_0"><span>不开发票</span></div>
+			<div class="child" id="invoice_1"><span>个人发票</span></div>
+		</div>
+		<input type="hidden" name="orderVO.isInvoice" id="isInvoice" value="0">
+	</div>
+</div>
+<div class="sepa"></div>
+<div class="checkout_list">
+	<div class="item" id="conCodeBox">
+		<div class="head"><span class="tit">使用优惠券</span></div>
+		<div class="body coupon hide" id="conCodeList">
+			<div class="inputBox clearfix hide" id="coupon_input">
+				<div class="btn_box">
+					<a href="javascript:;" class="baijia_button" id="checkDiscountCode"><span>使用</span></a>
+					<a href="javascript:;" class="baijia_button hide" id="cancelDiscountCode"><span>取消</span></a>
+				</div>
+				<div class="input_box"><input type="text" class="input" placeholder="填写优惠券" id="discountCodeId"></div>
+			</div>
+		</div>
+		<input type="hidden" name="conCode" id="discountCodePost" value="">
+	</div>
+	<div class="item hide" id="jiaCurrencyBox">
+		<div class="head"><span class="tit">使用加币</span></div>
+		<div class="body coupon hide">
+			<div class="inputBox clearfix">
+				<div class="btn_box">
+					<a href="javascript:;" class="baijia_button" id="useJcoin"><span>使用</span></a>
+					<a href="javascript:;" class="baijia_button hide" id="cancelJcoin"><span>取消</span></a>
+				</div>
+				<div class="input_box"><input type="text" class="input" placeholder="填写要使用的加币数量" id="jiaCurrencyAmt" onkeyup="this.value=this.value.replace(/\D/g,'')"></div>
+			</div>
+		</div>
+		<input type="hidden" name="jiaCurrencyUsedCount" id="jiaCurrencyPost" value="">
+	</div>
+	<div class="item" id="proListBox">
+		<div class="head"><span class="tit">商品清单：共<strong id="proNum"></strong>件商品</span></div>
+		<div class="body product hide" id="proList"></div>
+	</div>
+</div>
+<div class="sepa"></div>
+<div class="checkout_settle">
+	<div class="pt">
+		<span>商品金额合计</span>
+		<span class="right"><strong id="totalPrice"></strong>元</span>
+	</div>
+	<div class="pt">
+		<span>运费</span>
+		<span class="right"><strong id="transCost"></strong>元</span>
+	</div>
+	<div class="pt hide">
+		<span>优惠券抵扣</span>
+		<span class="right">-<strong id="discountCost"></strong>元</span>
+	</div>
+	<div class="pt hide">
+		<span>加币抵扣</span>
+		<span class="right">-<strong id="jCoinCost"></strong>元</span>
+	</div>
+	<div class="pt hot">
+		<span>订单金额</span>
+		<span class="right"><strong id="totalPrice_transCost"></strong>元</span>
+	</div>
+	<div class="btn"><a href="javascript:;" class="baijia_button" onClick="btnSubmitBefore();"><span>去结算</span></a></div>
+</div>
+</form>
+<script type="text/javascript">
+var GLOBAL={
+	balance:0,//加币余额
+	price:0,//订单余额
+	discountPrice:0,//优惠金额
+	isUseDiscount:0,//是否用优惠券
+	isUseJcoin:0,//是否用加币
+	jiaCurrencyAmt:0,//使用的加币
+	discountCode:''//优惠码
+}
+function btnSubmitBefore(){
+	if($("#popinfo").html() != '' && $("#popinfo").html() != null){
+		var k = window.confirm($("#popinfo").html());
+		if(k){
+			btnSubmit();
+		}
+	}else{
+		btnSubmit();
+	}
+}
+function btnSubmit(){
+	$('#dataForm').ajaxSubmit({
+		url:TERMINAL_URL+'/jsonrest/mobile/order/ShoppingCart/0/order',
+		type : 'post',
+		dataType : 'json',
+		error : function(){return;},
+		beforeSubmit:validateData,
+		success: function(data) {
+			//响应返回的业务处理  
+			if(data.msgCode==3){
+				window.location.href = "/user/login.html";
+				return;
+			}else if(data.msgCode==1){
+				if(data.entity.payflag == 1){
+					showTips("支付成功,即将跳转至订单详情页面");
+					var t = window.setTimeout(function(){
+						window.location.href = "/order/order-detail.html?type=1&id="+data.entity.id;
+					},1000);
+				}else if(data.entity.payflag == 0){
+					window.location.href = '/pay/weixin/pay.html?showwxpaytitle=1&id='+data.entity.id;
+				}
+			}else{
+				showTips(data.msg);
+				window.setTimeout(function(){
+					window.location = "/order/cart-index.html";
+				},500);
+			}
+		}
+	});
+}
+function validateData(){
+	if(!validate.validateConsigneeAddressId()){
+		return false;
+	}
+	return true;
+}
+var validate = (function(){
+	return {
+		validateConsigneeAddressId:function(){
+			if(!$.trim($("#consigneeAddressId").val())){
+				showTips('请添加收货地址！');
+				return false;
+			}
+			return true;
+		}
+	}				
+})();
+function getCartConfirmList(){
+	$.ajax({
+		url:TERMINAL_URL+'/jsonrest/mobile/order/ShoppingCart/0/confirm?resource='+getResource(),//必须,不能为空
+		type:'get',//非必须.默认get
+		data:'',
+		dataType:'json',//非必须.默认text
+		cache:false,//非必须.默认false
+		async:false,
+		timeout:30000,//非必须.默认30秒
+		error:function(){}, //非必须
+		success:function(data){
+			if(data.msgCode==3){
+				window.location.href = "/user/login.html";
+				return;
+			}
+			if(data.msgCode!=1)	{
+				window.location.href = '/order/cart-index.html';
+				return;
+			}
+			//收货地址
+			var customerConsignees=data.entity.consigneeAddressVOList;
+			if(customerConsignees == null || customerConsignees == ''){
+				customerConsignees = [];
+			}
+			var html='';
+			for(var i=0,length=customerConsignees.length;i<length;i++){
+				if(customerConsignees[i].isDefault == 1){
+					html += '<li class="item edit" onclick="checkAddr();"><div class="p"><span>';
+					html += customerConsignees[i].address;
+					if(customerConsignees[i].postcode != ''){
+						html += ' ('+customerConsignees[i].postcode+')';
+					}
+					html += '</span></div><div class="p"><span>';
+					html += customerConsignees[i].name;
+					html += ' ';
+					html += customerConsignees[i].mobile;
+					html += '</span></div></li><input type="hidden" name="orderVO.consigneeAddressId" id="consigneeAddressId" value="'+customerConsignees[i].id+'">';
+				}
+			}
+			if(customerConsignees.length > 0 && html == ''){
+				html += '<li class="item edit" onclick="checkAddr();"><div class="p"><span>';
+				html += customerConsignees[0].address;
+				html += ' (';
+				html += customerConsignees[0].postcode;
+				html += ')</span></div><div class="p"><span>';
+				html += customerConsignees[0].name;
+				html += ' ';
+				html += customerConsignees[0].mobile;
+				html += '</span></div></li><input type="hidden" name="orderVO.consigneeAddressId" id="consigneeAddressId" value="'+customerConsignees[0].id+'">';
+			}
+			if(html == ''){
+				html += '<li class="item edit" onclick="addAddr();"><div class="p"><span>添加地址</span></div></li><input type="hidden" name="orderVO.consigneeAddressId" id="consigneeAddressId" value="">';	
+			}
+			$("#addr_list").html(html);
+			html = '';
+			if(parseInt(data.entity.transCost) > 0){
+				html = '顺丰速递 （配送费'+ toPenny(parseInt(data.entity.transCost))+'元）';
+			}else if(parseInt(data.entity.transCost) == 0){
+				html = '顺丰速递 （免费配送）';
+			}
+			$("#transWay").html(html);
+			$("#proNum").html(data.entity.productCount);
+			if(data.entity.jiaMoneyVO != null){
+				$("#jiaCurrencyBox").show();
+			}
+			html = '';
+			var carts=data.entity.shoppingCartVOList;
+			var plans=data.entity.supplyPlans;
+			var popInfo = [];
+			var noGoods = [];
+			var goodsNotEnough = [];
+			for(var i=0,length=carts.length;i<length;i++){
+				html += '<div class="child"><div class="pic"><img src="';
+				if(carts[i].mainPicturesVO != null){
+					html += PHOTO_URL;
+					html += carts[i].mainPicturesVO.url3
+				}else{
+					html +='/images/nopic/index.gif';
+				}
+				html += '" onerror="this.src=\'/images/nopic/index.gif\'"></div><div class="tit">';
+				if(carts[i].isGift == 1){
+					html += '<span class="ico">赠</span>';
+				}
+				if(carts[i].proPreferentialPrice>0){
+					html += '<span class="ico">惠</span>';
+				}
+				if(carts[i].increasePurchaseFlag=="Y"){
+					html += '<span class="ico">加价购</span>';
+				}
+				html += '<span>';
+				html += carts[i].proName + ' ' +carts[i].proColor;
+				html += '</span></div><div class="attr"><span>';
+				html += '价格：';
+				if(carts[i].increasePurchaseFlag=="Y"){
+					html += toPenny(carts[i].increasePurchasePrice);
+				}else{
+					html += toPenny(carts[i].proPrice - carts[i].proPreferentialPrice);
+				}
+				html += '元 &nbsp; &nbsp;数量:';
+				html += carts[i].num;
+				html += ' &nbsp; &nbsp;小计：';
+				if(carts[i].increasePurchaseFlag=="Y"){
+					html += toPenny(carts[i].increasePurchasePrice);
+				}else{
+					html += toPenny(carts[i].num*(carts[i].proPrice - carts[i].proPreferentialPrice));
+				}
+				html += '元</span></div></div>';
+				if(plans[carts[i].productId].msgCode == 2){
+					popInfo.push(carts[i].proName+' 正在备货中,预计'+plans[carts[i].productId].expectTime+'到货');
+				}else if(plans[carts[i].productId].msgCode == 3){
+					noGoods.push(carts[i].proName);
+				}else if(plans[carts[i].productId].msgCode == 4){
+					goodsNotEnough.push(carts[i].proName);
+				}
+			}
+			if(noGoods.length>0){
+				alert('您选购的：'+noGoods.join("\n")+'\n暂时无货，请返回购物车删除该商品');
+				window.location.href = ('/order/cart-index.html');
+			}
+			if(goodsNotEnough.length>0){
+				alert('您选购的：'+goodsNotEnough.join("\n")+'\n库存不足，请返回购物车修改购买数量');
+				window.location.href = ('/order/cart-index.html');
+			}
+			if(popInfo.length>0){
+				$("#popinfo").html('您选购的：'+popInfo.join('\n')+'\n到货后我们将第一时间为您发货，给你带来的不便，敬请谅解！\n点击“确定”将继续提交订单。');
+			}
+			$("#proList").html(html);
+			$("#totalPrice").html(toPenny(data.entity.productPriceAmt));
+			$("#transCost").html(toPenny(data.entity.transCost));
+			$("#totalPrice_transCost").html(toPenny(data.entity.orderAmount));
+			getCouponList(data.entity.couponsInfo);
+			bindEvent();
+		}//非必须
+	});
+}
+function bindEvent(){
+	var checkDiscountCodeNode = document.getElementById('checkDiscountCode');
+	var cancelDiscountCodeNode = document.getElementById("cancelDiscountCode");
+	var useJcoinNode = document.getElementById("useJcoin");
+	var cancelJcoinNode = document.getElementById("cancelJcoin");
+	checkDiscountCodeNode.onclick = checkDiscountCode;
+	cancelDiscountCodeNode.onclick = cancelDiscountCode;
+	useJcoinNode.onclick = useJcoin;
+	cancelJcoinNode.onclick = cancelJcoin;
+	$('#change_delivery,#change_invoice').click(function(){
+		$(this).parent().siblings('.body').show();
+		$(this).hide();
+	});
+	$("#delivery_1,#delivery_2,#delivery_3").click(function(){
+		var id = $(this).attr('id').split('_')[1];
+		$(this).addClass('active').siblings('.child').removeClass('active');
+		$("#deliveryPeriod").val(id);
+		$(this).parents('.item').find('span.val').html($(this).find('span').html());
+	});
+	$("#invoice_0,#invoice_1").click(function(){
+		var id = $(this).attr('id').split('_')[1];
+		$(this).addClass('active').siblings('.child').removeClass('active');
+		$("#isInvoice").val(id);
+		$(this).parents('.item').find('span.val').html($(this).find('span').html());
+		if(id == '1'){
+			$("#invoiceTitle").val('个人');
+			$("#invoiceType").val('1');
+		}else{
+			$("#invoiceTitle").val('');
+			$("#invoiceType").val('0');
+		}
+	});
+	$("#conCodeBox .head,#jiaCurrencyBox .head,#proListBox .head").click(function(){
+		if($(this).siblings('.body').css('display') == 'none'){
+			$(this).addClass('active');
+			$(this).siblings('.body').show();
+		}else{
+			$(this).removeClass('active');
+			$(this).siblings('.body').hide();
+		}
+	});
+	$("#conCodeList .child").click(function(){
+		$(this).addClass('active').siblings('.child').removeClass('active');
+		var ct = $(this).attr('coupontype');
+		var cn = $(this).attr('coupon');
+		if(ct == '1'){
+			cancelDiscountCode();
+			$("#coupon_input").hide();
+			$("#discountCodeId").val(cn);
+			checkDiscountCode();
+		}
+		if(ct == '2'){
+			cancelDiscountCode();
+			$("#coupon_input").slideDown();
+		}
+	});
+}
+function getCouponList(data){
+	if(data == null){$("#coupon_input").show();return;}
+	var length = data.length;
+	if(length <1){$("#coupon_input").show();return;}
+	var type = '';
+	var html = '';
+	for(var i=0;i<length;i++){
+		type = data[i].purpose=='10'?'百加手机':(data[i].purpose=='20'?'配件':(data[i].purpose=='30'?'组合产品':'全部商品'));
+		html += '<div class="child" coupontype="1" coupon="'+data[i].conNo+'"><span>满'+toPenny(data[i].useCondition)+'元减'+toPenny(data[i].amount)+'元 用于购买'+type+' 有效期至'+data[i].endTime+'</span></div>';
+	}
+	html += '<div class="child" coupontype="2"><span>使用其他优惠码</span></div>';
+	$("#conCodeList").html(html + $("#conCodeList").html());
+}
+function checkAddr(){
+	window.location.href = '/order/cart-address.html';
+}
+function addAddr(){
+	window.location.href = '/user/address-edit.html?type=cart';
+}
+function checkDiscountCode(){
+	var discountCode = $.trim($('#discountCodeId').val());
+	if(discountCode == ''){
+		showTips("请输入优惠码");
+		return;
+	}
+	var url = '/jsonrest/mobile/order/ShoppingCart/0/useConCode?';
+	var param = 'conCode='+discountCode;
+	if(GLOBAL.isUseJcoin == 1){
+		param += '&jiaCurrencyUsedCount='+$.trim($("#jiaCurrencyPost").val());
+	}
+	$.ajax({
+		url: TERMINAL_URL+url+param,
+		type: 'post',
+		dataType:'json',
+		cache:false,
+		async:false,
+		timeout:30000,
+		error: function(){},
+		success: function(data){
+			if(data.msgCode==3){
+				window.location.href = "/user/login.html";
+			}
+			if(data.msgCode!=1){
+				showTips(data.msg); 
+				return;
+			}
+			if(null != data.entity){
+				GLOBAL.discountPrice = toPenny(data.entity.preferentialAmt);
+				GLOBAL.discountCode = data.entity.conCode;
+				GLOBAL.jiaCurrencyAmt = data.entity.jiaCurrencyAmt;
+				GLOBAL.isUseDiscount = 1;
+				GLOBAL.price = toPenny(data.entity.orderAmount);
+				$('#totalPrice_transCost').html(toPenny(data.entity.orderAmount));
+				$("#discountCost").html(GLOBAL.discountPrice).parents('div.pt').show();
+				$("#discountCodeId").attr('disabled','disabled');
+				$("#discountCodePost").val(GLOBAL.discountCode);
+				$("#checkDiscountCode").addClass('hide');
+				$("#cancelDiscountCode").removeClass('hide')
+				if(GLOBAL.isUseJcoin == 1){
+					$("#jCoinCost").html(toPenny(GLOBAL.jiaCurrencyAmt))
+					var jcoinNum = Math.ceil(GLOBAL.jiaCurrencyAmt/100);
+					$("#jiaCurrencyAmt").val(jcoinNum);
+				}
+			}
+		}
+	});
+}
+function cancelDiscountCode(){
+	if(GLOBAL.isUseDiscount == 0){
+		return;
+	}
+	var url = '/jsonrest/mobile/order/ShoppingCart/0/cancelConCode';
+	var param = '';
+	if(GLOBAL.isUseJcoin == 1){
+		param += 'jiaCurrencyUsedCount='+$.trim($("#jiaCurrencyPost").val());
+	}
+	$.ajax({
+		url: TERMINAL_URL+url,
+		data:param,
+		type: 'post',
+		dataType:'json',
+		cache:false,
+		async:false,
+		timeout:30000,
+		error: function(){},
+		success: function(data){
+			if(data.msgCode==3){window.location.href = "/user/login.html";}
+			if(data.msgCode!=1){
+				showTips(data.msg);  return;
+			}
+			GLOBAL.isUseDiscount = 0;
+			GLOBAL.discountPrice = toPenny(data.entity.preferentialAmt);
+			GLOBAL.jiaCurrencyAmt = data.entity.jiaCurrencyAmt;
+			GLOBAL.price = toPenny(data.entity.orderAmount);
+			$("#discountCodeId").removeAttr('disabled');
+			$("#checkDiscountCode").removeClass('hide');
+			$("#cancelDiscountCode").addClass('hide');
+			$("#discountCodeId").val('');
+			$("#discountCodePost").val('');
+			$("#totalPrice_transCost").html(GLOBAL.price);
+			$("#discountCost").html(GLOBAL.discountPrice).parents('div.pt').hide();
+			if(GLOBAL.isUseJcoin == 1){
+				$("#jCoinCost").html(toPenny(GLOBAL.jiaCurrencyAmt));
+				var jcoinNum = Math.ceil(GLOBAL.jiaCurrencyAmt/100);
+				$("#jiaCurrencyAmt").val(jcoinNum);
+			}
+		}
+	});
+}
+function useJcoin(){
+	var url = '/jsonrest/mobile/order/ShoppingCart/0/useJiaMoney';
+	var jiaCurrencyAmt = $.trim($("#jiaCurrencyAmt").val());
+	if(isNaN(jiaCurrencyAmt)){
+		showTips("请输入有效的数字");
+		return;
+	}
+	if(jiaCurrencyAmt == ''){
+		showTips("请输入有效的数字");
+		return;
+	}
+	var param = 'jiaCurrencyUsedCount='+jiaCurrencyAmt;
+	if(GLOBAL.isUseDiscount == 1){
+		param += '&conCode='+GLOBAL.discountCode;
+	}
+	$.ajax({
+		url: TERMINAL_URL+url,
+		data:param,
+		type: 'post',
+		dataType:'json',
+		cache:false,
+		async:false,
+		timeout:30000,
+		error: function(){},
+		success: function(data){
+			if(data.msgCode==3){window.location.href = "/user/login.html";}
+			if(data.msgCode!=1){
+				showTips(data.msg);  return;
+			}
+			$("#jiaCurrencyPost").val(jiaCurrencyAmt);
+			GLOBAL.jiaCurrencyAmt = data.entity.jiaCurrencyAmt;
+			GLOBAL.isUseJcoin = 1;
+			GLOBAL.price = toPenny(data.entity.orderAmount);
+			GLOBAL.discountPrice = toPenny(data.entity.preferentialAmt);
+			GLOBAL.discountCode = data.entity.conCode;
+			$("#totalPrice_transCost").html(GLOBAL.price);
+			$("#jCoinCost").html(toPenny(GLOBAL.jiaCurrencyAmt)).parents('div.pt').show();
+			var jcoinNum = Math.ceil(GLOBAL.jiaCurrencyAmt/100);
+			$("#jiaCurrencyAmt").val(jcoinNum);//这不知道到底需不需要
+			$("#jiaCurrencyAmt").attr('disabled','disabled');
+			$("#useJcoin").addClass('hide');
+			$("#cancelJcoin").removeClass('hide');
+		}
+	});
+}
+function cancelJcoin(){
+	if(GLOBAL.isUseJcoin != 1) return;
+	var url = '/jsonrest/mobile/order/ShoppingCart/0/cancelJiaMoney';
+	var param = '';
+	if(GLOBAL.isUseDiscount == 1){
+		param += 'conCode='+GLOBAL.discountCode;
+	}
+	$.ajax({
+		url: TERMINAL_URL+url,
+		data:param,
+		type: 'post',
+		dataType:'json',
+		cache:false,
+		async:false,
+		timeout:30000,
+		error: function(){},
+		success: function(data){
+			if(data.msgCode==3){window.location.href = "/user/login.html";}
+			if(data.msgCode!=1){
+				showTips(data.msg);  return;
+			}
+			$("#jiaCurrencyPost").val('');
+			GLOBAL.jiaCurrencyAmt = data.entity.jiaCurrencyAmt;
+			GLOBAL.isUseJcoin = 0;
+			GLOBAL.price = toPenny(data.entity.orderAmount);
+			GLOBAL.discountPrice = toPenny(data.entity.preferentialAmt);
+			GLOBAL.discountCode = data.entity.conCode;
+			$("#totalPrice_transCost").html(GLOBAL.price);
+			$("#jCoinCost").html(toPenny(GLOBAL.jiaCurrencyAmt)).parents('div.pt').hide();
+			$("#jiaCurrencyAmt").removeAttr('disabled');
+			$("#useJcoin").removeClass('hide');
+			$("#jiaCurrencyAmt").val('');
+			$("#cancelJcoin").addClass('hide');
+		}
+	});
+}
+(function(){
+	var t = (function() {
+		var u = navigator.userAgent.toLowerCase();
+		return {
+			isWeixin: function() {
+				return (RegExp("micromessenger").test(u))
+			}
+		};
+	})();
+	window.util = t;
+	if (!t.isWeixin()) {
+		$("#resource").val(4);
+		$("#resource1").val(4);
+	}else{
+		$("#resource").val(3);
+		$("#resource1").val(3);
+	}
+	getCartConfirmList();
+	$("#deliveryPeriod").val(1)
+	$("#isInvoice").val(0);
+	getCartNum();
+})();
+</script>
+<p class="hide">
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F27a6edda23c8cced290e66d76fc16a71' type='text/javascript'%3E%3C/script%3E"));
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-55764976-1', 'auto');ga('send', 'pageview');
+</script>
+</p>
+</body>
+</html>

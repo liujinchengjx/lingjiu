@@ -1,0 +1,134 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null;	
+	$(function() {
+		initValidateForm("checkstandards");
+	    $("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});			
+		dialog=$( "#nav_checkstandards").omDialog({autoOpen: false,draggable : false,resizable : false,height: 200,width:800,modal: true,
+			
+			buttons: [{
+                text : "确定", 
+                click : saveCheckStandards
+            	},{            	
+					text : "取消", 
+					click : function () {                   
+						dialog.omDialog("close");
+				  }
+				}
+			]
+		});	
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({
+				autoFit:true,				
+				limit:20,
+				autoFit:true,
+                title : '验核标准列表',
+                dataSource : "business/CheckStandards/0/searchCheckStandards",
+                colModel : [
+                             {header : '类型', name : 'checkType', width : 100, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.CheckStandardsType,colValue);
+								 }
+							 },							  
+							 {header : '名称', name : 'name', width : 120, align : 'left'}
+							]
+        });
+	});
+	function searchData(){
+	    var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#grid').omGrid('setData', "business/CheckStandards/0/searchCheckStandards?"+params);
+	}
+	function saveCheckStandards(){
+		 if(validateForm("checkstandards")==false)return false;
+		 var url =  $("#id").val()=="" ? "business/CheckStandards/0/add" : "business/CheckStandards/0/edit";		  
+		 var vo=$("#checkstandards").getVo();
+		 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   $('#grid').omGrid('reload');
+		  }
+		 });
+		 dialog.omDialog("close");  
+	}	
+	function addCheckStandards(){
+	    dialog.initializeInput(); //初始化
+		dialog.omDialog("option", "title", '新增');
+		dialog.omDialog("open");//显示dialog	
+	}
+	function editCheckStandards(){		 
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+		  $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+		  return;
+	   }		
+	   dialog.initializeInput({"vo":rowDatas});		 
+	   dialog.omDialog('open');       	     
+	}
+	
+	function viewCheckStandards(){
+	   
+	}
+	</script>	
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+  <table class="edit-panel">		
+	<tr>
+		<td ><input id="searchValue" name="searchValue"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" /></td>
+		<td ><span id="button-search">搜索</span></td>						
+	</tr>	
+  </table> 	 
+</div>		
+	<div id="nav_checkstandards" title="验核标准" style="display:none;">
+     	<form id="checkstandards">
+		<input  type="hidden" id="id" name="csd.id"  />
+		 <input type="hidden" id="lastModifyTime" name="csd.lastModifyTime" />
+	 	 <input type="hidden" id="createTime" name="csd.createTime" />
+		 <input type="hidden" id="lastModifyBy" name="csd.lastModifyBy" />
+	 	 <input type="hidden" id="createTime" name="csd.createBy" />
+		<table class="edit-table">
+			<tr>
+  			    <td class="label">验核类型：</td>
+				<td class="field" >
+				<input id="checkType" name="csd.checkType" validate="rules:['required']" validate="rules:['required']"
+					pattern='combo' editable='false' remote='CheckStandardsType' /></td>							
+				<td class="label">名称：</td>
+				<td class="field"><input id="name" name="csd.name" validate="rules:['required']"  /></td>
+			</tr>
+		</table>
+		</form>		
+	</div>
+	<div id="buttonbar"></div>	
+	<div id="grid"></div>
+</body>
+</html>

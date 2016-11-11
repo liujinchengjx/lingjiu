@@ -1,0 +1,225 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<script type="text/javascript" src="/js/jquery.js"></script>	
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null,typeName="";	
+	$(document).ready(function() {
+		initValidateForm("systemdict");
+	    $("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});		
+	    $('#type').omCombo({			//
+				dataSource :   "baseinfo/SystemDict/0/dictTypes",			
+                width:200,               
+                listMaxHeight:'300',           
+                inputField : 'value',              
+                valueField : 'key',
+				editable:false,
+				forceSelection:true,               
+                listProvider : function(container,records){
+                     var html='<table cellpadding="3" cellspacing="0"><thead>';                       						
+						html +='<tr><th width="90">类型</th><th width="90">ke值</th></tr>';
+						html +='</thead>';
+                        html +='<tbody>';
+                    $(records).each(function(){
+                        html += '<tr><td>' + this.value + '</td><td>' + this.key + '</td></tr>'; // buildTr(this);
+                    });
+                    html +=     '</tbody></table>';				
+                    $(html).appendTo(container);					
+                    return container.find('tbody>tr');
+                },           
+                filterStrategy:function(text,record){
+                    var text=text.toLowerCase();
+                    return record.value.toLowerCase().indexOf(text)>-1 || record.key.toLowerCase().indexOf(text)>-1;
+                },
+                onValueChange:function(target, newValue, oldValue){
+                   // $('#msg').html(newValue);
+                }																						
+		});	
+		$('#types').omCombo({dataSource : "baseinfo/SystemDict/0/dictTypes",width:'120',
+		    editable:false,optionField:'value',valueField : "key"});		
+		dialog=$("#nav_systemdict").omDialog({autoOpen: false,draggable : false,resizable : false,height: 300,width:800,modal: true,
+			buttons: [{
+                text : "确定", 
+                click : saveSystemDict
+            }, {
+                text : "取消", 
+                click : function () {                   
+                    dialog.omDialog("close");
+                }
+            }]
+		});			
+		dialog.initializeInput();
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({				
+				width:'100%',
+				limit:20,
+				autoFit:true,
+                title : '字典列表',
+                dataSource : "baseinfo/SystemDict/0/searchSystemDict",
+                colModel : [
+                             {header : '类型名称', name : 'typeName', width : 50, align : 'left'}, 
+ 							 {header : '名称', name : 'dictName', width : 120, align : 'left'},
+							 {header : '英文名称', name : 'dictEName', width : 120, align : 'left'}, 
+							 {header : '参数代码', name : 'dictCode', width : 50, align : 'left'}, 
+                             {header : '有效', name : 'flag', width : 20,align : 'left',
+						        renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.IsValid,colValue);
+								}	 
+							 }
+						 ],
+				onRowClick:function(rowIndex,rowData,event){
+				    if (rowData.flag==0){
+					     $('#btn13').omButton('enable');
+						 $('#btn13').omButton('changeLabel','关闭');
+					 }else if(rowData.flag==1){
+						 $('#btn13').omButton('enable');
+					     $('#btn13').omButton('changeLabel','开启');
+					 }
+     			}	            
+            });			
+	});
+	function searchData(){
+	   var vo=$("#search-panel").getVo();
+	   var params=convertParamToUrl(vo);
+	   $('#grid').omGrid('setData', "baseinfo/SystemDict/0/searchSystemDict?"+encodeURI(params));
+	}	
+	function saveSystemDict(){	     
+		  if(validateForm("systemdict")==false)return false;
+		  var dt=$('#type').omCombo('getData');
+		  var val=$('#type').omCombo('value');
+		  for (var i=0;i<dt.length;i++){
+			 if (dt[i].key==val){
+			    typeName=dt[i].value;
+				break;
+			 }
+		 }
+         if (typeName!=""){
+			 var vo=$("#systemdict").getVo(); 
+			 vo["dic.typeName"]=typeName;
+			 var url = $("#id").val()=="" ? "baseinfo/SystemDict/0/add" : "baseinfo/SystemDict/0/edit";
+			 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+				$('#grid').omGrid('reload');
+			  }	   
+		     });		
+		 }
+		 dialog.omDialog("close");       	     
+	}	
+	
+	function addSystemDict(){		    
+	   dialog.initializeInput(); //初始化
+	   dialog.omDialog("option", "title", '新增');
+	   dialog.omDialog("open");//显示dialog
+	   $("#dictCode").attr('disabled',false);	 	       	     
+	}	
+		
+	function editSystemDict(){		    
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			return;
+		}				
+		dialog.initializeInput({"vo":rowDatas});
+		dialog.omDialog("option", "title", '修改');
+		dialog.omDialog("open");//显示dialog	  
+		$("#dictCode").attr('disabled','disabled');	 	       	     
+	}	
+	
+	function openOrCloseDict(){ //启用或关闭字典
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+       if(rowDatas.length <= 0 ){
+         	$.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+           		return;
+       }
+	   var params=[];
+	   params.push("systemDictId="+rowDatas[0].id);
+	   params.push("flag="+(rowDatas[0].flag==0 ? 1:0));
+	   var url = "baseinfo/SystemDict/0/updateFlag?"+params.join("&");
+	   $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			$('#grid').omGrid('reload');//刷新grid
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+	   	}
+	   });
+	}
+	function viewSystemDict(){
+	}
+	</script>	
+</head>
+<body class="dfbody">
+<div id="search-panel">
+ <table class="edit-panel">		
+	<tr>
+		<td>关键字：</td>   	
+		<td><input type="text" id="searchValue" name="searchValue" /></td>
+		<td>类型：</td>   	
+		<td ><input id="types" name="type"  /></td>
+		<td ><span id="button-search">搜索</span></td>						
+	</tr>	
+ </table> 	 
+</div>	
+    <div id="nav_systemdict" title="新增字典项" style="display:none;">
+	   <form id="systemdict">	
+	   	 <input type="hidden" id="id" name="dic.id" />
+		 <input type="hidden" id="typeName" name="dic.typeName" />
+		 <input type="hidden" id="flag" name="dic.flag" value="1" />
+		 <input type="hidden" id="lastModifyTime" name="dic.lastModifyTime" />
+	 	 <input type="hidden" id="createTime" name="dic.createTime" />
+		 <input type="hidden" id="lastModifyBy" name="dic.lastModifyBy" />
+	 	 <input type="hidden" id="createTime" name="dic.createBy" />
+	     <table class="edit-table">		
+		 	<tr>   			    
+				<td class="label">代码：</td>
+				<td class="field" >
+				<input id="dictCode" name="dic.dictCode" validate="rules:['required']" /></td>
+				<td class="label" >引用值：</td>
+				<td class="field" ><input id="refKeyValue" name="dic.refKeyValue"  /></td>
+			</tr>	
+			<tr>
+   			    <td class="label" >名称：</td>
+				<td class="field" >
+				  <input id="dictName" name="dic.dictName" validate="rules:['required']" /></td>
+				<td class="label" >英文名称：</td>
+				<td class="field" ><input id="dictEName" name="dic.dictEName" /></td>						
+			</tr>						
+			<tr>			    							
+				<td class="label" >类型：</td>
+				<td class="field" >
+				  <input id="type" name="dic.type" validate="rules:['required']" /></td>
+				<td class="label" >次序</td>
+				<td class="field" ><input id="sequence" name="dic.sequence" pattern="int"  /></td>
+			</tr>
+		</table>
+		 </form>		
+	</div>	
+	<div id="buttonbar"></div>
+	<div id="grid"></div>
+</body>
+</html>

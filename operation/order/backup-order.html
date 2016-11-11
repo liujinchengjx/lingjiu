@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>出库备货单</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>	
+	<script type="text/javascript">	
+	    $(function(){		
+		      var deliverId=getQueryString("deliverId");        
+			  if (deliverId !=""){	
+				 var url="order/Deliver/0/getBackupOrder?deliverId="+deliverId;
+				 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+						 var html="";
+						 var dm=json.entity;
+						 if (dm.isPass==2){
+						    dm.isPass="需要报关";
+						 }else{
+						    dm.isPass="需要报关";
+						 } 
+						 $("#backuporder").initializeInput({"vo":dm}); //初始化
+				         var vcTb=$("#tbItems");
+						 var totalQty=0,totalNw=0.0,totalGw=0.0;
+						 for(var i=0;i<dm.stockOutCartons.length;i++){
+						     var soc=dm.stockOutCartons[i];
+							 for(var j=0;j<soc.stockOutPackings.length;j++){
+							     var sop=soc.stockOutPackings[j];
+								 html=html+"<tr><td height='20' align='left'>"+(j==0?soc.slno:"")+"</td>";
+								 html=html+"<td height='20' align='right'>"+(j==0?soc.cartonNo:"")+"</td>";
+								 html=html+"<td height='20' align='center'>"+sop.stockInNo+"原:"+soc.orgCartonNo+"</td>";
+								 html=html+"<td height='20' align='left'>"+sop.product.productName+"</td>";
+								 html=html+"<td height='20' align='left'>"+sop.product.pn+"</td>";
+								 html=html+"<td height='20' align='left'>"+sop.customerPn+"</td>";
+								 html=html+"<td height='20' align='right'>"+formatNum(sop.qty)+"</td>";
+								 html=html+"<td height='20' align='center'>"+sop.product.origin+"</td>";
+								 html=html+"<td height='20' align='center'>"+sop.dateCode+"</td>";
+								 html=html+"<td height='20' align='center'>"+sop.lotNum+"</td>";
+								 html=html+"<td height='20' align='center'>"+soc.size+"</td>";
+								 html=html+"<td width='90' style='text-align:right;'>"+(j==0?soc.gw.toFixed(2):"")+"</td></tr>";
+								 totalQty=totalQty.add(sop.qty);
+								 totalNw=totalNw+(j==0?soc.nw:0.0);
+								 totalGw=totalGw+(j==0?soc.gw:0.0);
+							 }	 
+						 } 
+						 html=html+"<tr><td height='20' align='left' >total:</td>";
+						 html=html+"<td height='20' align='right' >"+dm.stockOutCartons.length+"</td>";
+						 html=html+"<td height='20' align='left' colspan='4'></td>";
+						 html=html+"<td height='20' align='right'>"+formatNum(totalQty)+"</td>";
+						 html=html+"<td height='20' align='center' colspan='4'></td>";
+						 html=html+"<td height='20' align='right'>"+totalGw.toFixed(2)+"</td>";
+						 vcTb.append(html);
+				  }			
+				 });
+			  }
+		});
+	</script>
+	<style>
+		#tbItems td {
+			font-size: 12px;
+		}
+		.listContent td {
+		    background-color: #ffffff;
+		    border: 1px solid #000000;
+		    font-family: "宋体","";
+		    
+		    height: 15px;
+		    padding: 0px;
+		}
+		.listContent1 td {
+		    background-color: #ffffff;
+		    border: 1px solid #000000;
+		    font-family: "宋体","";		    
+		    height: 22px;
+		    padding: 0px;
+		}
+	</style>
+</head>
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px;">
+<div id="nav_backuporder" style="width:98%;text-align:center;padding-top:10px; padding-left:15px;">
+	 <div id="backuporder"> 
+		<table class="listContent1" width="100%" style='border-collapse: collapse; table-layout: fixed;'>
+			<tr>
+				<td class="clsInvoiceRBT" style="width:10%">客户：</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:40%"><span  name="customerName" ></span></td>				
+				<td class="clsInvoiceRBT" style="width:10%">出仓编号：</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:40%"><span name="deliverNo" ></span></td>
+			</tr>
+			<tr>
+				<td class="clsInvoiceRBT" style="width:10%">收货方：</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:40%"><span name="consigneeName" ></span></td>
+				<td class="clsInvoiceRBT" style="width:width:10%">报关类型：</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:40%"><span name="isPass"></span></td>
+			</tr>
+			<tr>
+				<td class="clsInvoiceRBT" style="width:10%">收货方地址：</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:40%" ><span name="address"></span></td>
+				<td class="clsInvoiceRBT" style="width:10%">收货方电话:</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:40%" ><span name="tel"></span></td>
+			</tr>
+			<tr>
+				<td class="clsInvoiceRBT" style="width:10%">备注：</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:40%" colspan="3"><span name="remark"></span></td>
+			</tr>
+			<tr>
+				<td class="clsInvoiceRBT" style="width:10%;" >注意事项:</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:40%" colspan="3"><span name="remark1"></span></td>
+			</tr>
+			<tr>
+				<td class="clsInvoiceRBT" style="width:10%">单据要求：</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:90%" colspan="3" ><span name="documentsRequired"></span></td>
+			</tr>
+		</table>	
+	</div>
+	<div style=" margin-top:5px;"> 
+		<table class="listContent1" width="100%" style='border-collapse: collapse; table-layout: fixed;font-size: 15px;'>
+			<tr>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%">拣货员</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%">拣货时间</td>				
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%">核货员</td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%">核货时间</td>
+			</tr>
+			<tr>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%"></td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%"></td>				
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%"></td>
+				<td class="clsInvoiceRBT" style="text-align:left;width:25%"></td>
+			</tr>
+		</table>	
+	</div>
+  <div style=" margin-top:5px;">
+    <table id="tbItems" class="listContent" width="100%" style='border-collapse: collapse; table-layout: fixed;'>
+	    <col width=105 style='mso-width-source: userset; mso-width-alt: 3360; width: 25pt'>
+	    <col width=105 style='mso-width-source: userset; mso-width-alt: 3360; width: 20pt'>
+	    <col width=105 style='mso-width-source: userset; mso-width-alt: 3360; width: 150pt'>
+	    <col width=105 style='mso-width-source: userset; mso-width-alt: 3360; width: 70pt'>
+	    <col width=105 style='mso-width-source: userset; mso-width-alt: 3360; width: 100pt'>
+	    <col width=105 style='mso-width-source: userset; mso-width-alt: 3360; width: 50pt'>
+	    <col width=105 style='mso-width-source: userset; mso-width-alt: 3360; width: 60pt'>
+	    <col width=105 style='mso-width-source: userset; mso-width-alt: 3360; width: 50pt'>
+	    <col width=105 style='mso-width-source: userset; mso-width-alt: 3360; width: 65pt'>
+	    <col width=105 style='mso-width-source: userset; mso-width-alt: 3360; width: 65pt'>
+	    <col width=105 style='mso-width-source: userset; mso-width-alt: 3360; width: 65pt'>
+	    <col width=105 style='mso-width-source: userset; mso-width-alt: 3360; width: 40pt'>
+	    <tbody>
+		    <tr>
+				<td class="clsInvoice" height="15" align="center" ><b>Location</b></td>
+				<td class="clsInvoice" height="15" align="center" ><b>Carton</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" ><b>Gsin</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" ><b>Description</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" ><b>P/N</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center"  style="font-weight: bold;"><b>Customer P/N</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center"  style="font-weight: bold;"><b>Qty</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center"  style="font-weight: bold;"><b>Origin</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" ><b>DateCode</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" ><b>Lotnum</b></td>	
+				<td class="clsInvoiceRBT" height="15" align="center" ><b>Size</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" ><b>G.W.(KGS)</b></td>
+			</tr>
+	 	 </tbody>
+	</table>
+</div>
+</div>
+</body>
+</html>

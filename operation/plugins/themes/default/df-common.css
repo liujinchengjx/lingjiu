@@ -1,0 +1,539 @@
+﻿html, body{auto; width: 100%; height: 100%; padding: 0; margin: 0;font-family:"΢ź", "";}
+
+.dfbody{width: 100%;height:100%;}
+/****/
+.header { background-image: url("images/header-bg1-gaoya.jpg") !important; background-repeat: repeat-x scroll 0 0;height:50px;}
+#search-panel{margin-bottom:10px;background-color:#FFF}
+#search-panel span.label{
+	margin-left: 10px;
+ }
+ #search-panel .input-text {
+	border: 1px solid #6D869E;
+	height: 18px;
+	vertical-align: middle;
+	width: 137px;
+}
+#south-panel{
+	background: url("images/header-bg.png") repeat-x scroll 0 0;
+	height:20px;
+	text-align: center;
+	font-size:12px;
+	color:#FFF;
+}
+#search-panel span.om-combo,#search-panel span.om-calendar{
+	vertical-align: middle;
+} 
+
+.om-dialog .om-dialog-content{
+	 padding: 0 10px 0 10px; margin: 0;
+}
+.om-grid {
+	overflow: visible;
+	position: relative;
+}
+
+/* edit table for normal */
+.edit-table
+{
+	color: #333;
+	border-top: solid 1px #adb6bd;
+	border-left: solid 1px #adb6bd;
+	width: 100%;
+	border-collapse: collapse;
+}
+.edit-table th
+{
+	background: url(images/page/title-bg.png) repeat-x 50% 50%;
+	height: 30px;
+	line-height: 30px;
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	text-align: left;
+	font-size: 14px;
+	padding-left: 10px;
+}
+.edit-table i, .edit-panel i
+{
+	margin-right: 5px;
+	color: red;
+	font-style: normal;
+	font-size: 14px;
+}
+.edit-table em
+{
+	color: #666;
+	font-style: normal;
+}
+.edit-table .cell
+{
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	padding: 3px 3px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 11px;
+	text-align: left;
+	height: 18px;
+}
+.edit-table .label
+{
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	background: url(images/page/edit-label-bg.png);
+	padding: 3px 8px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 12px;
+	text-align: right;
+	height: 18px;
+	width: 15%;
+}
+.edit-table .field
+{
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	padding: 3px 3px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 11px;
+	text-align: left;
+	height: 18px;
+	width: 35%;
+}
+.edit-table .label3
+{
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	background: url(images/page/edit-label-bg.png);
+	padding: 3px 8px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 12px;
+	text-align: right;
+	height: 18px;
+	width: 10%;
+}
+.edit-table .field3
+{
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	padding: 3px 3px 3px 8px;
+	font-family: Verdana, Arial;
+	font-size: 11px;
+	text-align: left;
+	height: 18px;
+	width: 23%;
+}
+.edit-table .labelx
+{
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	background: url(images/page/edit-label-bg.png);
+	padding: 3px 8px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 12px;
+	text-align: right;
+	height: 18px;
+}
+.edit-table .fieldx
+{
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	padding: 3px 3px 3px 8px;
+	font-family: Verdana, Arial;
+	font-size: 11px;
+	text-align: left;
+	height: 18px;
+}
+/* ע */
+.edit-table .postilable
+{
+	border-bottom: solid 1px #060;
+}
+/* ע */
+.edit-table .postiled
+{
+	border-bottom: solid 2px #a00;
+}
+.edit-table input, .edit-panel textarea
+{
+	background-color: #f9fffe;
+	border-top: solid 1px #666;
+	border-right: solid 1px #ccc;
+	border-bottom: solid 1px #ccc;
+	border-left: solid 1px #666;
+	padding-left: 1px;
+	padding-top: 1px;
+	font-size: 12px;
+	height: 17px;
+	line-height: 17px;
+	color: #000;
+}
+/*
+		.edit-table input {width:90%;}
+		*/
+.edit-panel textarea
+{
+	width: 80%;
+	height: 50px;
+}
+.edit-table .focus
+{
+	border: solid 1px #00c000;
+}
+.edit-table .error
+{
+	border: solid 1px #ff0000;
+}
+
+/* edit table 2 */
+.edit2-table
+{
+	width: 100%;
+	border-collapse: collapse;
+}
+.edit2-table th
+{
+	height: 30px;
+	line-height: 30px;
+	border-bottom: dashed 1px #adb6bd;
+	text-align: left;
+	font-size: 14px;
+	padding-left: 10px;
+}
+.edit2-table i
+{
+	margin-right: 5px;
+	color: red;
+	font-style: normal;
+	font-size: 14px;
+}
+.edit2-table em
+{
+	color: #666;
+	font-style: normal;
+}
+.edit2-table .label
+{
+	border-bottom: dashed 1px #adb6bd;
+	padding: 3px 3px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 12px;
+	text-align: right;
+	height: 18px;
+	width: 15%;
+	color: #666;
+}
+.edit2-table .field
+{
+	border-bottom: dashed 1px #adb6bd;
+	padding: 3px 3px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 11px;
+	text-align: left;
+	height: 18px;
+	width: 35%;
+}
+.edit2-table .label3
+{
+	border-bottom: dashed 1px #adb6bd;
+	padding: 3px 3px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 12px;
+	text-align: right;
+	height: 18px;
+	width: 10%;
+	color: #666;
+}
+.edit2-table .field3
+{
+	border-bottom: dashed 1px #adb6bd;
+	padding: 3px 3px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 11px;
+	text-align: left;
+	height: 18px;
+	width: 23%;
+}
+.edit2-table input, .edit2-panel textarea
+{
+	background-color: #f9fffe;
+	border-top: solid 1px #666;
+	border-right: solid 1px #ccc;
+	border-bottom: solid 1px #ccc;
+	border-left: solid 1px #666;
+	padding-left: 2px;
+	padding-top: 2px;
+	font-size: 12px;
+	height: 17px;
+	line-height: 17px;
+	color: #000;
+}
+
+.footbar
+{
+	background: #d7f1f7 url(images/page/bg-toolbar.gif) repeat-x left top;
+	height: 24px;
+	padding-top: 6px;
+	padding-bottom: 6px;
+	border: solid 1px #b8c9d6;
+	margin: 0 auto;
+	text-align: right;
+	padding-right: 10px;
+}
+.ui-textbox
+{
+	background-color: #f9fffe;
+	border-top: solid 1px #666;
+	border-right: solid 1px #ccc;
+	border-bottom: solid 1px #ccc;
+	border-left: solid 1px #666;
+	padding-left: 2px;
+	padding-top: 2px;
+	font-size: 12px;
+	height: 17px;
+	line-height: 17px;
+	color: #000;
+	width: 98%;
+}
+.ui-numbox
+{
+	background-color: #f9fffe;
+	border-top: solid 1px #666;
+	border-right: solid 1px #ccc;
+	border-bottom: solid 1px #ccc;
+	border-left: solid 1px #666;
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-top: 2px;
+	font-size: 12px;
+	height: 17px;
+	line-height: 17px;
+	color: #000;
+	width: 100px;
+	text-align: right;
+}
+.ui-datebox
+{
+	background-color: #f9fffe;
+	border-top: solid 1px #666;
+	border-right: solid 1px #ccc;
+	border-bottom: solid 1px #ccc;
+	border-left: solid 1px #666;
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-top: 2px;
+	font-size: 12px;
+	height: 17px;
+	line-height: 17px;
+	color: #000;
+	width: 100px;
+	text-align: left;
+}
+.ui-datetimebox
+{
+	background-color: #f9fffe;
+	border-top: solid 1px #666;
+	border-right: solid 1px #ccc;
+	border-bottom: solid 1px #ccc;
+	border-left: solid 1px #666;
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-top: 2px;
+	font-size: 12px;
+	height: 17px;
+	line-height: 17px;
+	color: #000;
+	width: 140px;
+	text-align: left;
+}
+.choose-box
+{
+	border-top: solid 1px #ccc;
+	border-right: solid 1px #666;
+	border-bottom: solid 1px #666;
+	border-left: solid 0px #ccc;
+	font-size: 12px;
+	padding: 2px;
+	line-height: 17px;
+	height: 17px;
+	width: 24px;
+	color: #000;
+}
+
+.button-table
+{
+	color: #333;
+	border: 0px;
+	width: 95%;
+	margin-left: 15px;
+}
+
+.v-middle
+{
+	vertical-align: middle;
+}
+
+.edit-panel
+{
+}
+.edit-panel input, .edit-panel textarea
+{
+	background-color: #f9fffe;
+	border-top: solid 1px #666;
+	border-right: solid 1px #ccc;
+	border-bottom: solid 1px #ccc;
+	border-left: solid 1px #666;
+	padding-left: 2px;
+	padding-top: 2px;
+	font-size: 12px;
+	height: 17px;
+	line-height: 17px;
+	color: #000;
+}
+.edit-panel .focus
+{
+	border: solid 1px #00c000;
+}
+.edit-panel .error
+{
+	border: solid 1px #ff0000;
+}
+.x-show-ko
+{
+	position: absolute;
+	width: 13px;
+	height: 13px;
+	background: url(./images/x-ko.png);
+	cursor: hand;
+	overflow: hidden;
+	z-index: 1;
+}
+.x-show-ge
+{
+	position: absolute;
+	width: 13px;
+	height: 13px;
+	background: url(./images/x-ge.png);
+	cursor: hand;
+	overflow: hidden;
+	z-index: 1;
+}
+.date-show
+{
+	position: absolute;
+	width: 20px;
+	height: 20px;
+	background: url(./images/calc.png);
+	cursor: hand;
+	overflow: hidden;
+	z-index: 1;
+}
+.btn28
+{
+	height: 28px;
+	margin: 4px 4px 4px;
+	letter-spacing: 2px;
+	background: #e0e0de;
+	font-family: Verdana, Arial;
+	font-size: 11px;
+}
+
+.color_red
+{
+	color: red;
+}
+
+label.error{
+        background: #fff6bf url(images/validation/alert.png) center no-repeat;
+		background-position: 5px 50%;
+		text-align: left;
+		padding: 2px 20px 2px 25px;
+		border: 1px solid #ffd324;
+		display: none;
+		width: 200px;
+		margin-left: 10px;
+}
+
+/* combo  */
+
+.om-droplist td,th {
+        border: 1px solid black;
+    }
+    
+.om-droplist th {
+        color: purple;
+        background-color: #CAD9EA;
+}
+
+/*按钮*/
+
+/*添加*/
+.icon-add {
+	background:url(./images/icons/add.png) no-repeat;
+}
+/*编辑*/
+.icon-edit {
+	background:url(./images/icons/edit.png) no-repeat;
+}
+/*删除*/
+.icon-delete {
+	background:url(./images/icons/delete.png) no-repeat;
+}
+/*查看*/
+.icon-view {
+	background:url(./images/icons/search.png) no-repeat;
+}
+/*关闭*/
+.icon-close {
+	background:url(./images/icons/remove.png) no-repeat;
+}
+/*返回*/
+.icon-back {
+	background:url(./images/icons/icons.png) no-repeat;
+}
+/*保存*/
+.icon-save {
+	background:url(./images/icons/save.gif) no-repeat;
+}
+/*确定*/
+.icon-ok {
+	background:url(./images/icons/icons.png) no-repeat;
+}
+/*取消*/
+.icon-cancel {
+	background:url(./images/icons/icons.png) no-repeat;
+}
+/*否决*/
+.icon-no {
+	background:url(./images/icons/icons.png) no-repeat;
+}
+/*搜索*/
+.icon-search {
+	background:url(./images/icons/icons.png) no-repeat;
+}
+/*打印*/
+.icon-print {
+	background:url(./images/icons/icons.png) no-repeat;
+}
+/*扫描*/
+A.icon-scan {
+	background:url(./images/icons/icons.png);
+}
+
+fieldset.header{
+     position:relative;
+     padding:10px 20px 10px 10px;
+	 margin:4px 0px 0 0!important;
+	 margin:0px 0px 0 0;
+	/* border:1px solid #CDCDCD*/
+}
+
+
+fieldset.main{
+     padding:28px 10px 3px 10px;
+	 margin:0px 0px 0 0!important;
+	 margin:8px 0px 0 0;
+	 /*border:1px solid #CDCDCD*/
+}
+
+
+fieldset LEGEND{
+     font-weight:bold;
+}

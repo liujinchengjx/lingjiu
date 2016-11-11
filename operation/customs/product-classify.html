@@ -1,0 +1,304 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>	
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null;
+	$(function() {			
+		var orderNo=getIframeParm("orderNo");
+		$("#search-panel").omPanel({title : "报关单号为："+orderNo,collapsed:true});
+		refreshProduct();
+		$('#buttonbar').omButtonbar({
+            	 width : "100%",
+            	 btns : [{label:"刷新",
+            		     id:"button1" ,
+            		     icons : {left : '/images/icon/add.png'},
+            	 		 onClick: function(){
+						    refreshProduct();
+						 }
+            			},
+						{separtor:true},
+						{label:"关闭",id:"button3", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);
+						  }
+						 }	           			
+            	 ]
+          }); 
+		  
+		dialog=$( "#nav_classify").omDialog({autoOpen:false,draggable:false,resizable:false,height:420,width:850,modal:true,
+				buttons: [{
+					text : "确定", 
+					click : saveProducts 
+				}, {
+					text : "取消", 
+					click : function () {                   
+						dialog.omDialog("close");
+					}
+				}]
+			});	
+		 $("#aBbtnLoad").omButton({ //加载申报要素
+	    		onClick : function(event){
+					loadDeclareElements();	
+		   		}
+		 });	  
+				
+	});
+	function loadDeclareElements(){
+	    var codets=$("#codeTs").html();
+		if (codets!=""){
+			var url="customs/CustomForm/0/loadProductClassify";
+			var vo=$("#classify").getVo(); 
+			$.ajaxPost({data:vo,url:url,msg:true,success:function(json,textStatus){
+					if(json.msgCode==1){
+						$("#classify").initializeInput({"vo":json.entity})
+						$("#alert").html("");
+						if(json.entity.isAlert==1){
+							   $("#alert").html("<img height='19' src='/images/icon/alert.png' title='"+json.entity.alertMsg+"'>"+json.entity.alertMsg);
+						   }
+					}else{
+					   dialog.initializeInput();
+					   $.omMessageTip.show({title : '提示',timeout : 2000,content : json.msg});
+					}
+			   }
+			}); 
+		}else{ $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起,商品编码不能为空！'});}
+	}
+	function saveProducts(){ //
+		var vo=$("#classify").getVo();
+		if (vo["tpc.productName"]==""){
+		   $.omMessageTip.show({content :"品名不要为空",timeout : 2000,type : 'error'});
+		   return false;
+		}
+		var criterionDeclare=vo["tpc.criterionDeclare"];
+		var cArr=criterionDeclare.split("|");
+		var declareElements=vo["tpc.declareElements"];
+		var dArr=declareElements.split("|");
+		if (((cArr.length-1) <= dArr.length) && (cArr.length>1)){
+		    vo["customOrderIds"]=getIframeParm("customOrderId");
+		    var url = "customs/CustomForm/0/saveProductClassify";
+			$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+				refreshProduct();
+				dialog.omDialog("close");//	
+				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});	 
+			}});    
+		}else{
+			$.omMessageTip.show({content :"申报要素格式不合法",timeout : 2000,type : 'error'});
+		}
+	}
+	//刷新产品数据
+	function refreshProduct(){
+		var type=getIframeParm("type");
+		var url="";
+		if (type==0){
+			url="customs/CustomForm/0/loadProductsClassifyList?customOrderId="+getIframeParm("customOrderId")+"&type=0";
+		}else if (type==1){
+		    url="customs/CustomForm/0/loadProductsClassifyList?customFormId="+getIframeParm("customFormId")+"&type=1";
+		}
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				var vTb=$("#tbData");
+				vTb.find("tr:not(:first)").remove();//$("#tbData tr:not(:first)").remove();	
+				var index=0;
+				var className="";				
+				$.each(json.entity, function(key, val) {
+				   index=(parseInt(key)+1);
+				   className="classify"+index;
+				   var vrHtml1="<tr class='"+className+"'><td height='20' align='center'>"+index+"</td>";
+				   vrHtml1=vrHtml1+"<td style='display:none'><span name='id'>"+val.id+"</span></td>";
+				   vrHtml1=vrHtml1+"<td height='20' align='left'><span name='productName'>"+val.productName+"</span></td>";
+				   vrHtml1=vrHtml1+"<td height='20' align='left'><span name='pn'>"+val.pn+"</span></td>";
+				   vrHtml1=vrHtml1+"<td height='20' align='left'><span name='brand'>"+val.brand+"</span></td>";
+				   vrHtml1=vrHtml1+"<td height='20' align='left'><span name='origin'>"+val.origin+"</span></td>";
+				   vrHtml1=vrHtml1+"<td height='20' align='right'><span name='quarantineMa'>"+val.quarantineMa+"</span></td>";
+				   vrHtml1=vrHtml1+"<td height='20' align='center'><span name='controlMa'>"+val.controlMa+"</span></td>";
+				   vrHtml1=vrHtml1+"<td style='display:none;'><span name='lowRate'>"+val.lowRate+"</span>";
+				   vrHtml1=vrHtml1+"<span name='commRate'>"+val.commRate+"</span><span name='addRate'>"+val.addRate+"</span>";
+				   vrHtml1=vrHtml1+"</td></tr>";
+				   
+				   var vrHtml2="<tr class='"+className+"'><td height='20' align='right'>" ;
+				   if(val.isAlert==1){
+					   vrHtml2= vrHtml2 + "<img height='19' src='/images/icon/alert.png' title='"+val.alertMsg+"'>";
+				   }
+				   vrHtml2 = vrHtml2+"</td>";
+				   vrHtml2=vrHtml2+"<td height='20' align='left'"
+				   vrHtml2=vrHtml2+(val.codeTs==""||val.isAlert==1?"style='background:#F9EAC8;'":"")
+				   vrHtml2 = vrHtml2+"><b>商品编码：</b>";
+				   //vrHtml2=vrHtml2+(val.codeTs==""?"<input id='txtCodeTs"+val.id+"' name='codeTs' style='width:68px;' />":"<span style='color: #0000FF' name='codeTs'>"+val.codeTs+"</span>");
+				   vrHtml2=vrHtml2+"<input id='txtCodeTs"+val.id+"' name='codeTs' value='"+val.codeTs+"' style='width:68px;' />";
+				   vrHtml2=vrHtml2+" <a href='javascript:void(0)'>"+(val.codeTs==""?"归类":"重新归类")+"</a></td>" ;
+				   vrHtml2=vrHtml2+"<td height='20' align='left' colspan='5'>";
+				   vrHtml2=vrHtml2+"<b>申报要素次序:</b><b style='color: #0000FF'>";
+				   vrHtml2=vrHtml2+"<span name='criterionDeclare'>"+val.criterionDeclare+"</span></b>";
+				   vrHtml2=vrHtml2+" &nbsp;<b>用途：</b><span name='usages'>"+val.usages+"</span>";
+				   vrHtml2=vrHtml2+" &nbsp;<b>批号：</b><span name='lotNo'>"+val.lotNo+"</span>";
+				   if (val.codeTs!="" && val.addRate<=0){
+					   vrHtml2=vrHtml2+" <span style='color: red;'>提示："+val.codeTs+" 的相关税率为0，请维护该商品税率！再进行后续动作</span>";
+				   }
+				   vrHtml2=vrHtml2+" </td></tr>";
+				   
+				   var vrHtml3="<tr class='"+className+"'><td height='20' align='left'></td>";
+				   vrHtml3=vrHtml3+"<td height='20' align='left' colspan='6'>";
+				   vrHtml3=vrHtml3+" <b>申报要素:</b><span  name='declareElements'> "+val.declareElements+"</span>";
+				   if(val.suggestCodeTs!=""){
+					   vrHtml3 = vrHtml3+"&nbsp;&nbsp;<b>推荐归类商品编码:</b><span>"+val.suggestCodeTs+"</span>";
+				   }
+				   vrHtml3=vrHtml3+"</td></tr>";
+				   vTb.append(vrHtml1);
+				   vTb.append(vrHtml2);
+				   vTb.append(vrHtml3);
+				   $("."+className).find("a").omButton({
+					   onClick : function(event){
+							  var temflag=0,codeTs="";
+							  $tr=$(this).parents("tr");
+							  var className=$tr.attr("class");
+							  if (chkCodeTs($tr)==true){
+								  if (( typeof(val.declareElements)=="undefined") || (val.declareElements=="")){temflag=1;}
+								  var vo=$("."+className).getVo(); 
+								  vo["flag"]=temflag;
+								  var vodata={"vo":vo} ;
+								  dialog.initializeInput(vodata); //初始化
+								  dialog.omDialog({title : '产品归类： 第'+(parseInt(key)+1)+"项"});
+								  dialog.omDialog("open");
+								  loadDeclareElements();	
+							  }
+						   }
+						});	  
+					});
+		   }
+		});    
+	}
+	
+	function chkCodeTs($tr){
+		$span=$tr.find("span[name='codeTs']");  
+        if($span.length<=0){
+		   $input=$tr.find("input[name='codeTs']"); 
+		   var reg = new RegExp("^[0-9]*[1-9][0-9]*$");
+		   if(!reg.test($input.val())){
+			  $.omMessageTip.show({content :"请填写商品编码(8位或10位数字商品编码)",timeout : 2000,type : 'error'});   
+		      return false;
+		   }
+		   var num=parseInt($input.val());
+		   if (num<(10000000)){
+		   	  $.omMessageTip.show({content :"请填写商品编码(8位或10位数字商品编码)",timeout : 2000,type : 'error'});   
+		      return false;
+		   }
+		}		
+		return true;
+	}
+	function  verify(){
+	
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+ 	 <span><input type="text" class="input-text" /><span id="button-search">搜索</span></span>	
+</div>			
+	<div id="nav_tearorder">
+	   <div id="buttonbar"></div>
+	   <table id="tbData" class="listContent" width="99%"> 
+		<tbody>
+		    <tr>
+				<td class="clsInvoice" height="20" align="center" width="5%"><b>序号</b></td>
+				<td class="clsInvoiceRBT" height="20" align="center" width="20%"><b>品名</b></td>
+				<td class="clsInvoiceRBT" height="20" align="center" width="20%"><b>型号</b></td>
+				<td class="clsInvoiceRBT" height="20" align="center" width="15%"><b>品牌</b></td>
+				<td class="clsInvoiceRBT" height="20" align="center" width="10%"><b>原产地</b></td>
+				<td class="clsInvoiceRBT" height="20" align="center" width="20%"><b>检验类别</b></td>
+				<td class="clsInvoiceRBT" height="20" align="center" width="10%"><b>监管条件</b></td>			
+			</tr>
+	 	 </tbody>
+	  </table>	   	
+	</div>
+	<div id="nav_classify" style="display:none;">
+        <form id="classify">	
+		<input id="id" name="tpc.id" type="hidden" />
+		<input id="flag" name="tpc.flag" type="hidden" />
+		<input id="customOrderId" name="tpc.customOrderId" type="hidden"/>
+		<table class="edit-table">
+		    <tr>
+			    <td class="label">型号：</td>
+				<td class="field"><span id="pn" name="tpc.pn"></span></td>							
+			    <td class="label">原产地：</td>
+				<td class="field"><span id="origin" name="tpc.origin"></span></td>																				
+			</tr>
+			<tr>
+				<td class="label">品牌：</td>
+				<td class="field"><span id="brand" name="tpc.brand"></span></td>
+				<td class="label">监管条件：</td>
+				<td class="field"><span id="controlMa" name="tpc.controlMa"></span></td>
+			</tr>
+			<tr>
+			    <td class="label">商品编码：</td>
+				<td class="field"><span id="codeTs" name="tpc.codeTs"  ></span></td>						
+				<td class="label">品名：</td>
+				<td class="field"><span id="productName" name="tpc.productName"/></span</td>
+			</tr>
+			<tr>
+			    <td class="label">最低关税：</td>
+				<td class="field"><input id="lowRate" name="tpc.lowRate"  /></td>						
+				<td class="label">普通关税：</td>
+				<td class="field"><input id="commRate" name="tpc.commRate"  /></td>
+			</tr>
+			<tr>
+			    <td class="label">增值税：</td>
+				<td class="field"><input id="addRate" name="tpc.addRate" validate="rules:['required']" /></td>
+				<td class="label">原产地证</td>
+				<td class="field"><input id="proveOrg" name="tpc.proveOrg" pattern='combo' remote='YesNot' value="1" /></td>	
+			</tr>	
+			<tr>
+   			    <td class="label">批号：</td>
+				<td class="field" colspan="3"><b><span id="lotNo" name="tpc.lotNo" style="color:red"></span></b></td>
+			</tr>
+			<tr>
+   			    <td class="label">用途：</td>
+				<td class="field" colspan="3"><b><span id="usages" name="tpc.usages"></span></b></td>
+			</tr>
+			<tr>
+   			    <td class="label">申报要素次序：</td>
+				<td class="field" colspan="3"><b><span id="criterionDeclare" name="tpc.criterionDeclare" style="color:red"></span></b>
+				<span id="alert" style="background:#F9EAC8;"></span>
+				</td>
+			</tr>
+			<tr>
+				<td class="label">申报要素：</td>
+				<td class="field" colspan="3"><textarea id="declareElements" name="tpc.declareElements" validate="rules:['required']"
+				  style="height:50px;" /></textarea>
+				</td>
+			</tr>
+      	    <tr>
+				<td class="label"><a id='aBbtnLoad' href='javascript:void(0)'>加载申报要素</a></td>
+				<td class="field"  colspan="3"><b style="color:blue">
+					申报要素提示信息：请按照  0.用途1.电压2.品牌3.型号4.其他 的顺序填写每个要素的内容
+					（如： 0215010.MXP牌|LITTELFUSE型|保险丝|韩国），并以竖线 | 隔开来
+				</b></td>
+			</tr>
+		</table>
+		</form>	
+	</div>	
+</body>
+</html>

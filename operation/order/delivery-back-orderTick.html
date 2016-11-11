@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>运单标签</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>	
+	<style>
+		.listContent td {
+		    background-color: #ffffff;
+		    border: 1px solid #000000;
+		    font-family: "宋体","";
+		    height: 15px;
+		    padding: 0px;
+		}
+		.tr1 td{
+		    font-size:15px;
+		    font-weight: bold;
+		}
+	</style>
+	<script type="text/javascript">
+	    $(function(){		
+		      var deliverId=getQueryString("deliverId");        
+			  if (deliverId !=""){	
+				 var url="order/Deliver/0/getDeliveryOrder?deliverId="+deliverId;
+				 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				 		 var vcTb=$("#newTab");
+						 var html="";
+						 var dm=json.entity;
+						 for(var i=0;i<dm.stockOutCartons.length;i++){
+						     var soc=dm.stockOutCartons[i];
+						     html=html+"<table class='listContent' width='760pt;' style='border-collapse: collapse; table-layout: fixed;'>";
+						     html=html+"<col  style='mso-width-source: userset; mso-width-alt: 3360; width: 25pt'>"
+						     html=html+"<col  style='mso-width-source: userset; mso-width-alt: 3360; width: 35pt'>"
+						     html=html+"<col  style='mso-width-source: userset; mso-width-alt: 3360; width: 50pt'>"
+						     html=html+"<col  style='mso-width-source: userset; mso-width-alt: 3360; width: 25pt'>"
+						     html=html+"<col  style='mso-width-source: userset; mso-width-alt: 3360; width: 30pt'>"
+						     html=html+"<col  style='mso-width-source: userset; mso-width-alt: 3360; width: 25pt'>"
+						     html=html+"<col  style='mso-width-source: userset; mso-width-alt: 3360; width: 25pt'>"
+						     html=html+"<col  style='mso-width-source: userset; mso-width-alt: 3360; width: 50pt'>"
+						     html=html+"<col  style='mso-width-source: userset; mso-width-alt: 3360; width: 50pt'>"
+						     html=html+"<col  style='mso-width-source: userset; mso-width-alt: 3360; width: 25pt'>"
+						     html=html+"<tr class='tr1'>";
+						     html=html+"<td height='20'  align='left' colspan=3 >出仓号："+dm.deliverNo+"</td>";
+						     html=html+"<td height='20'  align='left' colspan=7>收货公司："+dm.consigneeName+"</td>";
+						     html=html+"</tr>";
+						     html=html+"<tr><td height='20' width='40pt;' align='center'>箱号</td>";
+							 html=html+"<td height='20' width='80pt;' align='center'>品名</td>";
+							 html=html+"<td height='20' width='110pt;' align='center'>料号</td>";
+							 html=html+"<td height='20' width='50pt;' align='center'>产地</td>";
+							 html=html+"<td height='20' width='40pt;' align='center'>数量</td>";
+							 html=html+"<td height='20' width='40pt;' align='center'>净重</td>";
+							 html=html+"<td height='20' width='40pt;' align='center'>毛重</td>";
+							 html=html+"<td height='20' width='80pt;' align='center'>DateCode</td>";
+							 html=html+"<td height='20' width='80pt;' align='center'>lotNum</td>";
+							 html=html+"<td height='20' width='90pt;' align='center'>尺寸</td>";
+							 html=html+"</tr>";
+							 html=html+"<br>";
+							 for(var j=0;j<soc.stockOutPackings.length;j++){
+							 	 //循环创建table
+							     var sop=soc.stockOutPackings[j];
+								 html=html+"<tr><td height='20' align='center'>"+(j==0?soc.cartonNo:"")+"</td>";
+								 html=html+"<td height='20' align='left'>"+sop.product.productName+"</td>";
+								 html=html+"<td height='20' align='left'>"+sop.product.pn+"</td>";
+								 html=html+"<td height='20' align='center'>"+sop.product.origin+"</td>";
+								 html=html+"<td height='20' align='left'>"+formatNum(sop.qty)+"</td>";
+								 html=html+"<td height='20' align='left'>"+(j==0?soc.nw.toFixed(2):"")+"</td>";
+								 html=html+"<td height='20' align='left'>"+(j==0?soc.gw.toFixed(2):"")+"</td>";
+								 html=html+"<td height='20' align='center'>"+sop.dateCode+"</td>";
+								 html=html+"<td height='20' align='center'>"+sop.lotNum+"</td>";
+								 html=html+"<td height='20' align='center'>"+(j==0?soc.size:"")+"</td>";
+								 html=html+"</tr>";
+							 }
+							 html=html+"</table>";
+							 html=html+"<br>";	 
+							 html=html+"<br>";
+						 } 
+						 vcTb.append(html);
+				  }			
+				 });
+			  }
+		});
+	</script>
+	
+</head>
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px;">
+<div id="nav_backuporder" style="width:100%;text-align:center;padding-top:10px; padding-left:15px;">
+<div id="newTab" style=" margin-top:5px;width: 100%" >
+</div>
+</div>
+</body>
+</html>

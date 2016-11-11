@@ -1,0 +1,602 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>整理箱单（出库）</title>
+    <link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>	
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tabs.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<script type="text/javascript">	
+	var totalQty=0;
+	    $(function(){		
+			 loadStockOutCarton();
+			 $('#leftbar').omButtonbar({
+				 width : "100%",
+				 btns : [{label:"保存",
+						 id:"btnSave" ,
+						 icons : {left : '/images/icon/add.png'},
+						 onClick: saveCartons
+						},
+						{separtor:true},
+						{label:"关闭",id:"btnClose1", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							 closeCurrActivateTabs(1000);
+						  }
+						 }					
+					 ]
+             });	 
+			 $('#rightbar').omButtonbar({
+				 width : "100%",
+				 btns : [{label:"新增",
+						 id:"btnNew" ,
+						 icons : {left : '/images/icon/add.png'},
+						 onClick: addCarton
+						},{separtor:true},
+						{label:"选箱",
+						 id:"btnPick" ,
+						 icons : {left : '/images/icon/add.png'},
+						 onClick: pickCarton
+						},{separtor:true},
+						{label:"添加货物",
+						 id:"btnAddGoods",
+						 disabled: true,
+						 icons : {left : '/images/icon/add.png'},
+						 onClick: addDetail
+						},{separtor:true},	
+					    {label:"确定",
+						 id:"btnAndGoods",
+						 disabled: true,
+						 icons : {left : '/images/icon/add.png'},
+						 onClick: mergerCarton
+						},	
+					 ]
+             });	 
+			 var element = $('#nav_packingarrange').omBorderLayout({
+            	   panels:[{id:"center-panel",header:true,title:"<b>装箱列表 </b>",region:"center",width:"60%",height:"100%"},
+            	    {id:"west-panel",resizable:true,collapsible:true,title:"<b>目标箱</b>",fit:true,hideCollapsBtn:false,
+					 region:"east",width:"39.6%",height:"100%"}
+            	    ]
+            });			
+		});
+		function loadStockOutCarton(){
+		     var stockOutId=getIframeParm("stockOutId");
+			 totalQty=0;
+		     var url="warehouse/StockOut/0/getStockOutCartonList?limit=1000000&stockOutId="+stockOutId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					 var mutitable=$("#make-tab .mutitable");
+					 var chtm="",dhtm="";
+					 for(var i=0;i<json.rows.length;i++){
+						 var carton=json.rows[i];
+						 var cartonQty=0;
+						 var packings=carton.stockOutPackings;
+						 dhtm="";
+						 for(var j=0;j<packings.length;j++){
+							 var packing=packings[j];
+							 dhtm=dhtm+"    <dl>"; 
+							 dhtm=dhtm+"      <dd style='display:none'>";
+							 dhtm=dhtm+"          <span name='stockOutPackingId'>"+packing.id+"</span>";
+							 dhtm=dhtm+"          <span name='cartonId'>"+packing.cartonId+"</span>";
+							 dhtm=dhtm+"          <span name='stockInPackingId'>"+packing.stockInPackingId+"</span>";
+							 dhtm=dhtm+"          <span name='invoiceNo'>"+packing.invoiceNo+"</span>";
+							 dhtm=dhtm+"          <span name='entrustOrderDetailId'>"+packing.entrustOrderDetailId+"</span>";
+							 dhtm=dhtm+"          <span name='productId'>"+packing.productId+"</span>";
+							 dhtm=dhtm+"          <span name='stockOutId'>"+packing.stockOutId+"</span>";
+							 dhtm=dhtm+"          <span name='pn'>"+packing.product.pn+"</span>";
+							 dhtm=dhtm+"          <span name='productName'>"+packing.product.productName+"</span>";
+							 dhtm=dhtm+"          <span name='origin'>"+packing.product.origin+"</span>";
+							 dhtm=dhtm+"          <span name='brand'>"+packing.product.brand+"</span>";
+							 dhtm=dhtm+"      </dd>";
+							 dhtm=dhtm+"      <dd style='float:left;text-align:left;width:190px;'>";
+							 dhtm=dhtm+"          <span name='declare'>";
+							 dhtm=dhtm+               packing.product.pn+"/"+packing.product.productName;
+							 dhtm=dhtm+               "/"+packing.product.brand+"/" +packing.product.origin;
+							 dhtm=dhtm+"           </span>";
+							 dhtm=dhtm+"      </dd>";
+							 dhtm=dhtm+"      <dd style='float:left;text-align:right;width:120px;'>";
+							 dhtm=dhtm+"          <span name='qty'>"+packing.qty+"</span>";
+							 dhtm=dhtm+"      </dd>";
+							 dhtm=dhtm+"      <dd style='float:left;text-align:right;width:120px;'>";
+							 dhtm=dhtm+"	     <input type='text' value='"+packing.qty+"' ";
+							 dhtm=dhtm+"         style='width:90%;margin-right:2px;text-align: right;' name='tearQty' /> ";
+							 dhtm=dhtm+"       </dd>";
+							 dhtm=dhtm+"      <dd style='float:left;text-align:center;width:50px;'>";
+							 dhtm=dhtm+"         <input type='checkbox' value='checkbox1' name='subBox' style='width:20px; height:20px;' />";
+							 dhtm=dhtm+"	 </dd>";
+							 dhtm=dhtm+"	</dl>";
+							 totalQty=totalQty+packing.qty;
+							 cartonQty=cartonQty+packing.qty;
+						 }
+						 chtm=chtm+"<div class='tbody_item'>";
+						 chtm=chtm+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+						 chtm=chtm+" <tr> ";
+						 chtm=chtm+"   <td style='display:none'><span name='id'>"+carton.id+"</span>";
+						 chtm=chtm+"       <span name='etOrderId'>"+carton.etOrderId+"</span>";
+						 chtm=chtm+"       <span name='stockOutId'>"+carton.stockOutId+"</span>";
+						 chtm=chtm+"       <span name='length'>"+carton.length+"</span>";
+						 chtm=chtm+"       <span name='width'>"+carton.width+"</span>";
+						 chtm=chtm+"       <span name='height'>"+carton.height+"</span>";
+						 chtm=chtm+"       <span name='cartonQty'>"+cartonQty+"</span>";
+						 chtm=chtm+"   </td>";
+						 chtm=chtm+"   <td width='50'><strong><span name='cartonNo'>"+carton.cartonNo+"</span></strong></td>";
+						 chtm=chtm+"   <td width='50'><strong><span name='orgCartonNo'>"+carton.orgCartonNo+"</span></strong></td>";
+						 chtm=chtm+"   <td width='70' style='text-align:right;margin-right:2px;'><strong>";
+						 chtm=chtm+"     <span name='nw'>"+carton.nw+"&nbsp;</span>";
+						 chtm=chtm+"     </strong></td>";
+						 chtm=chtm+"   <td width='70' style='text-align:right;margin-right:2px;'><strong>";
+						 chtm=chtm+"     <span name='gw'>"+carton.gw+"&nbsp;</span>";
+						 chtm=chtm+"     </strong></td>";
+						 chtm=chtm+"  <td class='tbody_product' width='480'>";						 
+						 chtm=chtm+dhtm;
+						 chtm=chtm+"  </td>";
+						 chtm=chtm+"<td></td>";	 
+						 chtm=chtm+"</tr>";
+						 chtm=chtm+"</table></div>";
+					 } 
+					 mutitable.find(".tbody_item").remove();
+					 mutitable.append(chtm);
+					 $("#totalQty").html("总数量："+totalQty);
+					 var $subBox = $("input[name='subBox']");
+					 $('#checkAll').click(function (){ 
+						 $('input[name="subBox"]').attr("checked",this.checked);
+						 if(this.checked){
+							$subBox.parent().parent().addClass("highlight");
+						 }else{
+						   $subBox.parent().parent().removeClass("highlight");
+						 }
+					 });
+					 $subBox.click(function(){
+						$("#checkAll").attr("checked",$subBox.length == $("input[name='subBox']:checked").length ? true : false);
+						this.checked?$(this).parent().parent().addClass("highlight"): 
+						   $(this).parent().parent().removeClass("highlight");;
+		
+					 });
+					 $("input[name=tearQty]").omNumberField({allowDecimals:false});
+			  }			
+			 });
+		}
+		function addCarton(){
+		    var $allCartons=$(".tbody_item");
+			var maxCartonNo=0;
+			$allCartons.each(function(i){
+			     var $div=$(this); 
+				 var cartonNo=$div.find("span[name='cartonNo']").html();
+				 cartonNo=parseInt(cartonNo);
+				 if (cartonNo>maxCartonNo){
+				    maxCartonNo=cartonNo;
+				 }
+			});
+			var chtm=" <tr>";
+			chtm=chtm+"	 <td class='clsInvoiceRBT'><b style='color:blue;'>";
+			chtm=chtm+"     <input name='cartonNo' value='"+(maxCartonNo+1)+"' style='width:35px;' /></b></td>";
+			chtm=chtm+"	 <td class='clsInvoiceRBT'><input name='nw' value='0' style='width:100px;height:14px;' /></td>";
+			chtm=chtm+"	 <td class='clsInvoiceRBT'><input name='gw' value='0' style='width:100px;height:14px;' /></td>";
+			chtm=chtm+"	 <td class='clsInvoiceRBT'>";
+			chtm=chtm+"	 	<input name='length' value='0' type='text' style='width:35px; height:14px;' />*";
+			chtm=chtm+"	 	<input name='width'  value='0'  type='text' style='width:35px;height:14px;' />*";
+			chtm=chtm+"	 	<input name='height' value='0' type='text' style='width:35px;height:14px;' />";
+			chtm=chtm+"	</td>";
+			chtm=chtm+" <td style='display: none'>";
+			chtm=chtm+"	    <span name='id'></span> ";
+			chtm=chtm+"     <span name='etOrderId'></span>";
+			chtm=chtm+"		<span name='stockOutId'>"+getIframeParm("stockOutId")+"</span>";
+			chtm=chtm+"     <span name='orgCartonNo'></span>";
+			chtm=chtm+"	</td>";
+			chtm=chtm+"</tr>";		
+			var $tbHeader=$("#west-panel #tbHeader tbody");
+			$tbHeader.find("tr").eq(0).nextAll().remove();
+			$tbHeader.append(chtm);
+			openCLose("btnAddGoods,btnAndGoods");
+			initInput();
+		}
+		function pickCarton(){ //选箱子
+		    var $this=$("input[name='subBox']:checked");
+			if ($this.length!=1){
+			    $.omMessageTip.show({content :"对不起,请选从左边列表中择一个目标箱子！",timeout : 2000,type : 'error'});
+			   return false;
+			}
+			var $dv=$this.parents(".tbody_item");
+			var carton=$dv.getVo();
+			var chtm=" <tr>";
+			chtm=chtm+"	 <td class='clsInvoiceRBT'>";
+			chtm=chtm+"    <b style='color:blue;'><input name='cartonNo' style='width:35px;' value='"+carton.cartonNo+"' /></b></td>";
+			chtm=chtm+"	 <td class='clsInvoiceRBT'><input name='nw' value='"+carton.nw+"' style='width:100px;height:14px;' /></td>";
+			chtm=chtm+"	 <td class='clsInvoiceRBT'><input name='gw' value='"+carton.gw+"' style='width:100px;height:14px;' /></td>";
+			chtm=chtm+"	 <td class='clsInvoiceRBT'>";
+			chtm=chtm+"	 	<input name='length' value='"+carton.length+"' type='text' style='width:35px; height:14px;' />*";
+			chtm=chtm+"	 	<input name='width'  value='"+carton.width+"'  type='text' style='width:35px;height:14px;' />*";
+			chtm=chtm+"	 	<input name='height' value='"+carton.height+"' type='text' style='width:35px;height:14px;' />";
+			chtm=chtm+"	</td>";
+			chtm=chtm+" <td style='display: none'>";
+			chtm=chtm+"	    <span name='id'>"+carton.id+"</span> ";
+			chtm=chtm+"     <span name='etOrderId'>"+carton.etOrderId+"</span>";
+			chtm=chtm+"		<span name='stockOutId'>"+carton.stockOutId+"</span>";
+			chtm=chtm+"     <span name='orgCartonNo'>"+carton.orgCartonNo+"</span>";
+			chtm=chtm+"	</td>";
+			chtm=chtm+"</tr>";			
+			var $tbDetail=$dv.find(".tbody_product dl");
+			var tdVo=null,dhtm="";
+			$tbDetail.each(function(i){
+			    var $dl=$(this);
+				tdVo=$dl.getVo();
+			    dhtm=dhtm+"<tr>";
+				dhtm=dhtm+"  <td height='20' align='left'><span name='pn'>"+tdVo.pn+"</span></td>";
+				dhtm=dhtm+"  <td height='20' align='right'><span name='tearQty'>"+tdVo.tearQty+"</td>";
+				dhtm=dhtm+"  <td height='20' align='left'><span name='productName'>"+tdVo.productName+"</td>";
+				dhtm=dhtm+"  <td height='20' align='center'><span name='brand'>"+tdVo.brand+"</td>";
+				dhtm=dhtm+"  <td height='20' align='center'><span name='origin'>"+tdVo.origin+"</td>";				
+				dhtm=dhtm+"  <td style='display: none'>";
+				dhtm=dhtm+"    <span name='stockOutPackingId'>"+tdVo.stockOutPackingId+"</span>";
+				dhtm=dhtm+"	   <span name='cartonId'>"+tdVo.cartonId+"</span>";
+				dhtm=dhtm+"    <span name='stockInPackingId'>"+tdVo.stockInPackingId+"</span> ";
+				dhtm=dhtm+"	   <span name='invoiceNo'>"+tdVo.invoiceNo+"</span>";
+				dhtm=dhtm+"	   <span name='entrustOrderDetailId'>"+tdVo.entrustOrderDetailId+"</span>";
+				dhtm=dhtm+"    <span name='productId'>"+tdVo.productId+"</span>";
+				dhtm=dhtm+"    <span name='stockOutId'>"+tdVo.stockOutId+"</span>";
+				dhtm=dhtm+"	 </td>";
+			    dhtm=dhtm+"</tr>";
+			});			
+			var $tbHeader=$("#west-panel #tbHeader tbody");
+			clearTargetTr();
+			$tbHeader.append(chtm);
+			var $tbItem=$("#west-panel #tbItems tbody"); 
+			$tbItem.append(dhtm);
+			cartonOrDateil($this,0);
+			openCLose("btnAddGoods,btnAndGoods");
+			initInput();
+		}
+		function addDetail(){
+		    var $chk=$("input[name='subBox']:checked");
+			if ($chk.length<=0){
+			    $.omMessageTip.show({content :"对不起,请选择料号！",timeout : 2000,type : 'error'});
+			    return false;
+			}
+			var $targetHtr=$("#west-panel #tbHeader tbody tr");
+			if ($targetHtr.length<=1){
+			    $.omMessageTip.show({content :"对不起,请先设置目标箱子！",timeout : 2000,type : 'error'});
+			    return false;
+			}
+			var dhtm="";
+			$chk.each(function(i){
+			    var $dl=$(this).parent("dd").parent("dl");
+				var carton=$dl.parents("tr").getVo();
+				var tdVo=$dl.getVo();
+				if (tdVo.tearQty<=0){
+				   $.omMessageTip.show({content :"对不起！箱号为:"+carton.cartonNo+" 的整理数无数量！",timeout : 4000,type : 'error'});
+				   return false;
+				}
+				var qty=$dl.find("dd span[name=qty]").html().replace(/\s+/g,"");
+				qty=parseInt(qty);
+				if(qty<tdVo.tearQty){
+				   $.omMessageTip.show({content :"对不起！箱号为:"+carton.cartonNo+" 的整理数不能大于"+qty,timeout : 4000,type : 'error'});
+				   return false;
+				}
+				if(andNwGwQty(tdVo.stockOutPackingId,tdVo.tearQty,carton.nw,carton.gw,carton.cartonQty)==false){
+					dhtm=dhtm+"<tr>";
+					dhtm=dhtm+"  <td height='20' align='left'><span name='pn'>"+tdVo.pn+"</span></td>";
+					dhtm=dhtm+"  <td height='20' align='right'><span name='tearQty'>"+tdVo.tearQty+"</td>";
+					dhtm=dhtm+"  <td height='20' align='left'><span name='productName'>"+tdVo.productName+"</td>";
+					dhtm=dhtm+"  <td height='20' align='center'><span name='brand'>"+tdVo.brand+"</td>";
+					dhtm=dhtm+"  <td height='20' align='center'><span name='origin'>"+tdVo.origin+"</td>";					
+					dhtm=dhtm+"  <td style='display: none'>";
+					dhtm=dhtm+"    <span name='stockOutPackingId'>"+tdVo.stockOutPackingId+"</span>";
+					dhtm=dhtm+"	   <span name='cartonId'>"+tdVo.cartonId+"</span>";
+					dhtm=dhtm+"    <span name='stockInPackingId'>"+tdVo.stockInPackingId+"</span> ";
+					dhtm=dhtm+"	   <span name='invoiceNo'>"+tdVo.invoiceNo+"</span>";
+					dhtm=dhtm+"	   <span name='entrustOrderDetailId'>"+tdVo.entrustOrderDetailId+"</span>";
+					dhtm=dhtm+"    <span name='productId'>"+tdVo.productId+"</span>";
+					dhtm=dhtm+"    <span name='stockOutId'>"+tdVo.stockOutId+"</span>";
+					dhtm=dhtm+"	 </td>";
+					dhtm=dhtm+"</tr>";
+				}
+				qty=qty-parseInt(tdVo.tearQty);
+				$dl.find("dd span[name=qty]").html(qty);
+            });
+			var $targetDtr=$("#west-panel #tbItems tbody tr");
+			$targetDtr.last().after(dhtm);
+		}
+		function andNwGwQty(stockOutPackingId,qty,nw,gw,cartonQty){
+		   nw=nw.replace(/(^\s+)|(\s+$)/g, "").replace("&nbsp;","");
+		   gw=gw.replace(/(^\s+)|(\s+$)/g, "").replace("&nbsp;","");
+		   var retValue=false;
+		   var rate=0.0,tempNw=0.0,tempGw=0.0;
+		   rate=qty.div(cartonQty);
+		   var tnw=rate.mul(nw);
+		   var tgw=rate.mul(gw);
+		   var $inputNw=$("#west-panel #tbHeader tbody").find("input[name='nw']");
+		   var $inputGw=$("#west-panel #tbHeader tbody").find("input[name='gw']");
+		   tempNw=$inputNw.val();
+		   tempGw=$inputGw.val();
+		   $inputNw.val((parseFloat(tempNw)+tnw).toFixed(2));
+		   $inputGw.val((parseFloat(tempGw)+tgw).toFixed(2));
+		   $targetDtr=$("#west-panel #tbItems tbody tr").eq(0).nextAll();
+		   $targetDtr.each(function(i){
+			   var $this= $(this);
+			   var temPackingId=$this.find("span[name=stockOutPackingId]").html();
+			   if(temPackingId==stockOutPackingId){
+			      var tempQty=$this.find("span[name=tearQty]").html().replace(/(^\s+)|(\s+$)/g, "").replace("&nbsp;","");
+				  tempQty=parseInt(tempQty)+parseInt(qty);
+				  $this.find("span[name=tearQty]").html(tempQty);
+				  retValue=true;
+			   }
+		   });
+		   return retValue;
+		}
+		function cartonOrDateil($chk,type){ //移除箱子或是移除箱子的某一个料号 0 删除整个箱子 1 则是 则是根据detail的qty是否要删除
+		   if(type==0){ 
+		      $chk.parents(".tbody_item").remove();
+		   }else{
+		      
+		   } 
+		}
+		function mergerCarton(){ //并箱
+			 var $tbHeader=$("#west-panel #tbHeader tbody");
+			 var carton=$tbHeader.getVo();
+			 var packings=[];
+			 var $tbItr=$("#west-panel #tbItems tbody").find("tr").eq(0).nextAll(); //
+			 if ($tbItr.length<=0){
+			    $.omMessageTip.show({content :"对不起,没有货物!",timeout : 4000,type : 'error'});
+			    return false;
+			 }
+			 if (carton.nw<=0 || carton.gw<=0){
+			    $.omMessageTip.show({content :"对不起,箱子的净重或毛重不能为0!",timeout : 4000,type : 'error'});
+			    return false;
+			 }
+			 $tbItr.each(function(i){
+			      var vo=$(this).getVo();
+				  vo.cartonId=carton.id;
+				  packings.push(vo);
+			 });
+			 var html="";
+			 html=html+"<div class='tbody_item'>";
+			 html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+			 html=html+" <tr> ";
+			 html=html+"   <td style='display:none'><span name='id'>"+carton.id+"</span>";
+			 html=html+"       <span name='etOrderId'>"+carton.etOrderId+"</span>";
+			 html=html+"       <span name='stockOutId'>"+carton.stockOutId+"</span>";
+			 html=html+"       <span name='orgCartonNo'>"+carton.orgCartonNo+"</span>";
+			 html=html+"       <span name='length'>"+carton.length+"</span>";
+			 html=html+"       <span name='width'>"+carton.width+"</span>";
+			 html=html+"       <span name='height'>"+carton.height+"</span>";
+			 html=html+"   </td>";
+			 html=html+"   <td width='50'><strong><span name='cartonNo'>"+carton.cartonNo+"</span></strong></td>";
+			 html=html+"   <td width='50'><strong><span name='orgCartonNo'></span></strong></td>";
+			 html=html+"   <td width='70' style='text-align:right;margin-right:2px;'><strong>";
+			 html=html+"     <span name='nw'>"+carton.nw.replace(/(^\s+)|(\s+$)/g, "").replace("&nbsp;","")+"&nbsp;</span>";
+			 html=html+"     </strong></td>";
+			 html=html+"   <td width='70' style='text-align:right;margin-right:2px;'><strong>";
+			 html=html+"     <span name='gw'>"+carton.gw.replace(/(^\s+)|(\s+$)/g, "").replace("&nbsp;","")+"&nbsp;</span>";
+			 html=html+"     </strong></td>";
+			 html=html+"  <td class='tbody_product' width='480'>";
+			 for(var j=0;j<packings.length;j++){
+				 var packing=packings[j];
+				 html=html+"    <dl>"; 
+				 html=html+"      <dd style='display:none'>";
+				 html=html+"          <span name='stockOutPackingId'>"+packing.stockOutPackingId+"</span>";
+				 html=html+"          <span name='cartonId'>"+packing.cartonId+"</span>";
+				 html=html+"          <span name='stockInPackingId'>"+packing.stockInPackingId+"</span>";
+				 html=html+"          <span name='invoiceNo'>"+packing.invoiceNo+"</span>";
+				 html=html+"          <span name='entrustOrderDetailId'>"+packing.entrustOrderDetailId+"</span>";
+				 html=html+"          <span name='productId'>"+packing.productId+"</span>";
+				 html=html+"          <span name='stockOutId'>"+packing.stockOutId+"</span>";
+				 html=html+"          <span name='pn'>"+packing.pn+"</span>";
+				 html=html+"          <span name='productName'>"+packing.productName+"</span>";
+				 html=html+"          <span name='origin'>"+packing.origin+"</span>";
+				 html=html+"          <span name='brand'>"+packing.brand+"</span>";
+				 html=html+"      </dd>";
+				 html=html+"      <dd style='float:left;text-align:left;width:190px;'>";
+				 html=html+"          <span name='declare'>";
+				 html=html+               packing.pn+"/"+packing.productName;
+				 html=html+               "/"+packing.brand+"/" +packing.origin;
+				 html=html+"           </span>";
+				 html=html+"      </dd>";
+				 html=html+"      <dd style='float:left;text-align:right;width:120px;'>";
+				 html=html+"          <span name='qty'>"+packing.tearQty+"</span>";
+				 html=html+"      </dd>";
+				 html=html+"      <dd style='float:left;text-align:right;width:120px;'>";
+				 html=html+"	     <input type='text' value='"+packing.tearQty+"' ";
+				 html=html+"         style='width:90%;margin-right:2px;text-align: right;' name='tearQty' /> ";
+				 html=html+"       </dd>";
+				 html=html+"      <dd style='float:left;text-align:center;width:50px;'>";
+				 html=html+"         <input type='checkbox' value='checkbox1' name='subBox' style='width:20px; height:20px;' />";
+				 html=html+"	 </dd>";
+				 html=html+"	</dl>";
+			  }
+			 html=html+"  </td>";
+			 html=html+"<td></td>";	 
+			 html=html+"</tr>";
+			 html=html+"</table></div>";
+		     var $allCartons=$(".tbody_item");
+			 var find=false;			
+			 var targetCarton=parseInt(carton.cartonNo);
+			 $allCartons.each(function(i){
+			     var $div=$(this); 
+				 var cartonNo=$div.find("span[name='cartonNo']").html();
+				 cartonNo=parseInt(cartonNo);
+				 if(cartonNo>targetCarton){
+				   $div.before(html);
+				   find=true;
+				   return false;
+				 }
+			});
+            if(find==false){
+			   var $div=$allCartons.last(); 
+			   $div.after(html);
+			   find=true;
+			}
+			if (find==true){
+			   clearTargetTr();
+			   openCLose("btnNew,btnPick");
+			}
+		}
+		function openCLose(btns){
+		    var arr=btns.split(",");
+		    $('#btnNew').omButton('disable');
+			$('#btnPick').omButton('disable');
+			$('#btnAddGoods').omButton('disable'); //enable
+			$('#btnAndGoods').omButton('disable');
+			for(var i=0;i<arr.length;i++){
+			   $("#"+arr[i]).omButton('enable');
+			}
+		}
+		function initInput(){
+		   var $tbHeader=$("#west-panel #tbHeader tbody");
+		   $tbHeader.find("input[name=cartonNo]").omNumberField({allowDecimals:false});
+		   $tbHeader.find("input[name=nw]").omNumberField({allowDecimals:true,decimalPrecision:2});
+		   $tbHeader.find("input[name=gw]").omNumberField({allowDecimals:true,decimalPrecision:2});
+		   $tbHeader.find("input[name=length]").omNumberField({allowDecimals:false});
+		   $tbHeader.find("input[name=width]").omNumberField({allowDecimals:false});
+		   $tbHeader.find("input[name=height]").omNumberField({allowDecimals:false});
+		}
+		function clearTargetTr(){
+		    $("#west-panel #tbHeader tbody").find("tr").eq(0).nextAll().remove();
+			$("#west-panel #tbItems tbody").find("tr").eq(0).nextAll().remove(); //
+		}
+		function countCartonGwNw(flag){
+		    var totalWeight=0.0,rate=0.0,weight=0.0;
+			var cartonQty=0,tearQty=0;
+			$("input[name='subBox']:checked").each(function(i){
+				 var $this=$(this);
+				 cartonQty=countRowCartonQty(true,$this);
+				 tearQty=countRowCartonQty(false,$this);
+				 rate=tearQty.div(cartonQty);
+				 var $tr = $this.parents("tr");
+				 if (flag){
+					 weight=parseFloat($tr.find("span[name=nw]").html());
+					 totalWeight=totalWeight+rate.mul(weight);
+				 }else{
+					 weight=parseFloat($tr.find("span[name=gw]").html());
+					 totalWeight=totalWeight+rate.mul(weight);					     
+				 }
+			});
+			return totalWeight;
+		}
+		function saveCartons(){ //保存结果
+		    var tempQty=0;
+		    var $allCartons=$(".tbody_item");
+            var cartons=[];
+			$allCartons.each(function(i){
+			     var $div=$(this); 
+				 var tempCartonVo=$div.getVo();
+				 var cartonVo={};
+				 cartonVo["id"]=tempCartonVo.id;
+				 cartonVo["etOrderId"]=tempCartonVo.etOrderId;
+				 cartonVo["stockOutId"]=tempCartonVo.stockOutId;
+				 cartonVo["cartonNo"]=tempCartonVo.cartonNo;
+				 cartonVo["orgCartonNo"]=tempCartonVo.orgCartonNo;
+				 cartonVo["nw"]=tempCartonVo.nw.replace(/(^\s+)|(\s+$)/g, "").replace("&nbsp;","");
+				 cartonVo["gw"]=tempCartonVo.gw.replace(/(^\s+)|(\s+$)/g, "").replace("&nbsp;","");				 
+				 cartonVo["length"]=tempCartonVo.length;
+				 cartonVo["width"]=tempCartonVo.width;
+				 cartonVo["height"]=tempCartonVo.height;
+				 var $tbDetail=$div.find(".tbody_product dl");
+				 var packingList=[];
+				 $tbDetail.each(function(i){
+					var $dl=$(this);
+					var packingVo=$dl.getVo();
+					if (packingVo.qty>0){//数量为0的不添加
+						var packing={};
+						packing["id"]=packingVo.stockOutPackingId;
+						packing["stockOutId"]=packingVo.stockOutId;
+						packing["cartonId"]=packingVo.cartonId;
+						packing["stockInPackingId"]=packingVo.stockInPackingId;
+						packing["entrustOrderDetailId"]=packingVo.entrustOrderDetailId;
+						packing["productId"]=packingVo.productId;
+						packing["invoiceNo"]=packingVo.invoiceNo;
+						packing["qty"]=packingVo.qty;
+						packingList.push(packing);					
+						tempQty=tempQty+parseInt(packingVo.qty);
+					}
+				 });
+				 cartonVo["stockOutPackings"]=packingList;
+				 cartons.push(cartonVo);
+			});
+			if (tempQty!=totalQty){
+			   $.omMessageTip.show({content :"箱单整理好的总数量："+tempQty+" 跟箱单原来的数量："+totalQty+" 对不上！请检查！",
+			   timeout : 2000,type : 'error'});
+			   return false;
+			}
+			var stockOutPackings= JSON.stringify(cartons); 
+			var url="warehouse/StockOut/0/saveArrangeStockOut";
+			var vo={"stockOutPackings":stockOutPackings,stockOutId:getIframeParm("stockOutId")};
+			$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+				   loadStockOutCarton();//刷新一下
+				   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			}});
+		}
+	</script>
+</head>
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px;background-color: #EEEEEE">
+<div id="nav_packingarrange" title="" style="width:100%; height:97.6%;">
+	<div id="center-panel">
+	    <div id="leftbar"></div>	
+		<div id="make-tab">
+			<div class="mutitable">
+				<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+					<thead>
+					   <tr>
+						  <td width="50">箱号</td>
+						  <td width="50">客户箱号</td>
+						  <td width="70" style="text-align:right">净重&nbsp;</td>
+						  <td width="70" style="text-align:right">毛重&nbsp;</td>
+						  <td width="190">型号/品名/品牌/原产国</td>
+						  <td width="120" style="text-align:right">当前数</td>
+						  <td width="120" style="text-align:right">整理数</td>
+						  <td width="50" style="text-align: center;">
+							<input type="checkbox" name="checkAll" id="checkAll"  style="width:20px; height:20px;" />
+							<label for="selectAll"></label>
+						  </td>
+						  <td></td>
+					   </tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div id="west-panel">
+		<div id="rightbar"></div>
+		<div style="margin-left:2px;">
+			<table id="tbHeader" class="listContent" width="95%">
+				<tr>
+				   <td class="clsInvoiceRBT">箱号</td>
+				   <td class="clsInvoiceRBT">净重</td>
+				   <td class="clsInvoiceRBT">毛重</td>
+				   <td class="clsInvoiceRBT">长*宽*高</td>
+				 </tr>
+			</table>
+			<table id="tbItems" class="listContent" style="width:95%; margin-top:2px;">
+				<tr>
+					<td class="clsInvoiceRBT" height="20" align="center" width="150"><b>型号</b></td>
+					<td class="clsInvoiceRBT" height="20" align="center" width="15%" style="font-weight: bold;"><b>数量</b></td>
+					<td class="clsInvoiceRBT" height="20" align="center" width="30%"><b>品名</b></td>
+					<td class="clsInvoiceRBT" height="20" align="center" width="15%"><b>品牌</b></td>
+					<td class="clsInvoiceRBT" height="20" align="center" width="12%"><b>原产地</b></td>
+				</tr>
+			</table>
+		</div>
+	</div>	
+</div>
+<div id="totalQty" style="text-align:center; font-weight: bold;"></div>
+</body>
+</html>

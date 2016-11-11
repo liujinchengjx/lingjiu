@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tabs.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-grid-sort.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>	
+    <script type="text/javascript">
+		var roleId=0,userId=0,tabId=0,currPopedomsInRole = [],currPopedomsInUser = [],rightTree=null;
+		var rolegrid=null,usergrid=null;
+         $(document).ready(function() {
+		     var element = $('#nav_popedom').omBorderLayout({
+            	   panels:[{id:"center-panel",header:true,title:"用户角色信息",region:"center",width:"50%",height:"100%"},
+            	    {id:"west-panel",resizable:true,collapsible:true,title:"权限表",fit:true,hideCollapsBtn:false,
+					 region:"east",width:"49.6%",height:"100%"}
+            	    ]
+            });		 
+		 
+		    $('#make-tab').omTabs({height: "95%",width:600,closable : false,tabHeight:22,onActivate:function(n,event) {
+			    tabId=n;
+			}});     		
+			rolegrid=$('#rolegrid').omGrid({				
+				limit:0,
+				width:"95%",
+				title : '角色列表',
+                dataSource : "systemmanager/Role/0/searchRole",
+                colModel : [  
+                             {header : '角色名称', name : 'roleName', width : 120, align : 'left'},
+                             {header : '描述', name : 'description', width :300,align : 'left'}
+						  ],				
+				onRowSelect: setRolePopedom
+            });
+			usergrid=$('#usergrid').omGrid({
+				width:"95%",
+				limit:15,
+				autoFit:true,
+                title : '用户列表',
+                dataSource :"systemmanager/User/0/searchUser",
+                colModel : [
+                             {header : '登录账户', name : 'userName', width : 150, align : 'left'},
+							 {header : '名称', name : 'realName', width : 300, align : 'left'}, 							 
+							],
+				onRowSelect: setUserPopedom
+            });	
+			$('#rightbar').initToolBar();
+			var url= "systemmanager/Popedom/0/loadPopedomTree";
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   rightTree=$("#rightTree").omTree({
+					dataSource : json.rows,
+					showCheckbox:true,
+					simpleDataModel: true,
+					onCheck : function(nodeData){
+					}
+				});     
+			 }
+	   		});
+	});
+	
+	function setRolePopedom(rowIndex,rowData,event){
+		roleId=rowData.id;	
+		var url="systemmanager/PopedomInRole/0/getPopedomsByRoleId";
+		$.ajaxPost({data:{"roleId":roleId},url:url,msg:false,success:function(json,textStatus){
+			   unSelectAll();
+			   currPopedomsInRole=[];
+			   $.each(json.entity, function(i, obj){
+					currPopedomsInRole.push(obj.popedom);
+					var target = rightTree.omTree("findNode", "id", obj.popedom);
+					rightTree.omTree('check',target);
+			   });
+		  }
+		});	
+	}
+	function setUserPopedom(rowIndex,rowData,event){//
+		userId=rowData.id;	
+		var url="systemmanager/PopedomInUser/0/getPopedomsByUserId";
+		$.ajaxPost({data:{"userId":userId},url:url,msg:false,success:function(json,textStatus){
+			unSelectAll();
+			currPopedomsInUser=[];
+			$.each(json.entity, function(i, obj){
+				currPopedomsInUser.push(obj.popedom);
+				var target = rightTree.omTree("findNode", "id", obj.popedom);
+				rightTree.omTree('check',target);
+			});
+		  }
+		});	
+	}
+	function saveRight(){ //保存权限	
+		 var selectedNodes = $('#rightTree').omTree('getChecked',true);
+		 selectedNodes=getSelectedPopedom(selectedNodes);
+		 var rightRows=[];
+	     if (tabId==0) { //给角色设置权限
+			 if (roleId>0){					
+				 for (var i=0;i<selectedNodes.length;i++){ //这个循环是检测新增的权限
+					 if (currPopedomsInRole.in_array(selectedNodes[i])==false){
+							var right={};
+							right["roleId"]=roleId;
+							right["popedom"]=selectedNodes[i];
+							right["flag"]=2; //这里默认是新增 2  表示增的意思
+							rightRows.push(right);
+					 }
+				  }
+				  for(var i=0;i<currPopedomsInRole.length;i++){//这个循环是检测要删除的权限
+				     if (selectedNodes.in_array(currPopedomsInRole[i])==false){
+							var right={};
+							right["roleId"]=roleId;
+							right["popedom"]=currPopedomsInRole[i];
+							right["flag"]=3; // 3 表示删除的意思
+							rightRows.push(right);
+					 }
+				  }	
+				  if (rightRows.length<=0)	return false;
+				  var rightList= JSON.stringify(rightRows); 
+				  var url="systemmanager/PopedomInRole/0/edit";
+				  $.ajaxPost({data:{"popedomInRoles":rightList,"roleId":roleId},url:url,msg:false,success:function(json,textStatus){
+						 $.each(rightRows, function(i, obj){
+							 if (obj.flag==2){
+								currPopedomsInRole.push(obj.popedom);
+							 }else if (obj.flag==3){
+								$.each(currPopedomsInRole, function(key, val) {   
+									if (val==obj.popedom)	 {
+										currPopedomsInRole.remove(key); 
+									}
+								}); 
+							 }
+						 });
+						$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+					  }
+					});	
+			 }else{
+				$.omMessageTip.show({content :"请选择角色",timeout : 2000,type : 'error'});
+			 }
+		}else if(tabId==1){//给用户设置权限
+		    if (userId>0){					
+				 for (var i=0;i<selectedNodes.length;i++){ //这个循环是检测新增的权限
+					 if (currPopedomsInUser.in_array(selectedNodes[i])==false){
+							var right={};
+							right["userId"]=userId;
+							right["popedom"]=selectedNodes[i];
+							right["flag"]=2; //这里默认是新增 2  表示增的意思
+							rightRows.push(right);
+					 }
+				  }
+				  for(var i=0;i<currPopedomsInUser.length;i++){//这个循环是检测要删除的权限
+				     if (selectedNodes.in_array(currPopedomsInUser[i])==false){
+							var right={};
+							right["userId"]=userId;
+							right["popedom"]=currPopedomsInUser[i];
+							right["flag"]=3; // 3 表示删除的意思
+							rightRows.push(right);
+					 }
+				  }
+				  if (rightRows.length<=0)	return false;
+				  var rightlist= JSON.stringify(rightRows); 
+				  var url="systemmanager/PopedomInUser/0/edit";
+				  $.ajaxPost({data:{"popedomInUsers":rightlist,"userId":userId},url:url,msg:false,success:function(json,textStatus){
+						 $.each(rightRows, function(i, obj){
+							 if (obj.flag==2){
+								currPopedomsInUser.push(obj.popedom);
+							 }else if (obj.flag==3){
+								$.each(currPopedomsInUser, function(key, val) {  
+									if (val==obj.popedom)	 {
+										currPopedomsInUser.remove(key); 
+									}
+								}); 
+							 }
+						 });
+						$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});					  
+					 }
+					});	
+			 }else{
+				$.omMessageTip.show({content :"请选择用户",timeout : 2000,type : 'error'});
+			 }
+		}		 
+	}
+	
+	function getSelectedPopedom(selectedNodes){
+	     var tempArr=[];
+		 for (var i=0;i<selectedNodes.length;i++){ //这个循环是检测新增的权限
+			  var lf=selectedNodes[i].id+"";
+			  if(lf!=""){
+				var lastNum=lf.substring(5);
+				if (lastNum>0){					
+					tempArr.push(lf);
+				}
+			  }
+		  }
+		  return tempArr;
+	}
+	function unSelectAll(){
+		var tgs =rightTree.omTree("findNodes", "pid", "");
+		for(var i=0;i<tgs.length;i++){
+			rightTree.omTree('uncheck',tgs[i]); //先全部指为未选		   
+		}
+	}
+    </script>
+</head>
+<body class="dfbody" >
+<div id="nav_popedom" title="权限"  style="width:100%; height:95%;">
+	<div id="center-panel">	
+		<div id="make-tab">
+				<ul>
+					<li><a href="#tab1">给角色分配权限</a></li>
+					<li><a href="#tab2">给用户分配权限</a></li>
+				</ul>
+				<div id="tab1">			
+					<div id="rolegrid"></div>
+				</div>
+				<div id="tab2">
+				   <div id="usergrid"></div>				   
+				</div>        
+		</div>
+	</div>
+	<div id="west-panel">
+		<div id="rightbar"></div>
+		<ul id="rightTree"></ul>
+	</div>	
+</div>
+</body>
+</html>

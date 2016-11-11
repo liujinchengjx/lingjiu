@@ -1,0 +1,275 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<script type="text/javascript" src="/js/jquery.js"></script>	
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null,typeName="";	
+	$(document).ready(function() {
+		initValidateForm("systemdict");
+	    $("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$('#state').omCombo({
+                dataSource : [ {text : '未确认', value : '10'}, 
+                               {text : '已确认', value : '20'},
+                               {text : '已取消', value : '1'} ]
+            });
+		$('#fleightState').omCombo({
+                dataSource : [ {text : '未发货', value : '10'}, 
+                               {text : '已发货', value : '20'} ]
+            });
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});		
+		$('span#button-export').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+		    	   searchExport();
+			   }
+		});		
+
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({				
+				width:'100%',
+				limit:20,
+				autoFit:true,
+                title : '活动列表',
+                dataSource : "/lingjiu/CoollarRecord/0/search",
+                colModel : [
+							 {header : '订单编号', name : 'orderCode', width : 50, align : 'left'},
+							 {header : '订单日期', name : 'coollarTime', width : 50, align : 'left'},
+							 {header : '会员编号', name : 'memberCode', width : 50, align : 'left'},
+                             {header : '商品名称', name : 'coollarGoods.goodsName', width : 50, align : 'left'}, 
+ 							 {header : '商品描述', name : 'coollarGoods.goodsDesc', width : 120, align : 'left'},
+							 {header : '数量', name : 'coollarQty', width : 50, align : 'left'},
+							 {header : '领用单价', name : 'coollarPrice', width : 50, align : 'left',
+							 		renderer : function(colValue, rowData, rowIndex) {
+										return colValue/100;
+									}	
+							 },
+							 {header : '物流费用', name : 'logisticsFee', width : 50, align : 'left',
+
+							 		renderer : function(colValue, rowData, rowIndex) {
+										return colValue/100;
+									}	
+							 },
+							 {header : '总费用', name : 'totalFee', width : 50, align : 'left',
+							 		renderer : function(colValue, rowData, rowIndex) {
+										return colValue/100;
+									}	
+							 },
+							 {header : '收货人', name : 'receiverName', width : 50, align : 'left'},
+							 {header : '收货人电话', name : 'receiverMobile', width : 50, align : 'left'},
+							 {header : '收货人地址', name : 'fullAddress', width : 150, align : 'left'},
+							 {header : '订单状态', name : 'stateName', width : 50, align : 'left'},
+							 {header : '物流状态', name : 'fleightStateName', width : 50, align : 'left'},
+							 {header : '物流公司', name : 'fleightCompany', width : 100, align : 'left'},
+							 {header : '物流单号', name : 'fleightNumber', width : 100, align : 'left'}
+
+
+                        
+						 ],
+				onRowClick:function(rowIndex,rowData,event){
+				    
+     			}	            
+            });	
+
+			
+			
+	});
+	
+	function searchData(){
+	   var vo=$("#search-panel").getVo();
+	   var params=convertParamToUrl(vo);
+	   $('#grid').omGrid('setData', "lingjiu/CoollarRecord/0/search?"+encodeURI(params));
+	}	
+	function searchExport(){
+		  
+		   $.omMessageBox.confirm({title:'是否确定',
+				content:'是否确定导出？',onClose:function(v){
+					if(v){	
+						 var vo=$("#search-panel").getVo();
+						   var params=convertParamToUrl(vo);
+						   window.open(baseUrl+"lingjiu/CoollarRecord/0/searchforExport?"+encodeURI(params));
+					}
+				}}
+		  );
+	}
+
+
+	function cancel(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+      	 if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',content : '请选择行！'});
+           		return;
+      	 }
+      	 var topicId= rowDatas[0].id;
+      	 $.omMessageBox.confirm({title:'是否取消',
+			content:'是否取消此单？',onClose:function(v){
+			if(v){	
+				var url= "lingjiu/CoollarRecord/0/changeState?coollarRecord.state=1&coollarRecord.id="+rowDatas[0].id;
+				$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					   if(json.msgCode==1){
+		     				$('#grid').omGrid('reload');//刷新grid
+		     				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		     			}else{
+		     				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'error'});
+		     			}
+				   }
+				});
+			 }							        
+		 }});
+
+	}
+
+	function confirm(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+      	 if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',content : '请选择行！'});
+           		return;
+      	 }
+      	 var topicId= rowDatas[0].id;
+      	 $.omMessageBox.confirm({title:'是否确定',
+			content:'是否确定此单？',onClose:function(v){
+			if(v){	
+				var url= "lingjiu/CoollarRecord/0/changeState?coollarRecord.state=20&coollarRecord.id="+rowDatas[0].id;
+				$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					   if(json.msgCode==1){
+		     				$('#grid').omGrid('reload');//刷新grid
+		     				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		     			}else{
+		     				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'error'});
+		     			}
+				   }
+				});
+			 }							        
+		 }});
+
+	}
+
+	function fleight(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+      	 if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',content : '请选择行！'});
+           		return;
+      	 }
+      	 var topicId= rowDatas[0].id;
+      	 $("#coollarId").val(topicId);
+      	 var fleightDilog = $("#fahuo").omDialog({
+      	 		title:"请输入发货信息",
+				autoOpen: true,
+				height: 180,
+				width:300,
+				modal: true,
+				buttons : [
+					{
+						text : "确定发货", 
+                    	click : function () {
+                    		commitfleight(fleightDilog);
+                    	}
+                    }]
+			});
+
+	}
+
+	function commitfleight(fleightDilog){
+		var fleightCompany = $("#fleightCompany").val();
+		
+		var fleightNumber = $("#fleightNumber").val();
+		
+		var coollarId =  $("#coollarId").val();
+		var fleightData={'coollarRecord.fleightCompany':fleightCompany,'coollarRecord.fleightNumber':fleightNumber,'coollarRecord.id':coollarId};
+		$.omMessageBox.confirm({title:'是否确定',
+			content:'是否确定此单？',onClose:function(v){
+			if(v){	
+				var url= "lingjiu/CoollarRecord/0/fleight"
+				$.ajaxPost({data:fleightData,url:url,msg:false,success:function(json,textStatus){
+					   if(json.msgCode==1){
+					   		$.omMessageBox.alert({
+			                      type:'success',
+			                       title:'成功',
+			                       content:'操作成功',
+			                       onClose:function(value){
+			                          //$("#fahuo").hide();
+			                       }
+			                });
+		     				
+		     			}else{
+		     				$.omMessageBox.alert({
+			                      type:'error',
+			                       title:'失败',
+			                       content:'发货操作失败'+json.msg,
+			                       onClose:function(value){
+			                       }
+			                });
+		     			}
+				   }
+				});
+			 }							        
+		 }});
+
+	}
+
+	</script>	
+</head>
+<body class="dfbody">
+<div id="search-panel">
+ <table class="edit-panel">		
+	<tr>
+		<td>关键字：</td>   	
+		<td><input type="text" id="searchValue" name="searchValue" /></td>
+		<td>会员编号：</td>   	
+		<td><input type="text" id="memberCode" name="memberCode" /></td>
+		<td>状态：</td>   	
+		<td ><input id="state" name="state"  /></td>
+		<td>发货状态：</td>   	
+		<td ><input id="fleightState" name="fleightState"  /></td>
+		<td ><span id="button-search">搜索</span>&nbsp;&nbsp;<span id="button-export">导出</span></td>						
+	</tr>	
+ </table> 	 
+</div>	
+   
+	<div id="buttonbar"></div>
+	<div id="grid"></div>
+	<div id="fahuo" style="display:none;">
+		<table class="edit-panel">		
+			<tr>
+				<td>物流公司：</td>   	
+				<td><input type="text" id="fleightCompany" name="coollarRecord.fleightCompany" type="text"/></td>
+			</tr>
+			<tr>
+				<td>物流单号：</td>   	
+				<td >
+					<input id="fleightNumber" name="coollarRecord.fleightNumber"  type="text"/>
+					<input id="coollarId" name="coollarRecord.id"  type="hidden"/>
+				</td>
+									
+			</tr>	
+ 		</table> 
+	</div>
+</body>
+</html>

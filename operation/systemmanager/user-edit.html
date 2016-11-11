@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-grid-sort.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var params={
+                title :'公司',
+				text:"cname",
+				onRowClick:null,
+                dataSource :"", // business/OperationCompany/0/searchOpCompany?searchValue=
+                colModel: [{header : '客户', name : 'cname', width : 250, align : 'left'},
+						   {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	var combodata=[{id:"userType",data:null}];
+	$(function() {
+	    $("#search-panel").omPanel({title:"",collapsed:true});	
+		initValidateForm("user");
+	    var userId=getIframeParm("userId");	
+	    if (userId !=""){
+		     var url="systemmanager/User/0/get?userId="+userId;
+		  	 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				  $("#user").initializeInput({"vo":json.entity,"comb":combodata}); //初始化
+			 }});
+ 	    }else{
+			$("#user").initializeInput({"comb":combodata});//初始化
+	    }
+		$('#buttonbar').omButtonbar({
+            	 width : "100%",
+            	 btns : [{label:"保存",
+            		     id:"btnSave" ,
+            		     icons : {left : '/images/icon/add.png'},
+            	 		 onClick: saveUser
+            			},
+						{separtor:true},
+						{label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);
+						  }
+						 }	           			
+            	 ]
+          }); 
+		
+			 
+	});
+	
+	function saveUser(){
+		if(validateForm("user")==false)return false; 
+		var url ="systemmanager/User/0/saveUser";	
+		var vo=$("#user").getVo();
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		    $("#id").val(json.entity);
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		}});		 
+	}		
+
+	function usrGdOnChange(){
+	}
+	</script>	
+</head>
+<body class="dfbody">
+	<div id="search-panel"></div>
+	<div id="nav_user" title="新增用户" >
+	    <form id="user">	    
+		<input type="hidden" id="id" name="usr.id" />
+		<input type="hidden" id="flag" name="usr.flag" />
+		<input type="hidden" id="passWord" name="usr.passWord"  />
+		<input type="hidden" id="userType" name="usr.userType" />
+		<input type="hidden" id="lastModifyTime" name="usr.lastModifyTime" />
+	    <input type="hidden" id="createTime" name="usr.createTime" />
+	    <input type="hidden" id="lastModifyBy" name="usr.lastModifyBy" />
+		<input type="hidden" id="lowerdName" name="usr.lowerdName" />
+		<input type="hidden" id="createBy" name="usr.createBy" />
+	    <input type="hidden" id="status" name="usr.status" />
+		<input type="hidden" id="isAdmin" name="usr.isAdmin" />
+		<input type="hidden" id="userGrade" name="usr.userGrade" />
+		<input type="hidden" id="enterpriseId" name="usr.enterpriseId" value="1"/>
+		<table class="edit-table">
+			<tr>
+				<td class="label">登录账户(会员编码)：</td>
+				<td class="field"><input  id="userName" name="usr.userName"  /></td>				
+				<td class="label">用户类型：</td>
+				<td class="field"><input id="userType" name="usr.userType" pattern='combo' editable='false' 
+				remote='UserType' width="120px"
+				 value='1' /></td>				
+			</tr>
+			
+			<tr>
+				<td class="label">电话：</td>
+				<td class="field" >
+				<input id="tel" name="usr.tel"  validate="rules:['required']" /></td>	
+				<td class="label">邮箱：</td>
+				<td class="field" ><input id="email" name="usr.email"  /></td>
+			</tr>	
+			<tr>   			    
+   			    <td class="label">真实姓名：</td>
+				<td class="field" >
+				<input id="realName" name="usr.realName" validate="rules:['required']" /></td>
+				<td class="label">英文名：</td>
+				<td class="field" >
+				<input id="ename" name="usr.ename" validate="rules:['required']" /></td>
+			</tr>							
+			<tr>							
+   			    <td class="label">身份证：</td>
+				<td class="field" ><input id="idCard" name="usr.idCard"  /></td>
+				<td class="label">性别：</td>
+				<td class="field" ><input id="sex" name="usr.sex"  pattern='combo' editable='false' remote='Sex' value='0'/></td>				
+			</tr>
+		
+			<tr>
+			  <td class="label">备注：</td>
+				<td class="field" colspan="3"><textarea id="remark" name="usr.remark"   style="height:50px;"></textarea></td>				
+			</tr>
+		</table>
+		</form>		
+	</div>
+	<div id="buttonbar"></div>	
+</body>
+</html>

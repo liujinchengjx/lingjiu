@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var params={
+                title :'客户列表',
+				text:"cname",
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+         };
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput(); //初始化
+		$("#customerId").initGridDropList(params);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+					 var vo=$("#search-panel").getVo();
+					 var params=convertParamToUrl(vo);
+					 $('#grid').omGrid('setData',"finance/ForeignExchangePurchasing/0/searchForeignExchangePurchasing?"+params);
+			   }
+		});		
+		$('#buttonbar').initToolBar();		
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '购汇列表',
+                dataSource :"finance/ForeignExchangePurchasing/0/searchForeignExchangePurchasing",
+                colModel : [
+                             {header : '客户', name : 'customerName', width : 100, align : 'left'},
+							 {header : '购汇类型', name : 'purType', width : 100, align : 'left',
+							 	renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.PurType,colValue);									
+								}	
+							 },
+							 {header : '支付币种', name : 'locCurrency', width : 30, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.Currency,colValue);									
+								}	 
+							 },	
+							 {header : '申请金额(本)', name : 'actualApplyLocAmt', width : 60, align : 'right'},
+							 {header : '完购金额(本)', name : 'actualPayLocAmt', width : 60, align : 'right'},
+							 {header : '申请时汇率', name : 'applyRate', width : 60, align : 'right'},
+							 {header : '购汇币种', name : 'foreignCurrency', width : 30, align : 'right',
+								  renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getDictName(Dictionary.Currency,colValue);
+								  }	 
+							 },
+							 {header : '申请金额(外)', name : 'actualApplyForeignAmt', width : 60, align : 'right'},
+							 {header : '完购金额(外)', name : 'actualPayForeignAmt', width : 60, align : 'right'},
+							 {header : '实际汇率', name : 'rate', width : 60, align : 'right'},
+							 {header : '申请时间', name : 'applyTime', width : 60, align : 'center'},
+							 {header : '实际购汇时间', name : 'purchasingTime', width : 60, align : 'center'},
+							 {header : '账户余额', name : 'purCountAmt', width : 100, align : 'left'},
+							 {header : '预支账户余额', name : 'overPurAmt', width : 100, align : 'left'},
+							 {header : '预购汇金额', name : 'purCashAmt', width : 100, align : 'left'},
+							 {header : '状态', name : 'status', width : 30, align : 'center',
+							    renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.ForeignExchangePurchasingStatus,colValue);
+								}	 
+							 }
+ 							]
+            });
+		 
+	});
+	
+	function addForeignExchangePurchasing(){ //申请	 
+        var paras={tabId:"addForeignExchangePurchasing001"};
+ 	    addNewTab("申请购汇","/finance/foreignexchangepurchasing-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	    });   
+	}
+	function editForeignExchangePurchasing(){
+		  var rowDatas = $('#grid').omGrid('getSelections',true);
+		  if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！',timeout:2000,type :'error'});
+			 return;
+		  }
+		  if(rowDatas[0].status==20){
+		     $.omMessageTip.show({title : '提示',timeout : 4000,content : '对不起，该来款已入账！',type : 'error'});
+			 return;
+		  }
+		  var paras={fepId:rowDatas[0].id,tabId:"editForeignExchangePurchasing001"}; 
+		  addNewTab("编辑购汇信息","/finance/foreignexchangepurchasing-edit.html",paras,function(){
+				$('#grid').omGrid('reload');//刷新grid
+		 });    
+	}
+	function auditForeignExchangePurchasing(){ //审核
+	  	  var rowDatas = $('#grid').omGrid('getSelections',true);
+		  if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择记录！',timeout : 2000,type : 'error'});
+			 return;
+		  }		
+		  if(rowDatas[0].status > 10){
+		     $.omMessageTip.show({title : '提示',timeout : 4000,content : 
+			 '对不起，必须是待审核状态才可以审核！',type : 'error'});
+			 return;
+		  }
+		  var url = "finance/ForeignExchangePurchasing/0/audit?fepId="+rowDatas[0].id;
+		  $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   $('#grid').omGrid('reload');
+			}
+		  });
+	}
+	
+	function finishForeignExchangePurchasing(){ //完购
+	      var rowDatas = $('#grid').omGrid('getSelections',true);
+		  if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择记录！',timeout : 2000,type : 'error'});
+			 return;
+		  }		
+		  if(rowDatas[0].status!=20){
+		     $.omMessageTip.show({title : '提示',timeout : 4000,content : 
+			 '对不起，必须是已审核状态才可以完购！',type : 'error'});
+			 return;
+		  }
+		  var paras={fepId:rowDatas[0].id,tabId:"finishForeignExchangePurchasing001"}; 
+		  addNewTab("完购","/finance/foreignexchangepurchasing-finish.html",paras,function(){
+				$('#grid').omGrid('reload');//刷新grid
+		 });    
+	}
+		
+
+	function viewForeignExchangePurchasing(){
+	   
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+ <table class="edit-panel">		
+	<tr>   	
+	    <td>客户：</td>
+        <td><input id="customerId" name="customerId"  onfocus="myFocus(this,'#f4eaf1')" 
+		   onblur="myblur(this,'white')" tip="选择客户" showtext=""  /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>	
+ </table> 	 
+</div>
+<div id="buttonbar"></div>	
+<div id="grid"></div>
+</body>
+</html>

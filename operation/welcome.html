@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>元和津领酒管理系统</title>
+<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+ <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+   	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+   	<script type="text/javascript" src="/js/common.js"></script>  
+<script type="text/javascript">
+   $(function() {
+	   $("#panel").omPanel({title : "欢迎",collapsible:true, collapsed: false,collapsible: true, closable: true});
+	    var html=__parent.document.getElementById("lastTime").value;
+		$("#panel").html(html);
+   });
+</script>
+<style>
+html{ overflow-y:auto;}
+li{padding-left:10px;padding-top:10px;list-style-type:none}
+</style>
+</head>
+<body class="dfbody">
+<div id="panel">
+
+</div>
+
+</body>
+</html>

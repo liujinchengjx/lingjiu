@@ -1,0 +1,125 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/jquery.cookie.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#customerId").initGridDropList(cusParams);
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});		
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({
+				autoFit:true,
+				limit:20,
+                title : '应收账款列表',
+                dataSource :"finance/AccountReceivable/0/searchAccountReceivable",
+                colModel : [
+                             {header : '客户', name : 'customerName', width : 120, align : 'left'},								 
+							 {header : '订单号', name : 'orderNo', width : 60, align : 'left'},
+							 {header : '订单类型', name : 'orderType', width : 50, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.OrderType,colValue);	
+								}
+							 }, 
+							 {header : '费用名称', name : 'itemName', width : 120, align : 'left'},
+							 {header : '币种', name : 'receivableCur', width : 50, align : 'center',
+							    renderer : function(colValue, rowData, rowIndex) {
+                                    return Dictionary.getDictName(Dictionary.Currency,colValue);	
+								}
+							 },
+							 {header : '金额', name : 'actualAmt', width : 60, align : 'right'},
+							 {header : '状态', name : 'status', width : 50, align : 'center',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.AccountReceivableStatus,colValue);	
+								}
+							 },
+							 {header : '时间', name : 'createTime', width : 60, align : 'center'}
+ 							],
+				rowDetailsProvider:function(rowData,rowIndex){
+                		return '';								
+	            }
+            });
+	});	
+	function searchData(){
+	    var vo=$("#search-panel").getVo();
+		var params=convertParamToUrl(vo);
+		$('#grid').omGrid('setData',"finance/AccountReceivable/0/searchAccountReceivable?"+params);
+	}
+	function addAccountReceivable(){
+		var paras={tabId:"addAccountReceivable001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	    addNewTab("新加应收账款","/finance/accountreceivable-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	     });
+	}	
+	function editAccountReceivable(){
+	     var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择编辑行！'});
+			 return;
+		  }	
+		 var paras={accountReceivableId:rowDatas[0].id,tabId:"editAccountReceivable001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	     addNewTab("编辑应收账款","/finance/accountreceivable-edit.html",paras,function(){
+		      $('#grid').omGrid('reload');//刷新grid
+	     });
+	}	
+	function viewAccountReceivable(){
+	}
+	</script>
+</head>
+<body class="dfbody">
+<div id="search-panel">
+ <table class="edit-panel">		
+	<tr>   	
+   		<td>客户：</td>    
+		<td><input id="customerId" name="customerId"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" 
+		showtext=""  /></td>
+	   <td>时间：</td>
+	   <td><input id="startTime" name="startTime" pattern='date' editable='false' /></td>
+	   <td>到：</td>
+	   <td><input id="endTime" name="endTime" pattern='date' editable='false' /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>	
+ </table> 	 
+</div>	
+	<div id="buttonbar"></div>	
+	<div id="grid"></div>
+</body>
+</html>

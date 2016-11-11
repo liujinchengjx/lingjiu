@@ -1,0 +1,346 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---报关进度</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>  
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource : "business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	var actualLoadWeight=0.0;
+	var dialog=null;
+	$(function() {
+	    dialog=$("#nav_cooder").omDialog({autoOpen:false,draggable:false,resizable:false,height:250,width:300,modal:true});
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#customerId").initGridDropList(cusParams);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+					 var vo=$("#search-panel").getVo();
+					 var params=convertParamToUrl(vo);
+					 $('#grid').omGrid('setData',"customs/CustomForm/0/searchCustomForm?"+params);
+			   }
+		});
+		$('#btnbar').initToolBar();
+		$('#grid').omGrid({
+			limit:20,
+			autoFit:true,
+			title : '报关单列表',
+			dataSource :"customs/CustomForm/0/searchCustomForm",
+			colModel : [
+						 {header : '制单日期', name : 'makeDate', width : 60, align : 'left'},
+						 {header : '报关日期', name : 'customDate', width : 60, align : 'left'}, 							 
+						 {header : '原单号', name : 'coOrderNo', width : 70, align : 'left'},
+						 {header : '子单号', name : 'cfOrderNo', width : 70, align : 'left'},
+						 {header : '客户', name : 'receiveCompanyName', width : 120, align : 'left'},
+						 {header : '报关单号', name : 'customOrderNo', width : 110, align : 'left'},
+						 {header : '状态', name : 'status', width : 60, align : 'center',
+							 renderer : function(colValue, rowData, rowIndex) {
+								return Dictionary.getDictName(Dictionary.CusomFormStatus,colValue);
+							 }
+						 },
+						 {header : '操作模式', name : 'opType', width : 50, align : 'left',
+								renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.OpType,colValue);
+								}
+						 },
+						 {header : '货值', name : 'actualAmt', width : 60, align : 'right'},	
+						 {header : '币种', name : 'currency', width : 60, align : 'center',
+						 	 renderer : function(colValue, rowData, rowIndex) {
+								return Dictionary.getDictName(Dictionary.Currency,colValue);
+							 }
+						 },				 
+						 {header : '关税', name : 'actualCustomsAmt', width : 60, align : 'right'},
+						 {header : '增值税', name : 'actualAddAmt', width : 60, align : 'right'},
+						 {header : '消费税', name : 'actualConsumeAmt', width : 60, align : 'right'},
+						 {header : '成交方式', name : 'dealType', width : 40, align : 'left',
+							 renderer : function(colValue, rowData, rowIndex) {
+								return Dictionary.getDictName(Dictionary.DealType,colValue);
+							 }
+						 },		
+						 {header : '特殊标识', name : 'specialFlag', width : 60, align : 'left',
+						    renderer : function(colValue, rowData, rowIndex) {
+							    var sep = Dictionary.getMulDictName(Dictionary.SpecialFlag,colValue);
+								if (sep==""){
+								   sep="无";
+								}
+								return sep;
+							}
+						  },
+						 {header : '客户号码', name : 'contractNo', width : 60, align : 'left',
+						     renderer : function(colValue, rowData, rowIndex) {
+								return "<span title='"+colValue+"'> "+colValue+"</span>";
+							 }
+						 },
+						 {header : '制单人', name : 'makeOrderMan', width : 60, align : 'right'},
+						]
+		});	
+	});
+	function searchData(){
+	   var vo=$("#search-panel").getVo();
+	   var params=convertParamToUrl(vo);
+	   $('#grid').omGrid('setData',"customs/CustomForm/0/searchCustomForm?"+params);
+	}	
+	function orgInvoice(){ //原发票
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		}	 
+		var url="/order/customorder-invoice.html?customOrderId="+rowDatas[0].customOrderId;
+		showFullScreen(url);		
+	}
+	function orgContract(){ //原合同
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		}
+		var url=baseUrl+"order/CustomOrder/0/outContract?customOrderId="+rowDatas[0].customOrderId;
+		showFullScreen(url);
+	}
+	function orgPacking(){//原箱单
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		}	 
+		var url="/order/customorder-packing.html?customOrderId="+rowDatas[0].customOrderId;
+		showFullScreen(url);
+	}
+	function bsContract(){ //购销合同
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			 return;
+		}	 
+		if (rowDatas[0].tearAndFlag==1){
+		    var ids=rowDatas[0].customOrderIds.split(",");
+		    var contracts=rowDatas[0].coOrderNo.split(",");
+		    loadOrders(contracts,ids);
+			dialog.omDialog("option", "title",'选择订单号');
+			dialog.omDialog("open");//显示dialog
+		}else{
+			var url="/order/purchase-contract.html?customOrderId="+rowDatas[0].customOrderId;
+			showFullScreen(url);   
+		}
+	}
+	function loadOrders(contracts,ids){		
+		var $orderNos=$("#orderNos");
+		$orderNos.html("");
+		var files = "";
+		for(var i =0;i<contracts.length;i++){
+			var nos = contracts[i];
+			files = files+ " <span style='line-height:25px; font-weight:bold'>("+(i+1)+")";
+			files = files+ "   <a href='#' onclick='btnShowContractNo(this);return false;' rId='"+ids[i]+"' >"+nos+"</a></span> <br />";
+		}
+		$orderNos.html(files);
+	}
+	function btnShowContractNo(obj){
+	   $this=$(obj);
+	   var customOrderId=$this.attr("rId");
+	   var url="/order/purchase-contract.html?customOrderId="+customOrderId;
+	   showFullScreen(url);   
+	   dialog.omDialog("close");
+	}
+	function orgStatus(){ //原状态
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+	   }
+	   var ids=	rowDatas[0].tearAndFlag==0? rowDatas[0].customOrderId: rowDatas[0].customOrderIds;
+	   var paras={ids:ids,eoOrderNo:rowDatas[0].coOrderNo,orderType:1,tabId:"orgStatus001"}; 
+ 	   addNewTab("定单状态列表","/order/orderSatePage.html",paras,function(){
+	   });       
+	}	
+	function subInvoice(){ //子发票
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		}	     
+	    var url=baseUrl+"customs/CustomForm/0/outInvoce?customFormId="+rowDatas[0].id;
+		showFullScreen(url);
+	}	
+	function subContract(){ //子合同
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			return;
+		}	   
+	    var url=baseUrl+"customs/CustomForm/0/outContract?customFormId="+rowDatas[0].id;
+		showFullScreen(url);
+	}
+	function subPacking(){ //子箱单
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+		}	   
+	    var url=baseUrl+"customs/CustomForm/0/outPacking?customFormId="+rowDatas[0].id;
+	    showFullScreen(url);
+	}
+	function dlContract(){ //代理合同
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+		}	   
+	    var url="/order/agent-contract.html?customFormId="+rowDatas[0].id;
+	    showFullScreen(url);	
+	}
+	function subStatus(){ //子状态
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+	   }
+	   var ids=	rowDatas[0].id;
+	   var paras={ids:ids,eoOrderNo:rowDatas[0].cfOrderNo,orderType:2,tabId:"orgStatus001"}; 
+ 	   addNewTab("定单状态列表","/order/orderSatePage.html",paras,function(){
+	   });       
+	}
+	
+	function previewTariff(){ //预览关税
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		var url="/customs/customs-tariff-preview.html?id="+rowDatas[0].id;
+	    showFullScreen(url);	
+	}
+	function previewCustomForm(){//预览报关单
+ 		rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,timeout : 2000,content : '请选择记录！'});
+			 return;
+		}	
+	    var url="/customs/customs-preview.html?customFormId="+rowDatas[0].id
+	    showFullScreen(url);
+	}	
+	
+	function previewVat(){//预览增值税
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		var url="/customs/customs-vat-preview.html?id="+rowDatas[0].id;
+	    showFullScreen(url);	
+	}
+	function exportAll(){ //导出excel 给财务用
+		var vo=$(".edit-panel").getVo();
+		if ( (vo.cfOrderNo=="") && (vo.coOrderNo=="") && 
+		    (vo.customerId=="") && (vo.startTime=="") && (vo.endTime=="") ){
+			$.omMessageTip.show({content : "请至少选择客户，或是开始和截止时间，或是输入合同号码！",timeout : 4000,type : 'error'});
+			return ;
+		}
+		var params=convertParamToUrl(vo);
+       	var url=baseUrl+"customs/CustomForm/0/exportCustoms?"+params;
+		window.location.href=url;
+		//showFullScreen(url);
+	}
+		
+	function exportCustomsByDF(){ 
+		var vo=$(".edit-panel").getVo();
+		if ( (vo.cfOrderNo=="") && (vo.coOrderNo=="") && 
+		    (vo.customerId=="") && (vo.startTime=="") && (vo.endTime=="") ){
+			$.omMessageTip.show({content : "请至少选择客户，或是开始和截止时间，或是输入合同号码！",timeout : 4000,type : 'error'});
+			return ;
+		}
+		var params=convertParamToUrl(vo);
+       	var url=baseUrl+"customs/CustomForm/0/exportCustomsByDF?"+params;
+		window.location.href=url;
+		//showFullScreen(url);
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">		
+	<tr >
+	    <td>子单号：</td>    
+		<td><input id="cfOrderNo" name="cfOrderNo"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>原单号：</td>    
+		<td><input id="coOrderNo" name="coOrderNo"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>报关单号：</td>    
+		<td><input id="customOrderNo" name="customOrderNo"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>客户：</td>   
+		<td><input id="customerId" name="customerId"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  showtext="" /></td>
+		<td>操作模式：</td>   
+	    <td colspan="2"><input id="opType" name="opType" pattern='combo' editable='false' width="130" remote="OpType" /></td>
+	</tr>
+	<tr >	  
+	    <td>成交方式：</td>   
+	   <td><input id="dealType" name="dealType" pattern='combo' editable='false'  remote="DealType" /></td>
+	   <td>订单状态：</td>   
+	   <td><input id="orderStatus" name="orderStatus" pattern='combo' editable='false'  width="120" remote="CusomFormStatus" /></td>
+	   <td>币种：</td>
+	   <td><input id="currency" name="currency" pattern='combo' editable='false' width="120" remote="Currency"/></td>
+	   <td>报关时间：</td>
+	   <td><input id="startTime" name="startTime" pattern='date' editable='false' /></td>
+	   <td>到：</td>
+	   <td><input id="endTime" name="endTime" pattern='date' editable='false' /></td>
+	   <td colspan="2"><span id="button-search">搜索</span></td>
+	</tr>	
+  </table> 	 
+</div>			
+	<div id="nav_customs" title="报关单">
+       <div id="btnbar"></div>	
+	   <div id="grid"></div>	  
+	</div>	
+	<div id="nav_pickTruck" title="捆绑车辆" style="display:none;">
+	    <div id="searchTruckBind">
+		     <table class="edit-panel">		
+				<tr>   	
+					<td><img src="/images/icon/search.png" border="0"></td>		    
+					<td><input type="text" id="txtBlNo" class="ui-textbox" /></td>
+					<td ><input id="bindDate" name="bindDate"  pattern='date' /></td>
+					<td ><span id="button-search-truckbind">搜索</span></td>						
+				</tr>	
+			 </table> 	 
+		</div>
+		<div style="margin:10px 0px 10px 0px;background-color:#FFFFCC; height:50px;" id="currBgs">
+		</div>
+		<div style="margin:10px 0px 10px 0px;height:50px;" id="selectedBgs">
+		</div>
+		<div style=" font-style:normal; font-weight:bold;">车辆实际载重：<span id="actualLoadWeight"></span></div>
+		<div id="truckGrid"></div>		
+	</div>
+<div id="nav_cooder" title="选订单号" style="display:none;">
+	<div style="margin-top:10px; margin-bottom:5px;">
+	  <span id="orderNos"></span>
+	</div>	
+</div>
+</body>
+</html>

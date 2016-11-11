@@ -1,0 +1,187 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---汇丰银行汇率</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-validate.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null;
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput(); //初始化	
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+					 var vo=$("#search-panel").getVo();
+					 var params=convertParamToUrl(vo);
+					 $('#grid').omGrid('setData',"finance/HsbcRate/0/searchHsbcRate?"+params);
+			   }
+		});				
+		dialog=$( "#nav_hsbcrate").omDialog({autoOpen: false,draggable:false,resizable:false,height:300,width:750,modal:true,
+				buttons: [{
+					text : "确定", 
+					click : saveHsbcRate 
+				}, {
+					text : "取消", 
+					click : function () {                   
+						dialog.omDialog("close");
+					}
+				}]
+			});	
+		$('#buttonbar').initToolBar();
+		
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '汇丰汇率列表',
+                dataSource :"finance/HsbcRate/0/searchHsbcRate",
+                singleSelect : false,
+                colModel : [
+                             {header : '时间', name : 'opDate', width : 80, align : 'left'},								 
+							 {header : '支付币种', name : 'payCurr', width : 60, align : 'center',
+							      renderer : function(colValue, rowData, rowIndex) {
+                                     return Dictionary.getDictName(Dictionary.Currency,colValue);
+								}
+							 }, 
+							 {header : '结算币种', name : 'settlementCurr', width : 60, align : 'center',
+							      renderer : function(colValue, rowData, rowIndex) {
+                                     return Dictionary.getDictName(Dictionary.Currency,colValue);
+								}
+							 }, 
+							 {header : '买/卖方向', name : 'type', width : 60, align : 'center',
+							      renderer : function(colValue, rowData, rowIndex) {
+                                     return Dictionary.getDictName(Dictionary.HsbcRateType,colValue);
+								}
+							 }, 
+							 {header : '汇率', name : 'rate', width : 80, align : 'left'}
+ 							]
+            });
+	});
+	//删除汇率
+	function deletHsbcRate(){
+		 var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+		 }
+		 var hsId=[];
+		 for(var i=0;i<rowDatas.length;i++){
+		 	hsId.push(rowDatas[i].id);
+		 }
+		 var url="finance/HsbcRate/0/delHsRate";
+		 var vo={id:hsId.join(",")};
+		 $.omMessageBox.confirm({
+                title:'确认删除',
+                content:'删除后数据将不存在，需要重新添加！',
+                onClose:function(v){
+                    if(v==true){
+                    	$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		 				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		 				$('#grid').omGrid('reload');
+		 				}
+					});	 
+                    }else{
+                    }
+                }
+         });
+		     
+	}
+	function saveHsbcRate (){	 
+		var url = $("#id").val()=="" ? "finance/HsbcRate/0/add" : "finance/HsbcRate/0/edit";
+		var vo=$("#hsbcrate").getVo();
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   $('#grid').omGrid('reload');
+			   $("#id").val("");
+			}
+		 });
+		 dialog.omDialog("close");         	            
+	}
+	function addHsbcRate(){
+		dialog.initializeInput(); //初始化
+		dialog.omDialog("option", "title", '新增');
+		dialog.omDialog("open");//显示dialog	
+	}	
+	function editHsbcRate(){
+		  var rowDatas = $('#grid').omGrid('getSelections',true);
+		  if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+		  }		
+		  dialog.initializeInput({"vo":rowDatas});	
+		  dialog.omDialog('open');	  
+	}
+	function viewHsbcRate(){
+	   
+	}
+	
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">
+	<tr>
+		<td>时间：</td>
+		<td><input id="dateYyMm" name="dateYyMm" pattern='date' editable='false' /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>
+  </table> 	
+</div> 
+	<div id="nav_hsbcrate" title="新增汇率" style="display:none;">
+        <form id="hsbcrate">	
+		<input id="id" name="hr.id" type="hidden" />
+		<input id="lastModifyTime" name="hr.lastModifyTime" type="hidden" />
+		<input id="createTime" name="hr.createTime" type="hidden" />
+		<input id="createBy" name="hr.createBy" type="hidden" />
+		<input id="lastModifyBy" name="hr.lastModifyBy" type="hidden" />
+		<table class="edit-table">		
+			<tr>
+				<td class="label">支付币种：</td>
+				<td class="field"><input id="payCurr" name="hr.payCurr" validate="rules:['required']" pattern='combo' editable='false' remote='Currency'/></td>
+				<td class="label">结算币种：</td>
+				<td class="field">
+				<input id="settlementCurr" name="hr.settlementCurr" validate="rules:['required']" pattern='combo' 
+				editable='false' remote='Currency'/></td>
+			</tr>
+			<tr>
+				<td class="label">买/卖方向：</td>
+				<td class="field"><input id="type" name="hr.type" validate="rules:['required']" pattern='combo' 
+				editable='false' remote='HsbcRateType' /></td>
+				<td class="label">汇率：</td>
+				<td class="field"><input id="rate" name="hr.rate" pattern='float'/></td>
+			</tr>
+			<tr>
+				<td class="label">时间：</td>
+				<td class="field">
+				<input id="opDate" name="hr.opDate" pattern='datetime' validate="rules:['required']" editable='false'/></td>
+				<td class="label"></td>
+				<td class="field"></td>
+			</tr>
+		</table>
+		</form>	
+	</div>
+	<div id="buttonbar"></div>	
+	<div id="grid"></div>
+</body>
+</html>

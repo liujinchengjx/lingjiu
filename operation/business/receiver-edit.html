@@ -1,0 +1,276 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	 <script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+    <script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var params={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+         };
+	$(function() {	
+   	   $("#search-panel").omPanel({title : "",collapsed:true});	
+	   initValidateForm("receiver");
+	   var receiverId=getIframeParm("receiverId");	
+	   if (receiverId !=""){
+		     var url="business/Receiver/0/get?receiverId="+receiverId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				 $("#receiver").initializeInput({"vo":json.entity}); //初始化
+				 $("#customerCompanyId").attr("disabled", "disabled"); 
+				 loadAddress(json.entity.addList); //加载收货公司地址
+			   }			
+			 });
+ 	   }else{
+			$("#receiver").initializeInput(); //初始化			
+			$("#customerCompanyId").initGridDropList(params);
+	   }
+		 
+		$('#buttonbar').omButtonbar({
+            	 width : "100%",
+            	 btns : [{label:"保存",
+            		     id:"btnSave" ,
+						 //disabled:(getIframeParm("status")==10 || getIframeParm("status")=="" )?false:true,
+            		     icons : {left : '/images/icon/add.png'},
+            	 		 onClick: saveReceiver
+            			},
+						{separtor:true},
+						{label:"添加联系方式",
+            		     id:"btnSave" ,
+            		     icons : {left : '/images/icon/add.png'},
+            	 		 onClick: address
+            			},
+						{separtor:true},
+						{label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);
+						  }
+						 }	           			
+            	 ]
+          }); 
+	});
+	function saveReceiver(){
+		if(validateForm("receiver")==false)return false;
+		var adds=getAddresss();
+		if (adds.length<=0){
+		   $.omMessageTip.show({content : "对不起！联系地址列表不能为空！",timeout : 2000,type : 'error'});	
+		   return ;
+		}
+		var temp = JSON.stringify(adds); 
+		var vo= $("#receiver").getVo();
+		vo["rec.addresss"]=temp;
+		var url="business/Receiver/0/add";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		    $("#receiver").initializeInput({"vo":json.entity}); //初始化
+			$("#customerCompanyId").attr("disabled", "disabled"); 
+			url="business/Address/0/searchAddress?companyId="+json.entity.id;
+			$.ajaxPost({url:url,msg:false,success:function(json1,textStatus1){
+			    loadAddress(json1.rows); //加载收货公司地址            
+			}			
+			});
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '保存成功！',type:'success'});
+		  }			
+		});
+	}		
+	
+	function address(){
+		var mutitable=$(".mutitable");
+		var html="";
+		html=html+"<div class='tbody_item'>";
+		html=html+" <table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+		html=html+" <tr> ";
+		html=html+"   <td width='100' style='text-align:center;'>";
+		html=html+"      <input type='checkbox' value='checkbox1' name='subBox' style='width:20px; height:20px;' />";
+		html=html+"      <span name='companyId' style='display:none'></span>";
+		html=html+"      <span name='id' style='display:none'></span>";
+		html=html+"      <span name='flag' style='display:none'>1</span>";
+		html=html+"   </td>";	
+		html=html+"   <td width='100'><input name='linkMan' value='' style='width:98%' class='text2XL' /></td>";;
+		html=html+"   <td width='100'><input name='tel' value='' style='width:98%' class='text2XL' /></td>";
+		html=html+"   <td style='text-align:right;margin-right:1px;'>";
+		html=html+"      <input name='address' value='' style='width:98%' class='text2XL' />";
+		html=html+"   </td>";	
+		html=html+"</tr>";
+		html=html+"</table></div>";	
+		mutitable.append(html);
+		iniAddress();
+	}
+	function loadAddress(addressList){
+		 var mutitable=$(".mutitable");
+		 $(".tbody_item").remove();
+		 var html="";
+		 for(var i=0;i<addressList.length;i++){
+			 var add=addressList[i];
+			 html=html+"<div class='tbody_item'>";
+			 html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+			 html=html+" <tr> ";
+			 html=html+"   <td width='100' style='text-align:center;'>";
+			 html=html+"      <input type='checkbox' value='checkbox1' name='subBox' style='width:20px; height:20px;' />";
+			 html=html+"      <span name='companyId' style='display:none'>"+add.companyId+"</span>";
+			 html=html+"      <span name='id' style='display:none'>"+add.id+"</span>";
+			 html=html+"      <span name='flag' style='display:none'>"+add.flag+"</span>";
+			 html=html+"   </td>";	
+			 html=html+"   <td width='100'><input name='linkMan' value='"+add.linkMan+"' style='width:98%' class='text2XL' /></td>";;
+			 html=html+"   <td width='100'><input name='tel' value='"+add.tel+"' style='width:98%' class='text2XL' /></td>";
+			 html=html+"   <td style='text-align:right;margin-right:1px;'>";
+			 html=html+"       <input name='address' value='"+add.address+"' style='width:98%' class='text2XL' />";
+			 html=html+"   </td>";	
+			 html=html+"</tr>";
+			 html=html+"</table></div>";
+		 } 
+		 mutitable.append(html);
+		 iniAddress();
+	}
+	function iniAddress(){
+		 var $subBox = $("input[name='subBox']");
+		 $subBox.each(function(i){
+			  var $this=$(this);
+			  $this.attr("checked",true);	
+			  $this.parent().parent().addClass("highlight");
+		 });
+		 $('#checkAll').click(function (){ 
+			 $('input[name="subBox"]').attr("checked",this.checked);
+			 if(this.checked){
+				$subBox.parent().parent().addClass("highlight");
+			 }else{
+				$subBox.parent().parent().removeClass("highlight");
+			 }
+		});
+		$subBox.click(function(){
+			$("#checkAll").attr("checked",$subBox.length == $("input[name='subBox']:checked").length ? true : false);
+			this.checked?$(this).parent().parent().addClass("highlight"): 
+			$(this).parent().parent().removeClass("highlight");
+		});
+	}
+	function getAddresss(){
+	   	var adds=[];
+	    $("input[name='subBox']:checked").each(function(i){
+			   var $this=$(this);
+			   var $tr=$this.parents("tr");
+			   var vo=$tr.getVo();
+			   if (vo.address=="" || vo.linkMan=="" || vo.tel=="" ){
+				  $.omMessageTip.show({content : "对不起！地址列表的地址，联系人，电话必须填写不能为空！",timeout : 2000,type : 'error'});	
+				  throw new Error("对不起！地址列表的地址，联系人，电话必须填写不能为空！");
+			   }		   
+			   if (vo["id"]==0){ //新增数据
+				   vo["id"]="";
+			   }
+			   adds.push(vo);
+		});
+		$("input:checkbox").not("input:checked").each(function(i){
+		   var $this=$(this);
+		   var id=$this.siblings("span[name='id']").html();
+		   id=parseInt(id);
+		   if(id>0){ //未被选择，但是又有ID的 //这种应该删掉
+			   var $tr=$this.parents("tr");
+			   var vo=$tr.getVo();
+			   vo["flag"]=3;//标记为3表示被删掉
+			   adds.push(vo);
+		   }
+		});
+		return adds;
+	}
+	</script>	
+</head>
+<body class="dfbody">
+<div id="search-panel"></div>
+	<div id="nav_receiver" title="新增收货公司">
+	    <form id="receiver">
+		<input type="hidden" id="id" name="rec.id"  />
+		<input id="companyType" name="rec.companyType" type="hidden" />
+		<input type="hidden" id="flag" name="rec.flag" />
+		<input type="hidden" id="status" name="rec.status" />
+		<input type="hidden" id="lastModifyTime" name="rec.lastModifyTime" />
+		<input type="hidden" id="createTime" name="rec.createTime" />
+		<input type="hidden" id="lastModifyBy" name="rec.lastModifyBy" />
+ 		<input type="hidden" id="createTime" name="rec.createBy" />
+
+		<table class="edit-table">		
+			<tr>
+				<td class="label">档案编号(只读)：</td>
+				<td class="field"><input  id="ccode" name="rec.ccode" disabled="" /></td>				
+				<td class="label">客户：</td>
+				<td class="field">
+				<input id="customerCompanyId" name="customerCompanyId" showtext="rec.company.cname" validate="rules:['required']" /></td>
+			</tr>
+			<tr>
+   			    <td class="label">中文名称：</td>
+				<td class="field" >
+				<input id="cname" name="rec.cname" validate="rules:['required']" /></td>
+				<td class="label">英文名称：</td>
+				<td class="field" ><input id="ename" name="rec.ename" validate="rules:['required']" /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">中文简称：</td>
+				<td class="field" >
+				<input id="csname" name="rec.csname" validate="rules:['required']" /></td>
+				<td class="label">英文简称：</td>
+				<td class="field" ><input id="esname" name="rec.esname" validate="rules:['required']" /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">拼音：</td>
+				<td class="field" ><input id="pinyin" name="rec.pinyin" validate="rules:['required']" /></td>
+   			    <td class="label">邮箱：</td>
+				<td class="field" ><input id="email" name="rec.email"  /></td>	
+
+			</tr>
+			<tr>
+				<td class="label">传真：</td>
+				<td class="field" ><input id="fax" name="rec.fax"  /></td>
+				<td class="label">邮政编码：</td>
+				<td class="field" ><input id="pcode" name="rec.pcode"  /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">单据要求：</td>
+				<td class="field" colspan="3" ><textarea id="documentsRequired" name="rec.documentsRequired" style="height:50px;" ></textarea></td>				
+			</tr>
+			<tr>
+   			    <td class="label">备注：</td>
+				<td class="field" colspan="3" ><textarea id="remark" name="rec.remark" style="height:50px;" ></textarea></td>				
+			</tr>
+		</table>
+		</form>		
+	</div>
+	<div id="buttonbar"></div>
+	<div class="mutitable">
+		<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+			 <thead>
+				   <tr>
+					  <td width="100" style="text-align: center;">
+						<input type="checkbox" name="checkAll" id="checkAll"  style="width:20px; height:20px;" />
+						<label for="selectAll"></label>
+					  </td>
+					  <td width="100">联系人</td>
+					  <td width="100" >电话</td>
+					  <td style="text-align:center;">地址</td>
+				   </tr>
+			</thead>
+	   </table>
+   </div>
+</body>
+</html>

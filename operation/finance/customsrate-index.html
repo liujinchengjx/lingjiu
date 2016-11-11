@@ -1,0 +1,121 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});			
+		$('#buttonbar').initToolBar();
+		var myDate =new Date();
+        $('#txtCustomsRate').omCalendar();
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '海关中间汇率列表',
+                dataSource :"finance/CustomsRate/0/searchCustomsRate",
+                singleSelect:false,
+                colModel : [
+                             {header : '时间', name : 'opDate', width : 80, align : 'left'},								 
+							 {header : '币种', name : 'currency', width : 60, align : 'center',
+							      renderer : function(colValue, rowData, rowIndex) {
+                                     return Dictionary.getDictName(Dictionary.Currency,colValue);
+								}
+							 }, 
+							 {header : '海关中间汇率', name : 'rate', width : 80, align : 'left'}
+ 							]
+            });
+	});
+	function searchData(){
+	    var vo=$("#search-panel").getVo();
+		var params=convertParamToUrl(vo);
+		$('#grid').omGrid('setData',"finance/CustomsRate/0/searchCustomsRate?"+params);
+	}
+	function addCustomsRate(){
+		var paras={tabId:"addCustomsRate001"}; 
+ 	    addNewTab("新加中间海关汇率","/finance/customsrate-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	    });    
+	}	
+	function editCustomsRate(){
+		  var rowDatas = $('#grid').omGrid('getSelections',true);
+		  if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+		  }		
+		  var paras={customsRateId:rowDatas[0].id,tabId:"editCustomsRate001"}; 
+		  addNewTab("编辑海关中间价","/finance/customsrate-edit.html",paras,function(){
+				$('#grid').omGrid('reload');//刷新grid
+		  });           	     
+	}
+	function viewCustomsRate(){
+	   
+	}
+	//删除汇率
+	function deletCustomRate(){
+		 var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+		 }
+		 var cuId=[];
+		 for(var i=0;i<rowDatas.length;i++){
+		 	cuId.push(rowDatas[i].id);
+		 }
+		 var url="finance/CustomsRate/0/delCuRate";
+		 var vo={id:cuId.join(",")};
+		 $.omMessageBox.confirm({
+                title:'确认删除',
+                content:'删除后数据将不存在，需要重新添加！',
+                onClose:function(v){
+                    if(v==true){
+                    	$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		 				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		 				$('#grid').omGrid('reload');
+		 			}
+					});	
+                    }else{
+                    }
+                }
+         });
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">
+	<tr>
+		<td>时间：</td>
+		<td><input type="text" name="searchValue" pattern='date' /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>
+  </table> 	
+</div> 
+<div id="buttonbar"></div>	
+<div id="grid"></div>
+</body>
+</html>

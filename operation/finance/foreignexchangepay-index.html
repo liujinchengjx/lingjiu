@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var params={
+                title :'客户列表',
+				text:"cname",
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+         };
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput(); //初始化
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+					 var vo=$("#search-panel").getVo();
+					 var params=convertParamToUrl(vo);
+					 $('#grid').omGrid('setData',"finance/ForeignExchangePay/0/searchForeignExchangePay?"+params);
+			   }
+		});		
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '付汇列表',
+                dataSource : "finance/ForeignExchangePay/0/searchForeignExchangePay",
+                colModel : [
+                             {header : '客户', name : 'customerName', width : 100, align : 'left'},
+							 {header : '收汇公司', name : 'receiveCompanyName', width : 100, align : 'left'},
+							 {header : '支付币种', name : 'payCurrency', width : 30, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.Currency,colValue);
+								}	 
+							 },	
+							 {header : '付汇金额(外)', name : 'actualPayAmt', width : 80, align : 'right'},
+							 {header : '实际汇率', name : 'rate', width : 80, align : 'right'},
+							 {header : '实际付汇时间', name : 'payTime', width : 60, align : 'center'},
+							 {header : '状态', name : 'status', width : 40, align : 'center',
+							    renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.ForeignExchangePayStatus,colValue);
+								}	 
+							 }
+ 							]
+            });
+		 
+	});
+	
+	function addForeignExchangePay(){ //申请	 
+        var paras={tabId:"addForeignExchangePay001"};
+ 	    addNewTab("新增付汇","/finance/foreignexchangepay-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	    });   
+	}
+	function editForeignExchangePay(){
+		  var rowDatas = $('#grid').omGrid('getSelections',true);
+		  if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！',timeout:2000,type :'error'});
+			 return;
+		  }
+		  var paras={fpId:rowDatas[0].id,tabId:"editForeignExchangePay001"}; 
+		  addNewTab("编辑付汇信息","/finance/foreignexchangepay-edit.html",paras,function(){
+				$('#grid').omGrid('reload');//刷新grid
+		 });    
+	}
+	function auditForeignExchangePay(){ //审核
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+		    $.omMessageTip.show({title : '提示',content : '请选择记录行！',timeout : 2000,type : 'error'});
+			return;
+		}		
+		if(rowDatas[0].status==20){
+		     $.omMessageTip.show({title : '提示',timeout : 4000,content : '对不起，该付汇已审核！',type : 'error'});
+			 return;
+		}
+		var paras={fpId:rowDatas[0].id,tabId:"auditForeignExchangePay001"}; 
+		  addNewTab("审核付汇信息","/finance/foreignexchangepay-audit.html",paras,function(){
+			$('#grid').omGrid('reload');//刷新grid
+		});  
+	}
+	
+	function viewForeignExchangePay(){
+	   
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+ <table class="edit-panel">		
+	<tr>   	
+	    <td>关键字：</td>
+        <td><input id="searchValue" name="searchValue" nfocus="myFocus(this,'#f4eaf1')" 
+		   onblur="myblur(this,'white')" /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>	
+ </table> 	 
+</div>
+<div id="buttonbar"></div>	
+<div id="grid"></div>
+</body>
+</html>

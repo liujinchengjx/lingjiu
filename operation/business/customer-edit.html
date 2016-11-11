@@ -1,0 +1,897 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">	
+	var combodata=[{id : "businessType", onValueChange :businessTypeChange,data:null}]; //在这里combo的下拉定义事件
+	var cusLst = [
+	{id:"1",text:"客户信息",expanded:true},
+	{id:"11",pid:"1",text:"基本信息",tableId:"tabCustomer"},
+	{id:"12",pid:"1",text:"计费参数配置",tableId:"tabFeeDetail"},
+	{id:"13",pid:"1",text:"增值服务折扣",tableId:"tabDiscount"}
+	];
+	$(function() {
+		  $('#instockFee').omNumberField();
+		  $("#tabLinkMan").omPanel({
+                width:'95%',
+                height:'160px',
+                header: true,
+                title:'联系方式',
+                collapsed: false,
+                collapsible: true,
+                closable: true
+            });
+          $("#feeInfo").omPanel({
+                height:'160px',
+                header: true,
+                title:'开票信息',
+                collapsed: false,
+                collapsible: true,
+                closable: true
+            });
+	      var element = $('#nav_customer').omBorderLayout({
+            	   panels:[{id:"center-panel",header:false,region:"center",height:720},
+            	    {id:"west-panel",resizable:true,collapsible:true,title:"客户信息",region:"west",width:130,height:700}
+            	    ]
+         });	
+		 initValidateForm("customer");	
+		 $("#cusLst").omTree({
+                dataSource : cusLst,
+                simpleDataModel: true,
+                onClick : function(nodeData , event){
+				    $('#btnReLoadFeeParam').omButton('disable');
+					$("#"+nodeData.tableId).siblings("div").hide(); //隐藏其他节点
+					$("#"+nodeData.tableId).show(); //显示其他节点
+					var store = $('#gridFeeDetail').omGrid('getData');
+					if ((store.rows ==null || store.rows.length<=0) && (nodeData.tableId=="tabFeeDetail")){
+					   $('#btnReLoadFeeParam').omButton('enable');
+					}
+					
+					//if (nodeData.tableId=='tabLinkMan'){  
+					//   $('#btnAddLinkMan').omButton('enable');
+					//}else{
+					//   $('#btnAddLinkMan').omButton('disable');
+					//}
+                }
+         }); 
+		 $('#gridFeeDetail').omGrid({
+				autoFit:true,
+				height:530,
+				limit:0,
+				title : '收费参数配置 注：参数值 列请一定填写数值，不要填写非数值型的值！',
+				dataSource : "",
+				colModel : [
+				            {header : '计费类型', name : 'feeType', width : 100, align : 'left',
+								 renderer : function(colValue, rowData, rowIndex) {
+                                     return Dictionary.getDictName(Dictionary.FeeType,colValue);
+                                 }
+							 }, 
+							 {header : '参数名', name : 'variableName', width : 150, align:'left'},
+							 {header : '业务类型', name : 'businessType', width : 80, align:'left',
+							    renderer:function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.BusinessType,colValue);
+								}
+							 },
+							 {header : '参数值', name : 'variableValue', width : 100, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex){
+                                     return "<input id='"+rowData.scode+"' name='variable' value='"+colValue
+									 +"' style='width:98%;margin-right:2px;text-align: center;'/>";
+								} 
+							 }, 
+							 {header : '代码', name : 'scode', width : 60, align : 'center'},
+ 							 {header : '使用说明', name : 'description', width : 350, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex){
+                                     return "<input id='description"+rowData.id
+									 +"' name='description' value='"+colValue
+									 +"' style='width:98%;'  class='text2XL' />";
+								} 
+							 },
+							 {header : '状态', name : 'mode', width : 50, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex){
+								     if (colValue=="add"){
+									    return "<span style='color:blue;'>未添加</span>";    
+									 }else return "";
+								} 
+							 }, 
+						   ],
+				onRefresh : function(nowpage, records){//还原过去选中的记录				    
+				   // $('#gridFeeDetail').find("input[name='variable']").omNumberField({allowDecimals:true,decimalPrecision:10});
+					for(var i=0;i<records.length;i++){
+					    if ((records[i].scode=="ST0001-7") || (records[i].scode=="ST0001-8") || (records[i].scode=="ST0001-9") ){
+							$('#gridFeeDetail').find("input[id='"+records[i].scode+"']").omCombo({dataSource :Dictionary.RateTimePoint,
+							width:'90',editable:false,optionField:'dictName',valueField : "dictCode",value:records[i].variableValue});	
+						}
+						if ((records[i].scode=="ST0001-2") || (records[i].scode=="ST0001-3") || (records[i].scode=="ST0001-10") ||
+							(records[i].scode=="ST0001-11") ){
+							$('#gridFeeDetail').find("input[id='"+records[i].scode+"']").omCombo({dataSource :Dictionary.YesNot,
+							width:'90',editable:false,optionField:'dictName',valueField : "dictCode",value:records[i].variableValue+""});
+						}
+					}
+				}
+		 });		
+		 
+		 $('#buttonbar').omButtonbar({
+			 width : "100%",
+			 btns : [{label:"保存",
+					 id:"btnSave",
+					 disabled:(getIframeParm("status")==10 || getIframeParm("status")==16||getIframeParm("status")=="" )?false:true,
+					 icons : {left : '/images/icon/add.png'},
+					 onClick: saveCustomer
+					},
+					{separtor:true},
+					{label:"加载计费参数",id:"btnReLoadFeeParam",
+					  icons : {left : '/images/icon/edit.png'},
+					  disabled: true,
+					  onClick: reLoadFeeParam
+					 },
+					{separtor:true},
+					{label:"新加联系人",id:"btnAddLinkMan",
+					  icons : {left : '/images/icon/add.png'},
+					  disabled: false,
+					  onClick: addLinkMan
+					 },
+					{label:"新加折扣",id:"btnAddDiscount", 
+					  icons : {left : '/images/icon/add.png'},
+					  disabled: false,
+					  onClick: addDiscount
+					},
+					{label:"关闭",id:"btnClose", 
+					  icons : {left : '/images/icon/close.png'},
+					  onClick:function(){
+						  closeCurrActivateTabs(1000);
+					  }
+					 }
+			 ]
+        });
+	    var customerId=getIframeParm("customerId");     
+        if (customerId !=""){	
+		     var url="business/Customer/0/get?customerId="+customerId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){		  	 
+				$("#customer").initializeInput({"vo":json.entity,"comb":combodata}); //初始化
+				reLoadFeeParam(json.entity.company.id);
+				var arrLinkMan=json.entity.linkManList;
+				loadLinkMan(arrLinkMan);
+				loadDiscount(json.entity.discountList);
+			  }			
+			 });
+ 		}else{
+			$("#customer").initializeInput({"comb":combodata}); //初始化
+		}
+	});
+		
+	function saveCustomer(){	
+		  if(validateForm("customer")==false)return false; 
+		  var vo=$("#customer").getVo();
+		  var ccValRows=[];	
+		  var ccvlist="";
+		  var customerId=getIframeParm("customerId");  
+		  var store = $('#gridFeeDetail').omGrid('getData');
+		  if (typeof(store.rows.length) !="undefined"){
+			  for(var i=0;i<store.rows.length;i++){
+			      var variable={};
+				  var $inputV=$('#gridFeeDetail').find("input[id="+store.rows[i].scode+"]");
+				  var inVal=$inputV.val();
+				  if (inVal=="") {
+				     $.omMessageTip.show({content :variable.variableName+" 的参数值不能为空！",timeout : 2000,type : 'error'});
+				     return false;
+				  }
+				  var $inputN=$('#gridFeeDetail').find("input[id=description"+store.rows[i].id+"]");
+				  var inN=$inputN.val();
+				  if(isNaN(inVal)){$.omMessageTip.show({content :inVal+"不是数值型，保存失败！",timeout : 2000,type : 'error'});return false; }
+				  if ((customerId=="") || store.rows[i].mode=="add"){ //添加模式
+					  variable.businessType = store.rows[i].businessType;
+					  variable.feeType = store.rows[i].feeType;
+					  variable.variableName = store.rows[i].variableName;
+					  variable.scode = store.rows[i].scode;
+					  variable.variableValue = inVal;
+					  variable.description = inN;
+					  variable.mode = store.rows[i].mode;
+					  ccValRows.push(variable);
+				  }else { //更新模式
+				      if ((store.rows[i].variableValue!=inVal) || (store.rows[i].description!=inN) ){ //有改动，需要更新
+					     variable.id= store.rows[i].id;
+						 variable.variableValue = inVal;
+						 variable.feeType = store.rows[i].feeType;
+					     variable.variableName = store.rows[i].variableName;
+						 variable.scode = store.rows[i].scode;
+						 variable.description = inN;
+						 variable.mode = "update";
+						 ccValRows.push(variable);
+					  }
+				  }
+			  }
+			  ccvlist= JSON.stringify(ccValRows); 
+			  vo["cus.cusInChargeList"]=ccvlist;
+		  }else{ //没有费用部分
+		      if (customerId==""){ //添加模式 又没有费用部分
+			     $.omMessageTip.show({content :"请检查收费参数！",timeout : 2000,type : 'error'});
+		         return false;
+			 }
+		  }
+		  var arrLinkMan=getLinkMans();
+		  if (arrLinkMan.length>0){
+		     var linkStr= JSON.stringify(arrLinkMan); 
+			 vo["cus.linkMans"]=linkStr;
+		  }else{
+		     $.omMessageTip.show({content :"请至少填写一个客户的联系人",timeout : 2000,type : 'error'});
+			 return false;
+		  }
+		  var discount=getDiscounts();
+		  if (discount.length>0){
+		     for(var i=0;i<discount.length;i++){
+		     	if(isNaN(discount[i].currency)){
+		     		//转换保存时候的数据类型
+		     		discount[i].currency=Dictionary.getDicCode(Dictionary.Currency,discount[i].currency);
+		     	}
+		     	//判断serviceCode是否包含AV字母
+		     	if(discount[i].serviceCode.indexOf("AV")<0){
+		     		discount[i].serviceCode=Dictionary.getDicCode(Dictionary.ServiceParamters,discount[i].serviceCode);
+		     	}
+		     	//判断存入折扣率是否为空或则为0-如是则默认为100
+		     	if(discount[i].discount<=0 && discount[i].discount > 1){
+		     		discount[i].discount="1.00";
+		     	}
+		     }
+			 vo["cus.discounts"]=JSON.stringify(discount);
+		  }
+		  var code=verification(discount);
+		  var url = customerId=="" ? "business/Customer/0/add" : "business/Customer/0/edit";
+		  if(code=="0001"){
+		  	$.omMessageTip.show({content :"请不要重复添加数据！",timeout : 2000,type : 'error'});
+		  }else{
+		  	$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			  $("#customer").initializeInput({"vo":json.entity}); //初始化					
+			   	reLoadFeeParam(json.entity.company.id);
+			   	url="business/LinkMan/0/searchLinkMan?companyId="+json.entity.company.id;
+			   	$.ajaxPost({url:url,msg:false,success:function(json1,textStatus){
+					loadLinkMan(json1.rows);
+				}});
+				url="business/Customer/0/searchValueAddedServicesDiscount?companyId="+json.entity.company.id;
+				$.ajaxPost({url:url,msg:false,success:function(json1,textStatus){
+					loadDiscount(json1.rows);
+				}});
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});					  
+			 }
+		  	});
+		  }
+	}
+	
+	//校验是否存在重复数据
+	function verification(discountJosn){
+		var code="";
+		for(var i=0;i<discountJosn.length;i++){
+			var currency1=discountJosn[i].currency;
+			var serviceCode1=discountJosn[i].serviceCode;
+			for(var j=i+1;j<discountJosn.length;j++){
+				var currency2=discountJosn[j].currency;
+				var serviceCode2=discountJosn[j].serviceCode;
+				if(currency1==currency2&&serviceCode1==serviceCode2){
+					code="0001";
+					return code;
+					break;
+				}
+			}
+		}
+		return code;
+	}
+	function businessTypeChange(target, newValue, oldValue){
+	   if( newValue == 3 ){	   	 
+	      $("#t1").hide();
+	   	  $("#t2").hide();
+	   	  $("#t3").hide();
+	   	  $("#useContractNo").omCombo({disabled:true});
+	   	  $("#opType").omCombo({disabled:true});
+	   	  $("#grade").omCombo({disabled:true});
+	   	  $("#hsCode").attr("validate","");
+	   	  $("#orgCode").attr("validate","");
+	   	  $("#legalName").attr("validate","");
+	   	  $("#isTaxPayer").attr("validate","");
+	   	  $("#invoiceAddress").attr("validate","");
+	   } else {	
+	   	  $("#t1").show();
+	   	  $("#t2").show();
+	   	  $("#t3").show();
+	   	  $("#useContractNo").omCombo({disabled:false});
+	   	  $("#opType").omCombo({disabled:false});
+	   	  $("#grade").omCombo({disabled:false});	
+	   	  $("#hsCode").attr("validate","rules:['required']");
+	   	  $("#orgCode").attr("validate","rules:['required']");
+	   	  $("#legalName").attr("validate","rules:['required']");
+	   	  $("#isTaxPayer").attr("validate","rules:['required']"); 
+	   	  $("#invoiceAddress").attr("validate","rules:['required']");    	    
+	   }
+	   var companyId=$("#cid").val();
+	   reLoadFeeParam(companyId);
+	}
+	function reLoadFeeParam(companyId){ //重新加载计费参数
+	   var businessType=$('#businessType').omCombo('value');
+	   var params=[];
+	   params.push("businessTypes="+businessType);
+	   params.push("opType="+$('#opType').omCombo('value'));
+	   params.push("preCode=ST"); 
+	   params.push("customerId="+companyId); 
+	   var url="business/CustomerChargesVariables/0/searchCharges?"+params.join("&");
+	   $('#gridFeeDetail').omGrid('setData', url);
+	}	
+	
+	function loadLinkMan(lst){
+   		var mutitable=$(".mutitable");
+		$(".tbody_item").remove();
+		var html="";
+	    for(var i=0;i<lst.length;i++){
+			html=html+"<div class='tbody_item'>";
+			html=html+"<table cellpadding='0' cellspacing='0' width='90%' class='tbody_table'>";
+			html=html+" <tr> ";
+			html=html+"   <td width='100' style='text-align:center;'>";
+			html=html+"      <input type='checkbox' value='checkbox1' name='subBox' checked='true' style='width:20px; height:20px;' />";
+			html=html+"      <span name='companyId' style='display:none'>"+lst[i].companyId+"</span>";
+			html=html+"      <span name='id' style='display:none'>"+lst[i].id+"</span>";
+			html=html+"   </td>";	
+			html=html+"   <td width='120'>";
+			html=html+"       <input name='type' style='width:90%;margin-right:2px;' class='text2XL' value='"+lst[i].type+"' />";
+			html=html+"   <td width='150'>";
+			html=html+"       <input name='name' style='width:90%;margin-right:2px;' class='text2XL' value='"+lst[i].name+"'/>";
+			html=html+"   </td>";
+			html=html+"   <td width='120'>";
+			html=html+"       <input name='tel' style='width:90%;margin-right:2px;' class='text2XL' value='"+lst[i].tel+"'/>";
+			html=html+"   </td>";
+			html=html+"   <td><input name='fax' style='width:90%;margin-right:2px;' class='text2XL' value='"+lst[i].fax+"'/></td>";
+			html=html+"   <td width='120'>";
+			html=html+"       <input name='phone' style='width:90%;margin-right:2px;' class='text2XL' value='"+lst[i].phone+"'/>";
+			html=html+"   </td>";
+			html=html+"   <td width='150'>";
+			html=html+"       <input name='email' style='width:90%;margin-right:2px;' class='text2XL' value='"+lst[i].email+"'/>";
+			html=html+"   </td>";				 
+			html=html+" </tr>";
+			html=html+"</table></div>";
+		}
+		mutitable.append(html); 
+		mutitable.find("input[name='type']").each(function(i){
+			var $this=$(this);
+			$this.omCombo({dataSource :Dictionary.LinkManType,
+			width:'90',editable:false,optionField:'dictName',valueField : "dictCode",value:$this.val()});    
+		});
+		iniLinkManType(mutitable);
+	}
+	
+	
+	function loadDiscount(lst){
+   		var mutitable=$(".mutitables");
+		$(".mutitables .tbody_item").remove();
+		var html="";
+	    for(var i=0;i<lst.length;i++){
+			html=html+"<div class='tbody_item'>";
+			html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+			html=html+" <tr> ";
+			html=html+"   <td width='100' style='text-align:center;'>";
+			html=html+"      <input type='checkbox' value='checkbox1' name='subBox' checked='true' style='width:20px; height:20px;' />";
+			html=html+"      <span name='customerId' style='display:none'>"+lst[i].customerId+"</span>";
+			html=html+"      <span name='id' style='display:none'>"+lst[i].id+"</span>";
+			html=html+"   </td>";
+			html=html+"   <td width='120'>";
+			html=html+"       <input name='currency' style='width:90%;margin-right:2px;' class='text2XL' value='"+Dictionary.getDictName(Dictionary.Currency,lst[i].currency)+"' />";
+			html=html+"   <td width='300'>";
+			html=html+"       <input name='serviceCode' style='width:90%;margin-right:2px;' class='text2XL' value='"+Dictionary.getDictName(Dictionary.ServiceParamters,lst[i].serviceCode)+"' />";
+			html=html+"   </td>";
+			html=html+"   <td width='90'>";
+			html=html+"       <input name='discount' style='width:90%;margin-right:2px;' class='text2XL' value='"+lst[i].discount.toFixed(2)+"' />";
+			html=html+"   </td>";
+			html=html+" </tr>";
+			html=html+"</table></div>";
+		}
+		mutitable.append(html); 
+		mutitable.find("input[name='type']").each(function(i){
+			var $this=$(this);
+			$this.omCombo({dataSource :Dictionary.Currency,
+			width:'90',editable:false,optionField:'dictName',valueField : "dictCode",value:$this.val()});    
+		});
+		mutitable.find("input[name='currency']").omCombo({dataSource :Dictionary.Currency,
+			width:'90',editable:false,optionField:'dictName',valueField : "dictCode",value:""});
+		//设置增值服务数据
+		var url="business/ValueAddedServices/0/getServiceJason";
+	    $.ajaxPost({url:url,msg:false,success:function(json1,textStatus){
+		    //新增增值服务代码-调用方法请求获取树节点
+		    var mutitable=$(".mutitables");
+			var DataRows=json1.rows;
+			mutitable.find("input[name='serviceCode']").omCombo({
+			dataSource :DataRows,
+			editable:false,
+			optionField:function(DataRows,index){
+				return DataRows.text+'('+DataRows.value+')';
+			},valueField : 'scode',value:"",width:350,
+			listProvider:function(container,records){
+		 	var html='<table cellpadding="3" cellspacing="0"><thead>';                       						
+						html +='<tr><th width="180">增值服务名</th><th width="150">参数名</th></tr>';
+						html +='</thead>';
+                        html +='<tbody>';
+                    $(records).each(function(){
+                        html += '<tr><td>' + this.text + '</td><td>' + this.value + '</td></tr>'; // buildTr(this);
+                    });
+                    html += '</tbody></table>';				
+                    $(html).appendTo(container);					
+                    return container.find('tbody>tr');
+ 			}
+			});		
+		}});
+		iniLinkManType(mutitable);
+	}
+	function addLinkMan(){//新加联系人	
+		var mutitable=$(".mutitable");
+		var html="";
+	    html=html+"<div class='tbody_item'>";
+		html=html+"<table cellpadding='0' cellspacing='0' width='90%' class='tbody_table'>";
+		html=html+" <tr> ";
+		html=html+"   <td width='100' style='text-align:center;'>";
+		html=html+"      <input type='checkbox' value='checkbox1' name='subBox' checked='true' style='width:20px; height:20px;' />";
+		html=html+"      <span name='companyId' style='display:none'></span>";
+		html=html+"      <span name='id' style='display:none'></span>";
+		html=html+"   </td>";	
+		html=html+"   <td width='120'>";
+		html=html+"       <input name='type' style='width:90%;margin-right:2px;' class='text2XL' />";
+		html=html+"   <td width='150'>";
+		html=html+"       <input name='name' style='width:90%;margin-right:2px;' class='text2XL' />";
+		html=html+"   </td>";
+		html=html+"   <td width='120'>";
+		html=html+"       <input name='tel' style='width:90%;margin-right:2px;' class='text2XL' />";
+		html=html+"   </td>";
+		html=html+"   <td><input name='fax' style='width:90%;margin-right:2px;' class='text2XL' /></td>";
+		html=html+"   <td width='120'>";
+		html=html+"       <input name='phone' style='width:90%;margin-right:2px;' class='text2XL' />";
+		html=html+"   </td>";
+		html=html+"   <td width='150'>";
+		html=html+"       <input name='email' style='width:90%;margin-right:2px;' class='text2XL' />";
+		html=html+"   </td>";			 
+		html=html+" </tr>";
+		html=html+"</table></div>";
+		mutitable.append(html);
+		iniLinkManType(mutitable);
+		mutitable.find("input[name='type']").omCombo({dataSource :Dictionary.LinkManType,
+		width:'90',editable:false,optionField:'dictName',valueField : "dictCode",value:1});
+	}
+	function addDiscount(){//新加折扣
+		var mutitable=$(".mutitables");
+		var html="";
+	    html=html+"<div class='tbody_item'>";
+		html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+		html=html+" <tr> ";
+		html=html+"   <td width='100' style='text-align:center;'>";
+		html=html+"      <input type='checkbox' value='checkbox1' name='subBox' checked='true' style='width:20px; height:20px;' />";
+		html=html+"      <span name='companyId' style='display:none'></span>";
+		html=html+"      <span name='id' style='display:none'></span>";
+		html=html+"   </td>";	
+		html=html+"   <td width='120'>";
+		html=html+"       <input name='currency' style='width:90%;margin-right:2px;' class='text2XL' />";
+		html=html+"   <td width='300'>";
+		html=html+"       <input name='serviceCode' style='width:90%;margin-right:2px;' class='text2XL' />";
+		html=html+"   </td>";
+		html=html+"   <td width='90'>";
+		html=html+"       <input name='discount' style='width:90%;margin-right:2px;' class='text2XL' />";
+		html=html+"   </td>";
+		html=html+" </tr>";
+		html=html+"</table></div>";
+		mutitable.append(html);
+		iniLinkManType(mutitable);
+		mutitable.find("input[name='currency']").omCombo({dataSource :Dictionary.Currency,
+		width:'90',editable:false,optionField:'dictName',valueField : "dictCode",value:""});
+		url="business/ValueAddedServices/0/getServiceJason";
+	    $.ajaxPost({url:url,msg:false,success:function(json1,textStatus){
+		    //新增增值服务代码-调用方法请求获取树节点
+		    var mutitable=$(".mutitables");
+			var DataRows=json1.rows;
+			mutitable.find("input[name='serviceCode']").omCombo({dataSource :DataRows,
+			editable:false,
+			optionField:function(DataRows,index){
+				return DataRows.text+'('+DataRows.value+')';
+			}
+			,valueField : "scode",value:"",width:350,
+			listProvider:function(container,records){
+		 	var html='<table cellpadding="3" cellspacing="0"><thead>';                       						
+						html +='<tr><th width="180">增值服务名</th><th width="150">参数名</th></tr>';
+						html +='</thead>';
+                        html +='<tbody>';
+                    $(records).each(function(){
+                        html += '<tr><td>' + this.text + '</td><td>' + this.value + '</td></tr>'; // buildTr(this);
+                    });
+                    html += '</tbody></table>';				
+                    $(html).appendTo(container);					
+                    return container.find('tbody>tr');
+ 			}
+			});		
+		}});
+	}
+	
+	function iniLinkManType(mutitable){
+	    var $subBox = mutitable.find("input[name='subBox']");
+		mutitable.find("input[name='checkAll']").click(function (){ 
+			 $subBox.attr("checked",this.checked);
+			 if(this.checked){
+				$subBox.parent().parent().addClass("highlight");
+			 }else{
+				$subBox.parent().parent().removeClass("highlight");
+			 }
+		});
+		$subBox.click(function(){
+			$("#checkAll").attr("checked",$subBox.length == $("input[name='subBox']:checked").length ? true : false);
+			this.checked?$(this).parent().parent().addClass("highlight"): 
+			$(this).parent().parent().removeClass("highlight");
+		});
+		$subBox.attr("checked",true).parent().parent().addClass("highlight");
+	}
+	function getLinkMans(){
+		var arrLinkMan=[];
+	    $(".mutitable input[name='subBox']:checked").each(function(i){
+		   var $this=$(this);
+		   var $tr=$this.parents("tr");
+		   var vo=$tr.getVo();
+		   if (vo["id"]==0){ //新增数据
+		       vo["id"]="";
+		   }
+		   arrLinkMan.push(vo);
+		});
+		$(".mutitable input[name='subBox']").not("input:checked").each(function(i){
+		   var $this=$(this);
+		   var id=$this.siblings("span[name='id']").html();
+		   id=parseInt(id);
+		   if(id>0){ //未被选择，但是又有ID的 //这种应该删掉
+			   var $tr=$this.parents("tr");
+			   var vo=$tr.getVo();
+			   vo["mode"]="del";//标记为3表示被删掉
+			   arrLinkMan.push(vo);
+		   }
+		});
+		return arrLinkMan;
+	}
+	
+	function getDiscounts(){
+		var discount=[];
+	    $(".mutitables input[name='subBox']:checked").each(function(i){
+		   var $this=$(this);
+		   var $tr=$this.parents("tr");
+		   var vo=$tr.getVo();
+		   if (vo["id"]==0){ //新增数据
+		       vo["id"]="";
+		   }
+		   discount.push(vo);
+		});
+		$(".mutitables input[name='subBox']").not("input:checked").each(function(i){
+		   var $this=$(this);
+		   var id=$this.siblings("span[name='id']").html();
+		   id=parseInt(id);
+		   if(id>0){ //未被选择，但是又有ID的 //这种应该删掉
+			   var $tr=$this.parents("tr");
+			   var vo=$tr.getVo();
+			   vo["mode"]="del";//标记为3表示被删掉
+			   discount.push(vo);
+		   }
+		});
+		return discount;
+	}
+	
+	
+</script>
+	
+</head>
+<body class="dfbody">		
+<div id="nav_customer" title="新增客户" style="width:100%; height:95%;">
+	<div id="center-panel">
+	<form id="customer" >
+	    <div id="tabCustomer">			
+			<input type="hidden" id="id" name="cus.id" />
+			<input type="hidden" id="status" name="cus.company.status" />
+			<input type="hidden" id="discountRateStatus" name="cus.discountRateStatus" />
+			<input type="hidden" id="cid" name="cus.company.id" />
+			<input type="hidden" id="companyType" name="cus.company.companyType" value='2'/>
+			<input type="hidden" id="flag" name="cus.company.flag" />
+			<input type="hidden" id="lastModifyTimes" name="cus.lastModifyTime" />
+			<input type="hidden" id="createTimes" name="cus.createTime" />
+			<input type="hidden" id="lastModifyBys" name="cus.lastModifyBy" />
+	 		<input type="hidden" id="createTimes" name="cus.createBy" />
+			<input type="hidden" id="lastModifyTime" name="cus.company.lastModifyTime" />
+			<input type="hidden" id="createTime" name="cus.company.createTime" />
+			<input type="hidden" id="lastModifyBy" name="cus.company.lastModifyBy" />
+	 		<input type="hidden" id="createTime" name="cus.company.createBy" />
+			<input type="hidden" id="pinyin" name="cus.company.pinyin" />
+			<input type="hidden" id="rentDiscountRate" name="cus.rentDiscountRate" />
+			<input type="hidden" id="dnDiscountRate" name="cus.dnDiscountRate" />
+			<input type="hidden" id="mixDiscountRate" name="cus.mixDiscountRate" />
+			<input type="hidden" id="addDiscountRate" name="cus.addDiscountRate" />
+			<input type="hidden" id="positionCode" name="cus.positionCode" />
+			<table class="edit-table" style="width:95%;">
+				<tr>
+					<td class="label">档案编号(只读)：</td>
+					<td class="field"><input  id="ccode" name="cus.company.ccode" disabled="" /></td>				
+					<td class="label">使用客户号报关：</td>
+					<td class="field">
+						 <input id="useContractNo" name="cus.useContractNo" validate="rules:['required']"  pattern='combo' 
+				          editable='false' remote='YesNot' value="1" />
+					 </td>	
+				</tr>
+				<tr>
+					<td class="label">中文名称：</td>
+					<td class="field" >
+					<input id="cname" name="cus.company.cname"  validate="rules:['required']" /></td>
+					<td class="label">中文简称：</td>
+					<td class="field" >
+					<input id="csname" name="cus.company.csname" validate="rules:['required']" /></td>					
+				</tr>
+				<tr>
+				    <td class="label">英文名称：</td>
+					<td class="field" >
+					<input id="ename" name="cus.company.ename" validate="rules:['required']" /></td>
+					<td class="label">英文简称：</td>
+					<td class="field" >
+					<input id="esname" name="cus.company.esname" validate="rules:['required']" /></td>				
+				</tr>
+				<tr>				    
+					<td class="label">业务类型：</td>
+					 <td class="field">
+					   <input id="businessType" name="cus.businessType" validate="rules:['required']" editable='false' 
+						multi="true" width="250" pattern='combo' remote='BusinessType' />
+					  </td>	
+					<td class="label">合作模式：</td>
+					<td class="field">
+						<input id="opType" name="cus.opType" validate="rules:['required']"  pattern='combo' 
+						 editable='false' remote='OpType' value="1" />
+					</td>					
+				</tr>
+				<!-- 
+				<tr>
+					<td class="label">注册资金：</td>
+					<td class="field" ><input id="regCapital" name="cus.regCapital" pattern="float" /></td>
+					<td class="label">注册日期：</td>
+					<td class="field" ><input id="regDate" name="cus.regDate" pattern="date"  editable="false" width="50px"/></td>				
+				</tr>
+				<tr>
+					<td class="label">注册地址：</td>
+					<td class="field" ><input id="officeSpace" name="cus.officeSpace"  /></td>
+					<td class="label">办公面积：</td>
+					<td class="field" ><input id="officeArea" name="cus.officeArea"  /></td>				
+				</tr>
+				
+				<tr>
+					<td class="label">税务登记号：</td>
+					<td class="field" >
+						<input id="taxNo" name="cus.company.taxNo"  validate="rules:['required']" />
+					 </td>
+					<td class="label">营业执照：</td>
+					<td class="field" ><input id="license" name="cus.company.license"  /></td>				
+				</tr>
+				 -->
+				<tr id="t1">						
+					<td class="label">海关代码：</td>
+					<td class="field" >
+					<input id="hsCode" name="cus.company.hsCode" validate="rules:['required']" /></td>
+					<td class="label">机构代码：</td>
+					<td class="field" >
+					<input id="orgCode" name="cus.company.orgCode" validate="rules:['required']"  /></td>				
+				</tr>
+				<!--
+				<tr>
+					<td class="label">开户银行：</td>
+					<td class="field" >
+					<input id="bank" name="cus.company.bank" validate="rules:['required']" /></td>
+					<td class="label">银行账户：</td>
+					<td class="field" >
+					<input id="bankAccount" name="cus.company.bankAccount"  validate="rules:['required']" /></td>
+				</tr>
+				<tr>
+					<td class="label">Swift code：</td>
+					<td class="field" >
+					<input id="bankName" name="cus.company.bankName"  /></td>				
+					<td class="label">银行地址：</td>
+					<td class="field" >
+					<input id="bankAddress" name="cus.company.bankAddress"  /></td>			    
+				</tr>
+				<tr>
+					 <td class="label">客户来源：</td>
+					 <td class="field">
+						 <input id="customerSource" name="cus.customerSource"   />
+					 </td>
+					 <td class="label">客户类型：</td>
+					 <td class="field">
+						 <input id="cusType" name="cus.cusType" pattern='combo' editable='false' remote='CustomerType'  />
+					 </td>
+				</tr>
+				-->
+				<tr>
+					 <td class="label">入仓登记费：</td>
+					 <td class="field">
+						 <input id="instockFee" name="cus.instockFee"   validate="rules:['required']"/>
+					 </td>
+					 <td class="label">客户类型：</td>
+					 <td class="field">
+						 <input id="cusType" name="cus.cusType" pattern='combo' editable='false' remote='CustomerType' validate="rules:['required']" />
+					 </td>
+				</tr>
+				<tr id="t2">
+					 <td class="label">法人代表：</td>
+					 <td class="field">
+					   <input id="legalName" name="cus.company.legalName" validate="rules:['required']" />
+					 </td>
+					 <td class="label">是否一般纳税人：</td>
+					 <td class="field">
+						<input id="isTaxPayer" name="cus.isTaxPayer" pattern='combo' remote='YesNot' editable='false' value="1"  validate="rules:['required']" />
+					 </td>				 
+				</tr>
+				<tr>
+					 <td class="label">申报级别：</td>
+					 <td class="field">
+						 <input  id="grade" name="cus.grade"  validate="rules:['required']" pattern='combo' editable='false' 
+						 remote='CustomsGrade' value="2"/>
+					 </td>				 
+					 <td class="label">交易币种：</td>
+					 <td class="field">
+						 <input id="currency" name="cus.currency" validate="rules:['required']" pattern='combo' 
+						 editable='false' remote='Currency'  />
+					 </td>
+				</tr>
+				<!--
+				<tr>
+					 <td class="label">费用支付方式：</td>
+					 <td class="field">
+						 <input id="serviceFee" name="cus.serviceFee"  />
+					 </td>
+					 <td class="label">贷款支付方式：</td>
+					 <td class="field">
+						 <input id="payMent" name="cus.payMent"   />
+					 </td>
+				</tr>
+				-->
+				<tr>						
+					<td class="label">客户信用等级：</td>
+					<td class="field" >
+					<input id="creditGrade" name="cus.creditGrade" validate="rules:['required']" 
+					pattern='combo' remote='CreditGrade'  editable='false' value="2" /></td>	
+					<td class="label">客户归属</td>
+					<td class="field"><input id="belongTo" name="cus.belongTo" validate="rules:['required']" 
+					pattern='combo' remote='cusBelongTo'  editable='false' value="1" /></td>
+				</tr>
+				<tr>
+					 <td class="label">客服负责人：</td>
+					 <td class="field">
+						 <input id="serviceMan" name="cus.serviceMan"   validate="rules:['required']" />
+					 </td>
+					 <td class="label">客服部门负责人：</td>
+					 <td class="field">
+						 <input id="servicePartMan" name="cus.servicePartMan" validate="rules:['required']" />
+					 </td>
+				</tr>
+				<tr>
+					 <td class="label">业务负责人：</td>
+					 <td class="field">
+						 <input id="businessMan" name="cus.businessMan"  validate="rules:['required']" />
+					 </td>
+					 <td class="label">业务部门负责人：</td>
+					 <td class="field">
+						 <input id="businessPartMan" name="cus.businessPartMan"  validate="rules:['required']" />
+					 </td>
+				</tr>
+				<tr>	
+					 <td class="label">办公地址：</td>
+					 <td class="field" colspan="3" ><input id="address" name="cus.company.address" validate="rules:['required']"  /></td>	
+				</tr>
+				<tr id="t3">	
+					 <td class="label">寄票地址：</td>
+					 <td class="field" colspan="3" >
+					 <input id="invoiceAddress" name="cus.invoiceAddress" validate="rules:['required']"  /></td>	
+				</tr>
+				<tr>
+					 <td class="label">合同条款：</td>
+					 <td class="field" colspan="3">
+						 <textarea id="remark1" name="cus.company.remark1"  style="height:120px;"></textarea>
+					 </td>
+				</tr>			
+			</table>
+		  <div id="tabLinkMan" >	
+			  <div class="mutitable" id="checkstandards">
+				<table cellpadding="0" cellspacing="0" width="90%" class="thead">
+					 <thead>
+						   <tr>
+							  <td width="100" style="text-align: center;">
+								<input type="checkbox" name="checkAll" id="checkAll"  style="width:20px; height:20px;" />
+								<label for="selectAll"></label>
+							  </td>
+							  <td width="120">联系人类型</td>
+							  <td width="150" >姓名</td>
+							  <td width="120" >电话</td>
+							  <td >传真</td>
+							  <td width="120" >手机</td>
+							  <td width="150" style="text-align:center;">邮箱地址</td>
+							 
+						   </tr>
+					</thead>
+			   </table>
+			</div>
+		  </div>	
+	  </div>
+	  <div id="tabFeeDetail" style="display:none">
+	  		<div id="feeInfo" >	
+		  		<table class="edit-table">
+					<tr>
+						<td class="label">开票公司名称：</td>
+						<td class="field"><input  id="invoiceCompany" name="cus.invoiceCompany" /></td>				
+						<td class="label">税务登记号：</td>
+						<td class="field" >
+							<input id="taxNo" name="cus.company.taxNo" />						
+						</td>
+					</tr>
+					<tr>
+						<td class="label">开户银行：</td>
+						<td class="field" >
+						<input id="bank" name="cus.company.bank" /></td>
+						<td class="label">银行账户：</td>
+						<td class="field" >
+						<input id="bankAccount" name="cus.company.bankAccount" /></td>
+					</tr>
+					<tr>
+						<td class="label">联系人：</td>
+						<td class="field" >
+						<input id="contacter" name="cus.contacter"  /></td>				
+						<td class="label">联系电话：</td>
+						<td class="field" >
+						<input id="contactPhone" name="cus.contactPhone"  /></td>			    
+					</tr>
+					<tr>
+						<td class="label">传真：</td>
+						<td class="field" >
+							<input id="fax" name="cus.company.fax"  />
+						 </td>
+						<td class="label">注册地址：</td>
+						<td class="field" ><input id="officeSpace" name="cus.officeSpace"  /></td>		
+					</tr>
+				</table>
+			</div>
+			<div id="gridFeeDetail"></div>
+	  </div>
+	  <div id="tabDiscount" style="display:none">
+	  		<div id="discount" class="mutitables">	
+				<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+					 <thead>
+						   <tr>
+							  <td width="100" style="text-align: center;">
+								<input type="checkbox" name="checkAll" id="checkAll"  style="width:20px; height:20px;" />
+								<label for="selectAll"></label>
+							  </td>
+							  <td width="80">币种</td>
+							  <td width="450" >增值服务代码</td>
+							  <td width="100" >折扣</td>
+						   </tr>
+					</thead>
+			   </table>
+			</div>
+	  </div>
+	  </form>	  
+  </div>
+  <div id="west-panel">
+		<ul id="cusLst"></ul>
+  </div> 			
+</div>	
+ <div id="buttonbar"></div>
+</body>
+</html>

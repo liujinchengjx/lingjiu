@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var params={
+                title :'客户账本列表',
+				text:"customerName",
+                dataSource :"finance/UserAccount/0/searchUserAccount?currency="+getIframeParm("currency")+"&searchValue=",
+                colModel: [
+ 							 {header : '客户', name : 'customerName', width : 250, align : 'left'},
+							 {header : '币种', name : 'currency', width : 200, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getDictName(Dictionary.Currency,colValue);
+								 }
+							 }
+						 ]
+         };
+	$(document).ready(function(){	
+		$("#search-panel").omPanel({title : "账户名："+getIframeParm("accountName")+" 币种："+
+		   Dictionary.getDictName(Dictionary.Currency,getIframeParm("currency")),collapsed:true});
+		initValidateForm("cashinrecord");
+		var cashInRecordId=getIframeParm("cashInRecordId");
+		if (cashInRecordId !=""){ //编辑状态
+		     var url="finance/CashInRecord/0/get?cashInRecordId="+cashInRecordId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				$("#cashinrecord").initializeInput({"vo":json.entity}); //初始化
+				$("#userAccountId").val("");
+			  }			
+			 });
+ 		 }else{
+			$("#cashinrecord").initializeInput(); //初始化							、
+		 }		
+		$("#userAccountId").initGridDropList(params);
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"button1" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: inAccount
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });
+	});
+	
+	function inAccount(){	 
+	    if (validateForm("cashinrecord")==false) return false;
+		var curr = getIframeParm("currency"); //币种
+		var vo=	$("#cashinrecord").getVo(); 
+		var url = "finance/CashInRecord/0/inAccount";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		   $("#id").val(json.entity);
+		   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+		  }
+		});
+	}	
+	
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>
+<div id="nav_cashinrecord" title="来款记录" >
+	<form id="cashinrecord">
+	<input id="id" name="cir.id" type="hidden" />
+	<input id="status" name="cir.status" type="hidden" />
+	<input id="amt" name="cir.amt" type="hidden" />
+	<input id="currency" name="cir.currency" type="hidden" />
+	<input id="accountName" name="cir.accountName" type="hidden" />
+	<input id="time" name="cir.time" type="hidden" />
+	<input id="bookType" name="cir.bookType" type="hidden" />
+	<input type="hidden" id="lastModifyTime" name="cir.lastModifyTime" />
+	<input type="hidden" id="createTime" name="cir.createTime" />	
+	<table class="edit-table">		
+		<tr>
+			<td class="label">客户：</td>
+			<td class="field">
+			   <input id="userAccountId" name="userAccountId" validate="rules:['required']" showtext="accountName" />
+			</td>
+			<td class="field" colspan="2"><span style="color:#0033FF">提示：若客户账本不存在的，请到财务菜单栏的客户账本处建立对应币种的客户账本！</span></td>
+		</tr>
+		<tr>
+			<td class="label">备注：</td>
+			<td class="field" colspan="3"><textarea id="bookRemark" name="cir.bookRemark" style="height:40px;"></textarea></td>
+		</tr>	
+	</table>
+	</form>	
+</div>
+<div id="buttonbar"></div>
+</body>
+</html>

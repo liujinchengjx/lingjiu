@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/js/ajaxfileupload.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-sortable.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-itemselector.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>	
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<style type="text/css">
+		input {vertical-align:middle;margin:0;padding:0; left:0px;}
+		.file-box {position:relative;margin-top:5px;width:620px; }
+		.txt {height:22px;border:1px solid #cdcdcd;width:450px;}
+		.btn {background-color:#FFF;border:1px solid #CDCDCD;height:22px;width:70px;}
+    </style>
+    <script type="text/javascript">
+         $(document).ready(function() {
+		      var val=52000.01+"";
+		      alert(val.indexOf('.'));
+		      $('#button-search').omButton({icons : {left : '/images/icon/add.png'},width : 50,
+		         onClick : function(event){
+				     var type=$("#type").val();
+					 var url = "baseinfo/SystemDict/0/getDictsByType?type="+type;
+					 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					     var obj=[];
+						for(var i=0;i<json.rows.length;i++){
+						   var o={};
+						   o["dictCode"]=json.rows[i].dictCode;
+						   o["dictName"]=json.rows[i].dictName;
+						   obj.push(o);
+						}	
+						var t= JSON.stringify(obj);
+						$("#dicts").html(t); 
+				      }
+				   });   	 
+			   }
+			  });	
+			  
+               $('#abtnfileupload').omButton({width : 60,
+					 onClick : function(event){	
+					     var cuid=$('#cuid').val();
+						 var url=baseUrl+'attachment/UpLoadFile/0/importWT?ulf.fileType=WT&ulf.relationId=0&ulf.uploadTemplate=6';
+						 url=url+"&ulf.customerId="+cuid;
+						 $.ajaxFileUpload({url:url,secureuri:false,fileElementId:'fileField',dataType:'json',
+							success: function (json, status){
+								if (json.msgCode==1){
+								   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+								}else $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'error'});							
+							},error: function (data, status, e){}
+						})
+					  }			 
+	            });		
+		 });
+		function lPad(s) {
+        	return s < 10 ? '0' + s:s ;
+        }
+		function test(){
+		    
+				
+		}
+    </script>
+</head>
+<body class="dfbody">
+  该模块正在开发中......
+  <div id="search-panel">
+  外汇折算： <input id="rate" name="rate" /> <br/ >
+  单价： <input id="price" name="price" /> <br/ >
+  数量： <input id="qty" name="qty" /> <br/ >
+  <span id="button-search">测试</span><br/ >
+  <span id='test'></span>
+  <div>
+ <div>导出字典：<input id="type" name="type" /></div>
+ <div id="dicts"></div>
+
+
+<div class="file-box">
+     <span >
+		<input type='text' name='textfield' id='textfield' class='txt' />
+		<input type='button' class='btn' value='浏览...' />		
+		<input type="file" name="fileField" 
+		style="position:absolute;top:0;left:0px;height:22px;filter:alpha(opacity:0);opacity: 0;width:530px" id="fileField"
+		 onchange="document.getElementById('textfield').value=this.value" />
+		<input type="button" name="abtnfileupload" id="abtnfileupload"  value="上传" />
+	</span>
+</div>
+<div>客户id号<input type='text' name='cuid' id='cuid' /></div>
+</body>
+</html>

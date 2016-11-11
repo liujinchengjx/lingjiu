@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>报关单排序</title>
+    <link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<script type="text/javascript">	
+	    $(function(){		
+		      $("#nav_product").omPanel({title : "<label style='font-weight:bolder'>报关单号："+
+			  getIframeParm("coOrderNo")+"  客户："+getIframeParm("customerName")+"</label>",collapsed:false,height:'95%'});
+			 loadcustomFormDetails();
+			 $('#buttonbar').omButtonbar({
+				 width : "100%",
+				 btns : [{separtor:true},
+				         {label:"保存",
+						 id:"btnSave" ,
+						 icons : {left : '/images/icon/edit.png'},
+						 onClick: saveSortCustomForm
+						 },
+						{label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);  
+						  }
+						 }					
+					 ]
+             });	 
+		});
+	function loadcustomFormDetails(){
+	      var customFormId=getIframeParm("customFormId");
+		  if (customFormId !=""){	
+			 var url="customs/CustomForm/0/searchCustomFormDetail?limit=100000&customFormId="+customFormId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					 var mutitable=$(".mutitable");
+					 mutitable.find(".tbody_item").remove();
+					 var html="",index=1;
+					 var products=[];
+					 for(var i=0;i<json.rows.length;i++){
+						 var d=json.rows[i];
+						 if (products.in_array(d.productId)==false){
+							 products.push(d.productId); 
+							 html=html+"<div class='tbody_item'>";
+							 html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+							 html=html+" <tr> ";
+							 html=html+"   <td width='50'>";
+							 html=html+"     <span name='productId'  style='display:none' >"+d.productId+"</span>";
+							 html=html+"     <span name='customFormId'  style='display:none' >"+d.customFormId+"</span>";
+							 html=html+"   </td>";
+							 html=html+"   <td width='80'>";
+							 html=html+"      <strong><span name='codeTs'>"+d.product.codeTs+"</span></strong>";
+							 html=html+"   </td>";
+							 html=html+"   <td width='140'>";
+							 html=html+"     <span name='pn' >"+(d.product.pn)+"</span>";
+							 html=html+"  </td>";
+							 html=html+"   <td width='140'>";
+							 html=html+"     <span name='brand' >"+(d.product.brand)+"</span>";
+							 html=html+"  </td> ";
+							 html=html+"  <td width='140'>";
+							 html=html+"     <span name='origin' >"+(d.product.origin)+"</span>";
+							 html=html+"  </td>";
+							 html=html+"  <td width='140'>";
+							 html=html+"     <span name='productName' >"+(d.product.productName)+"</span>";
+							 html=html+"  </td>";
+							 html=html+"  <td width='100'>";
+							 html=html+"     <span name='productName' >"+(d.price)+"</span>";
+							 html=html+"  </td>";
+							 html=html+"  <td style='text-align:right;' width='50'>";
+							 html=html+"     <input type='text' value='"+(d.sequence)+"' ";
+							 html=html+"      name='sequence' style='width:90%;margin-right:2px;text-align:right;' ";
+							 html=html+"      validate="+"rules:['required'] />";
+							 html=html+"  </td>";	 
+							 html=html+"  <td style='text-align:left;'></td>";
+							 html=html+"</tr>";
+							 html=html+"</table></div>";
+                         }
+					 } 
+					 mutitable.append(html);
+					 $("input[name='sequence']").omNumberField({allowDecimals:true,decimalPrecision:10});
+					 products=[];
+			  }			
+			 });
+		}
+	}
+	function saveSortCustomForm(vo){
+		if(validateForm("product")==false)return false;  
+		var customFormId=getIframeParm("customFormId");
+		if ((customFormId=="") || (customFormId<=0)) return;
+		var customFormDetails=[];	
+		customFormDetails=getCustomFormDetails();
+		if (customFormDetails==null) return ;
+		$.omMessageBox.confirm({title:'产品排序',content:'你确定吗？',onClose:function(v){
+		if(v){
+				var vos=[];
+				for(var i=0;i<customFormDetails.length;i++){
+				    var v={};
+					v.productId=customFormDetails[i].productId;
+					v.sequence=customFormDetails[i].sequence;
+					v.customFormId=customFormId;
+					vos.push(v);
+				}
+				var str= JSON.stringify(vos); 
+				var url = "customs/CustomForm/0/sortCustomForm";
+				$.ajaxPost({data:{"customFormDetails":str},url:url,msg:false,success:function(json,textStatus){
+					loadcustomFormDetails();
+					$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+				}});
+		  }}});		 
+	}
+	function getCustomFormDetails(){
+		var customFormDetails=[];
+		$(".mutitable .tbody_item table tr").each(function(i){
+			 $this=$(this);
+			 var vo=$this.getVo();
+			 customFormDetails.push(vo);				
+		});
+		return customFormDetails;
+	}
+	</script>
+</head>
+
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px; background-color: #EEEEEE">
+<div id="nav_product" style="height:750px;" >
+	<div id="buttonbar"></div>
+	<form id="product" >	
+		<div class="mutitable">
+			<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+				<thead>
+				   <tr>
+					  <td width="50" ></td>
+					  <td width="80"  style="text-align:center;margin-left:2px;">税号</td>
+					  <td width="140" style="text-align: center; margin-left:2px;">型号</td>
+					  <td width="140" style="text-align:center;margin-left:2px;">品牌</td>
+					  <td width="140" style="text-align:center;margin-left:2px;">原产地</td>
+					  <td width="140" style="text-align:center;margin-left:2px;">品名</td>
+					  <td width="100" style="text-align:center;margin-left:2px;">单价</td>
+					  <td width="50" >排序</td>
+					  <td ></td>
+				   </tr>
+				</thead>
+			</table>
+		</div>
+	</form>	
+</div>
+</body>
+</html>

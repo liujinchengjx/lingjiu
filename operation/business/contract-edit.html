@@ -1,0 +1,156 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	 <script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/editor/omeditor.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>	
+    <script type="text/javascript">
+	var content=null;
+	$(function() {	    
+		content = $('#content').omEditor({toolbar : 'Basic',height: 360});
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("contract");			
+		var contractId=getIframeParm("contractId");	
+		if (contractId !=""){
+		      var url="business/Contract/0/get?contractId="+contractId;
+			  $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				  $('#contract').initializeInput({"vo":json.entity}); //初始化
+			   }
+			 });
+ 		}else{
+			 $('#contract').initializeInput(); //初始化
+		}      
+		var opParams={
+                title :'经营公司',
+				text:"cname",
+				onRowClick:null,
+                dataSource : "business/OperationCompany/0/searchOpCompany?searchValue=",
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+         };
+		 $("#buyerId").initGridDropList(opParams);
+		 
+		 var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource : "business/Customer/0/searchCusCompany?searchValue=",
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+         };
+		 $("#sellerId").initGridDropList(cusParams);
+		 
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveContract
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }					
+		 ]
+        });
+	});
+	
+	function saveContract(){
+		  if(validateForm("contract")==false)return false;	
+	      var vo=$("#contract").getVo();
+		  vo["cont.content"]=content.omEditor('getData');
+		  var url = $("#id").val()=="" ? "business/Contract/0/add" : "business/Contract/0/edit";
+		  $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			  $("#id").val(json.entity);
+			  $("#btnSave").attr("disabled", "disabled");
+			  $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});					  
+			}
+		  });		  
+	}		
+	</script>	
+</head>
+<body class="dfbody">		
+<div id="search-panel"></div>	
+<div id="nav_contract" title="新增协议"  style="width:100%; height:95%;">	
+   <form id="contract">			    	
+		<input  type="hidden" id="id" name="cont.id" />
+		<input  type="hidden" id="status" name="cont.status" />
+		<input  type="hidden" id="flag" name="cont.flag" />
+		<input type="hidden" id="lastModifyTime" name="cont.lastModifyTime" />
+		<input type="hidden" id="createTime" name="cont.createTime" />
+		 <input type="hidden" id="lastModifyBy" name="cont.lastModifyBy" />
+	 	 <input type="hidden" id="createTime" name="cont.createBy" />
+		<table  class="edit-table" >					
+			<tr>
+				<td class="label">档案编号(只读)：</td>
+				<td class="field"><input  id="ctCode" name="cont.ctCode" disabled="" /></td>				
+				<td class="label">协议类型：</td>
+				<td class="field"><input id="businessType" name="cont.businessType" validate="rules:['required']" pattern='combo' editable='false' remote='BusinessType' /></td>				
+			</tr>
+			<tr>
+				<td class="label">甲方：</td>
+				<td class="field" >
+				<input id="buyerId" name="cont.buyerId" showtext="buyerName" validate="rules:['required']"  /></td>
+				<td class="label">乙方：</td>
+				<td class="field" >
+				<input id="sellerId" name="cont.sellerId" showtext="sellerName" validate="rules:['required']"  /></td>
+			</tr>
+			<tr>
+				<td class="label">甲签约日期：</td>
+				<td class="field">
+				<input id="buyerSigndte" name="cont.buyerSigndte" validate="rules:['required']" pattern="date"  editable="false" /></td>
+				<td class="label">乙方签约日期：</td>
+				<td class="field">
+				<input id="sellerSignDte" name="cont.sellerSignDte" validate="rules:['required']" 
+				 pattern="date"  editable="false" /></td>
+			</tr>
+			<tr>
+				<td class="label">甲方签约代表：</td>
+				<td class="field" >
+				<input id="buyerSignname" name="cont.buyerSignname" validate="rules:['required']" /></td>				
+				<td class="label">乙方签约代表：</td>
+				<td class="field" >
+				<input id="sellerSignName" name="cont.sellerSignName" validate="rules:['required']"   /></td>
+			</tr>
+			<tr>					
+				<td class="label">合同的有效日期：</td>
+				<td class="field">
+				 <input id="validDate" name="cont.validDate" validate="rules:['required']"  pattern='date'  /></td>											
+			</tr>
+			<tr>						
+				<td class="field" colspan="4"><textarea id="content" name="cont.content" class="editor"></textarea></td>						
+			</tr>											
+	</table>						
+</form>	
+<div id="buttonbar"></div>
+</div>	
+
+</body>
+</html>

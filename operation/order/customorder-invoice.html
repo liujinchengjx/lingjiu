@@ -1,0 +1,249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+			<title>后台管理系统---查看发票</title>
+			 <script type="text/javascript"
+				src="/js/jquery.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+			<script type="text/javascript" src="/js/common.js"></script>
+			<script type="text/javascript" src="/js/dictionary.js"></script>
+			<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+			<style type="text/css">
+html,body {
+	width: 100%;
+	height: 100%;
+	padding: 0;
+	margin: 0;
+	font-family: "宋体", "";
+}
+
+td {
+	font-size: 14px;
+	color: #000000;
+	text-decoration: none;
+	line-height: 18px;
+	td-layout: fixed;
+	word-break: break-all;
+}
+
+.listContent {
+	background-color: #FFFFFF;
+	border-collapse: collapse;
+	font-family: verdana, helvetica, arial, sans-serif;
+	font-size: 14px;
+	border: #000000 1px solid;
+}
+
+.listContent td {
+	background-color: #ffffff;
+	border: 1px solid #000000;;
+	height: 23px;
+	padding: 1px 0px 0px 5px
+}
+</style>
+			<script type="text/javascript">
+	$(function() {
+	    var customOrderId=getQueryString("customOrderId");
+		if (customOrderId !=""){
+		     var url="order/CustomOrder/0/outInvoce?customOrderId="+customOrderId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   json.entity.currency=Dictionary.getDictName(Dictionary.Currency,json.entity.currency);
+				   json.entity.dealType=Dictionary.getDictName(Dictionary.DealType,json.entity.dealType);
+				   $(".listContent").initializeInput({"vo":json.entity}); //初始化
+				   var vcTb=$("#tbItems");
+				   var items=json.entity.items;
+				   var html="";
+				   var index=1;
+				   for(var i=0;i<items.length;i++){
+					   var it=items[i];
+					   var Dqty=toThousands(parseFloat(it.qty).toFixed(2));
+					   var Damt=toThousands(parseFloat(it.amt).toFixed(2));
+					   html=html+"<tr>";
+					   html=html+"<td height='15'>"+index+"</td>";
+					   html=html+"<td height='15' align='left'>"+it.productName+"</td>";
+					   html=html+"<td height='15' align='left'>"+it.pn+"</td>";
+					   html=html+"<td height='15' align='center'>"+it.brand+"</td>";
+					   html=html+"<td height='15' align='right'>"+Dqty+"</td>";
+					   html=html+"<td height='15' align='center'>"+it.unit+"</td>";
+					   html=html+"<td height='15' align='left'>"+it.nw+"</td>";
+					   html=html+"<td height='15' align='left'>"+it.price+"</td>";
+					   html=html+"<td height='15' align='right'>"+Damt+"</td>";
+					   html=html+"<td height='15' align='center'>"+it.org+"</td></tr>";
+					   index++;
+				  }
+				  html=html+ "<tr><td height='15' align='left' colspan='4'>total:</td>";
+				  html=html+"<td height='15' align='right'>"+toThousands(json.entity.totalQty.toFixed(2))+"</td>";
+				  html=html+"<td height='15' align='right'></td>";
+				  html=html+"<td height='15' align='left'>"+toThousands(json.entity.totalNw.toFixed(2))+"</td>";
+				  html=html+"<td height='15' align='right'></td>";
+				  html=html+"<td height='15' align='right'>"+toThousands(json.entity.totalAmt.toFixed(2))+"</td>";
+				  html=html+"<td height='15' align='center' ></td></tr>";
+				  vcTb.append(html);	
+				}			
+			 });
+ 		 }
+	});	
+
+	</script>
+	</head>
+	<body
+		style="font-size: 12px; margin-top: 0px; margin-left: 0px; margin-right: 0px; line-height: 18px; margin: 0px;">
+		<div
+			style="width: 100%; text-align: center; padding-top: 20px; padding-left: 20px;">
+			<div align="center" style="font-size: 18px; font-weight: bold">
+				<span>INVOICE</span>
+			</div>
+			<div>
+				<table class="listContent" width="98%"
+					style='border-collapse: collapse; table-layout: fixed;'>
+					<tbody>
+						<tr>
+							<td align="left" width="15%">
+								Contract No.:
+							</td>
+							<td align="left" colspan="3">
+								<span name="contractNo"></span>
+							</td>
+						</tr>
+						<tr>
+							<td align="left" width="15%">
+								Invoice No.:
+							</td>
+							<td align="left">
+								<span name="invoiceNo"></span>
+							</td>
+							<td align="left" width="15%">
+								Invoice Date:
+							</td>
+							<td align="left">
+								<span name="invoiceDate"></span>
+							</td>
+						</tr>
+						<tr>
+							<td align="left" width="15%">
+								Sold To:
+							</td>
+							<td align="left" colspan="3">
+								<span name="buyerCompany"></span>
+							</td>
+						</tr>
+						<tr>
+							<td align="left" width="15%">
+								Address:
+							</td>
+							<td align="left" colspan="3">
+								<span name="buyerAddress"></span>
+							</td>
+						</tr>
+						<tr>
+							<td align="left" width="15%">
+								Seller:
+							</td>
+							<td align="left" colspan="3">
+								<span name="seller"></span>
+							</td>
+						</tr>
+						<tr>
+							<td align="left" colspan="4">
+								Tel:
+								<span name="buyerTel"></span>&nbsp;&nbsp; Fax:
+								<span name="buyerFax"></span>&nbsp;&nbsp; 货币:
+								<span name="currency"></span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div style="margin-top: 5px; text-align: center;">
+				<!--<table id="tbItems" class="listContent" width="100%">
+	    <tbody>
+		    <tr>
+				<td class="clsInvoice" height="15" align="center" width="8%"><b>item</b></td>
+				<td class="clsInvoice" height="15" align="center" width="200"><b>Description</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="250"><b>P/N</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="10%"><b>Brand</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="10%"><b>Qty</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="8%" style="font-weight: bold;"><b>unit</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="9%" style="font-weight: bold;"><b>N/W(kgs)</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="10%" style="font-weight: bold;"><b>Unit Price</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="80" style="font-weight: bold;"><b>Amount</b></td>
+				<td class="clsInvoiceRBT" height="15" align="center" width="8%"><b>Origin</b></td>
+			</tr>
+	 	 </tbody>
+	</table>
+	-->
+				<table id="tbItems" class="listContent" width="98%" border=0
+					cellpadding=0 cellspacing=0
+					style='border-collapse: collapse; table-layout: fixed;'>
+					<col 
+						style='mso-width-source: userset; mso-width-alt: 3360; width: 50pt'>
+						<col 
+							style='mso-width-source: userset; mso-width-alt: 3808; width: 70pt'>
+							<col 
+								style='mso-width-source: userset; mso-width-alt: 3072; width: 100pt'>
+								<col 
+									style='mso-width-source: userset; mso-width-alt: 5248; width: 80pt'>
+									<col 
+										style='mso-width-source: userset; mso-width-alt: 3968; width: 80pt'>
+										<col 
+											style='mso-width-source: userset; mso-width-alt: 5504; width: 70pt'>
+											<col 
+												style='mso-width-source: userset; mso-width-alt: 3072; width: 72pt'>
+												<col 
+													style='mso-width-source: userset; mso-width-alt: 5248; width: 80pt'>
+													<col 
+														style='mso-width-source: userset; mso-width-alt: 3968; width: 80pt'>
+														<col 
+															style='mso-width-source: userset; mso-width-alt: 5504; width: 99pt'>
+															<tbody>
+																<tr>
+																	<td class="clsInvoice" height="15" align="center">
+																		<b>item</b>
+																	</td>
+																	<td class="clsInvoice" height="15" align="center">
+																		<b>Description</b>
+																	</td>
+																	<td class="clsInvoiceRBT" height="15" align="center">
+																		<b>P/N</b>
+																	</td>
+																	<td class="clsInvoiceRBT" height="15" align="center">
+																		<b>Brand</b>
+																	</td>
+																	<td class="clsInvoiceRBT" height="15" align="center">
+																		<b>Qty</b>
+																	</td>
+																	<td class="clsInvoiceRBT" height="15" align="center"
+																		style="font-weight: bold;">
+																		<b>unit</b>
+																	</td>
+																	<td class="clsInvoiceRBT" height="15" align="center"
+																		style="font-weight: bold;">
+																		<b>N/W(kgs)</b>
+																	</td>
+																	<td class="clsInvoiceRBT" height="15" align="center"
+																		style="font-weight: bold;">
+																		<b>Unit Price</b>
+																	</td>
+																	<td class="clsInvoiceRBT" height="15" align="center"
+																		style="font-weight: bold;">
+																		<b>Amount</b>
+																	</td>
+																	<td class="clsInvoiceRBT" height="15" align="center">
+																		<b>Origin</b>
+																	</td>
+																</tr>
+															</tbody>
+				</table>
+			</div>
+		</div>
+	</body>
+</html>

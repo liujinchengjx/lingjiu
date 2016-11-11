@@ -1,0 +1,195 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统-增值服务</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>    
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var currValueAddArr=[],addValueTree={};
+	$(document).ready(function(){	
+		$("#search-panel").omPanel({title : "客户："+getIframeParm("customerName")+"出库单："+getIframeParm("stockOutNo"),collapsed:true});
+		loadValueAddService();
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnAddSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveValueAddService
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });
+	});
+	
+	function saveValueAddService(){	 
+	    var selectedNodes =addValueTree.omTree('getChecked',true);
+		selectedNodes=getSelectedValueAddService(selectedNodes);
+		var vo=$("#workorder").getVo();
+		var woDetails=[],tempscodeArr=[];
+	    for (var i=0;i<selectedNodes.length;i++){ 
+			var woDetail={};
+			if(selectedNodes[i].workOrderDetailId>0){
+			   woDetail["id"]=selectedNodes[i].workOrderDetailId;
+			   woDetail["flag"]=1; 
+			}else{
+			   woDetail["flag"]=2; 
+			}
+			var count=$("#"+selectedNodes[i].nid).find("input[name=count]").val();
+			var payAmt=$("#"+selectedNodes[i].nid).find("input[name='payAmt']").val();
+			if(typeof (count)=="undefined"){
+			   $.omMessageTip.show({content:"对不起！("+selectedNodes[i].pidName+")---> "+selectedNodes[i].text+" 没有输入值，请重新操作！",
+			   timeout : 2000,type : 'error'});
+			   return false; 
+			}
+			woDetail["workOrderId"]=vo["wo.id"];
+			woDetail["serviceName"]=selectedNodes[i].pidName;
+			woDetail["feeUnit"]=selectedNodes[i].feeUnit;
+			woDetail["valueAddedServicesId"]=selectedNodes[i].addValueId;
+			woDetail["variableName"]=selectedNodes[i].text;
+			woDetail["scode"]=selectedNodes[i].id;
+			woDetail["count"]= count;
+			woDetail["payAmt"]= payAmt;
+			tempscodeArr[i]=selectedNodes[i].id;
+			woDetails.push(woDetail);
+		}
+		for (var i=0;i<currValueAddArr.length;i++){
+		    if(tempscodeArr.in_array(currValueAddArr[i])==false){
+			   var woDetail={};
+			   woDetail["scode"]=currValueAddArr[i]; 
+			   woDetail["flag"]=3; //表示要删掉的意思
+			   woDetails.push(woDetail);
+			}
+		}
+		if(woDetails.length<=0) return false;
+		vo["wo.customerId"]=getIframeParm("customerId");
+        var deliverId=getIframeParm("deliverId");
+		if (deliverId>0){
+			vo["wo.deliverId"]=deliverId;
+			vo["wo.refOrderNo"]=getIframeParm("refOrderNo");
+		}
+		vo["wo.type"]=2;
+		var woDetailList= JSON.stringify(woDetails); 
+		vo["workOrderDetails"]=woDetailList;
+	    var url="order/WorkOrder/0/saveWorkOrder";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			loadValueAddService();
+			$("#workorder").initializeInput({"vo":json.entity}); //初始化
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		 }
+		});
+	}
+	
+	 function loadValueAddService(){
+	    var url="business/ValueAddedServices/0/loadValueAddedServicesTree?type=2&refOrderId="+getIframeParm("deliverId");
+		currValueAddArr=[];
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+		   addValueTree=$("#addValueTree").omTree({
+					dataSource : json.rows,
+					showCheckbox:true,
+					simpleDataModel: true,
+					onCheck : function(nodeData){
+						chkSingleNodes(nodeData);
+						if (nodeData.pid!=""){
+						   var $input = $("#"+nodeData.nid).find("span[name="+nodeData.id+"]");
+						   var isCheck=addValueTree.omTree('isCheck',nodeData);
+						   if(isCheck){
+							   if ($input.length<=0){
+								   var $this = $("#"+nodeData.nid).find("a");
+								   var input="<span name='"+nodeData.id+"' style='height:12px;' ><input name='count'"; 
+								   input=input+"  style='width:80px;height:12px;margin-left:10px;text-align: right;' />"
+								   +nodeData.feeUnit;
+								   input=input+" &nbsp;成本：<input type='text' name='payAmt' style='width:120px;' /></span>";
+								   $(input).insertAfter($this);
+								   var $html=$("#"+nodeData.nid);
+								   $html.find("input[name=count]").omNumberField({allowDecimals:true,decimalPrecision:2});
+								   $html.find("input[name=count]").val(nodeData.count);
+								   $html.find("input[name=payAmt]").omNumberField({allowDecimals:true,decimalPrecision:2});
+								   $html.find("input[name=payAmt]").val(nodeData.payAmt);
+							   }
+						   }else{
+							  $input.remove();
+						   }
+						}else{
+						   addValueTree.omTree('expand',nodeData);
+						}
+					}
+			   }); 
+			if (json.entity!=null){
+			   $("#workorder").initializeInput({"vo":json.entity}); //初始化
+			   if(json.entity.status>=20){
+				  $('#btnAddSave').omButton('disable');
+			   }
+			   $.each(json.entity.workOrderDetailList, function(i, obj){
+					currValueAddArr.push(obj.scode);
+					var target = addValueTree.omTree("findNode", "id", obj.scode);
+					addValueTree.omTree('check',target);
+			   });
+		   }
+		 }
+		});
+	 }
+	function getSelectedValueAddService(selectedNodes){//获取选中的子节点
+	     var tempArr=[];
+		 for (var i=0;i<selectedNodes.length;i++){ 
+			  var addValueId=selectedNodes[i].addValueId;
+			  if (addValueId>0){
+				 tempArr.push(selectedNodes[i]);
+			  }
+		  }
+		  return tempArr;
+	}
+	</script>
+</head>
+<body class="dfbody">	
+	<div id="search-panel"></div>
+	<div id="buttonbar"></div>
+	<div id="panel" >
+	   <div style="width:600px;height:auto;float:left;margin:0 0 0 5px;display:inline; ">
+		  <ul id="addValueTree"></ul>
+	   </div>
+	   <div id="workorder" style="width:400px;height:auto;float:left;margin:0 0 0 5px;display:inline;"> 
+	        <span style="font-size:12px;"><b>工作事项：</b></span><br />
+	        <textarea id="workInfo" name="wo.workInfo"  style="width:100%;height:350px;"></textarea>
+		    <span name="wo.id" style="display:none;"></span>
+			<span name="wo.workOrderNo" style="display:none;"></span>
+		    <span name="wo.status" style="display:none;"></span>
+			<span name="wo.wh" style="display:none;"></span>
+		    <span name="wo.customerId" style="display:none;"></span>
+			<span name="wo.deliverId" style="display:none;"></span>
+			<span name="wo.etOrderId" style="display:none;"></span>
+			<span name="wo.type" style="display:none;"></span>
+			<span name="wo.lastModifyTime" style="display:none;"></span>
+			<span name="wo.createTime" style="display:none;"></span>
+			<span name="wo.lastModifyBy" style="display:none;"></span>
+			<span name="wo.createBy" style="display:none;"></span>
+			<span name="wo.serviceMan" style="display:none;"></span>
+	   </div>
+	</div>	
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {	
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("driver");	
+		var driverId=getIframeParm("driverId");	
+		if (driverId !=""){
+		     var url="business/Driver/0/get?driverId="+driverId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				$("#driver").initializeInput({"vo":json.entity}); //初始化
+			   }			
+			 });
+ 		 }else{
+			$("#driver").initializeInput(); //初始化			
+		 }
+		
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveDriver
+				},
+				{separtor:true},
+				{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+					  closeCurrActivateTabs(1000);
+				  }
+				 }	 
+		     ]
+          });  
+		 var params={
+                title :'货运公司列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource :"business/TransportCompany/0/searchTranCompany?searchValue=",			
+                colModel: [
+ 							 {header : '名称', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+         };
+		 $("#tranId").initGridDropList(params);
+
+	});
+	
+	function saveDriver(){	
+	    if(validateForm("driver")==false)return false;
+		var vo=$("#driver").getVo();   
+		var url = $("#id").val()=="" ? "business/Driver/0/add" : "business/Driver/0/edit";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $("#btnSave").omButton("disable");
+			   $("#id").val(json.entity);
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				  
+			}
+		 });
+	}	
+	 
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>		
+	<div id="nav_driver" title="新增司机">
+        <form id="driver">	
+		<input id="id" name="driver.id" type="hidden" />
+		<input id="status" name="driver.status" type="hidden" />
+		<input type="hidden" id="lastModifyTime" name="driver.lastModifyTime" />
+		<input type="hidden" id="createTime" name="driver.createTime" />
+		<input type="hidden" id="lastModifyBy" name="driver.lastModifyBy" />
+ 		<input type="hidden" id="createTime" name="driver.createBy" />
+		<table class="edit-table">
+			<tr>
+			    <td class="label">档案编号(只读)：</td>
+				<td class="field"><input  id="driverNo" name="driver.driverNo" disabled="" /></td>	
+				<td class="label">性别：</td>
+				<td class="field" ><input id="sex" name="driver.sex"  pattern='combo' editable='false' remote='Sex' /></td>
+			</tr>		
+			<tr>
+			    <td class="label">姓名：</td>
+				<td class="field">
+				<input id="name" name="driver.name" validate="rules:['required']" /></td>							
+				<td class="label">运输公司：</td>
+				<td class="field">
+				<input id="tranId" name="driver.tranId" showtext="tranName" validate="rules:['required']" /></td>
+			</tr>
+			<tr>   			    
+				<td class="label">香港电话：</td>
+				<td class="field"><input id="tel" name="driver.tel" validate="rules:['required']"/></td>							    					
+				<td class="label">手机：</td>
+				<td class="field" >
+				<input id="phone" name="driver.phone" validate="rules:['required']" /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">居住地址：</td>
+				<td class="field" ><input id="liveAddress" name="driver.liveAddress"  /></td>
+				<td class="label">身份证：</td>
+				<td class="field" ><input id="idCard" name="driver.idCard"  /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">驾驶执照：</td>
+				<td class="field"><input id="driverLicense" name="driver.driverLicense"  /></td>	
+   			    <td class="label">驾证取证时间：</td>
+				<td class="field" ><input id="driverLicenseDte" name="driver.driverLicenseDte" pattern='date' editable='false'  /></td>				
+			</tr>
+			<tr>
+			    <td class="label">驾照年审时间：</td>
+				<td class="field" ><input id="driverLicenseChkDte" name="driver.driverLicenseChkDte"  pattern='date' editable='false' /></td>				
+				<td class="label">准驾号码：</td>
+				<td class="field" ><input id="allowDriverNum" name="driver.allowDriverNum"  /></td>							    
+			</tr>	
+			<tr>
+			    <td class="label">从业证号：</td>
+				<td class="field" ><input id="doNum" name="driver.doNum" /></td>				
+				<td class="label">学位：</td>
+				<td class="field" ><input id="degress" name="driver.degress" /></td>							    
+			</tr>		
+			<tr>
+			    <td class="label">户籍：</td>
+				<td class="field" colspan="3" ><input id="census" name="driver.census" /></td>
+			</tr>	
+			<tr>
+   			    <td class="label">备注：</td>
+				<td class="field" colspan="3" ><input id="remark" name="driver.remark"  /></td>				
+			</tr>
+		</table>
+		</form>	
+	</div>
+	<div id="buttonbar"></div>	
+</body>
+</html>

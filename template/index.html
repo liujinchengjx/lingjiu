@@ -1,0 +1,199 @@
+﻿﻿﻿﻿﻿<!DOCTYPE html>
+<html>
+<head>
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="js/html5.js"></script>
+    <![endif]-->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <!--
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">-->
+    <title>益童行—亲子游_儿童户外_手工DIY_亲子旅行_儿童乐园</title>
+    <meta name="keywords" content="亲子活动网,深圳亲子游,儿童早教,幼儿活动,儿童旅游,儿童手工DIY,儿童启蒙,亲子乐园,公益活动" />
+    <meta name="description" content="益童行网站提供亲子游、幼儿户外活动、儿童旅游、幼儿手工DIY、儿童启蒙、儿童早教 、亲子乐园等活动。并为众多早教机构提供网络推广平台，为宝宝父母们提供了参加各种亲子活动的信息。报名参加亲子活动，益童行绝对是您的首选" />
+    <link rel="stylesheet" type="text/css" href="${STATIC_PAGE_CSS_SERVER_URL!}/css/reset.css">
+    <script type="text/javascript" src="${STATIC_PAGE_JS_SERVER_URL!}/js/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="${STATIC_PAGE_CSS_SERVER_URL!}/css/basic.css">
+    <link rel="stylesheet" type="text/css" href="${STATIC_PAGE_CSS_SERVER_URL!}/css/style.css">
+    <link rel="stylesheet" type="text/css" href="${STATIC_PAGE_CSS_SERVER_URL!}/css/pages.css">
+    <link rel="stylesheet" type="text/css" href="${STATIC_PAGE_CSS_SERVER_URL!}/css/page1.css">
+    <script type="text/javascript" src="${STATIC_PAGE_JS_SERVER_URL!}/js/base.js"></script>
+    <script type="text/javascript" src="${STATIC_PAGE_JS_SERVER_URL!}/js/main.js"></script>
+    <!--plugin-->
+    <style>
+    </style>
+    <script>
+        $(function () {
+
+        });
+    </script>
+</head>
+<body>
+    <!-------------------------------------- 头部开始 -------------------------------------->
+    <div class="header">
+        <div class="wrap">
+            <div class="header_logo">
+                <a href="#"><img src="${STATIC_PAGE_IMG_SERVER_URL!}/img/header_logo.png" /></a>
+            </div>
+            <img src="${STATIC_PAGE_IMG_SERVER_URL!}/img/header_bg.jpg" />
+        </div>
+        <div class="header_main">
+            <div class="wrap">
+                <div class="header_ewm">
+                    <img src="${STATIC_PAGE_IMG_SERVER_URL!}/img/header_ewm.png" />
+                </div>
+                <div class="wrap1">
+                    <img src="${STATIC_PAGE_IMG_SERVER_URL!}/img/header_jqhd.png" />
+                    <a href="#">深圳</a><a href="#">广州</a>
+                    <div class="clear"></div>
+                </div>
+                <!-- 
+                <div class="header_wb">
+                    <img src="${STATIC_PAGE_IMG_SERVER_URL!}/img/header_wb.jpg" />
+                    <div class="header_wb_xq">
+                        <img src="${STATIC_PAGE_IMG_SERVER_URL!}/img/wbtx_pic.png" />
+                        <h4><a href="#">小设狼</a><span>lv.16</span></h4>
+                        <p><a href="#"><span>148</span><br />关注</a><a href="#"><span>148</span><br />粉丝</a><a href="#"><span>148</span><br />微博</a></p>
+                    </div>
+                </div>
+                -->
+            </div>
+        </div>
+    </div>
+    <!-------------------------------------- 头部结束 -------------------------------------->
+    <!-------------------------------------- 内容开始 -------------------------------------->
+    <div class="mainer">
+    	<#if topiclist??>
+    	<#list topiclist as list>
+    	<#assign topicIndex = list_index/>
+    	<#if topicIndex<4 >
+	        <div class="index_item color_${topicIndex+1}">
+	            <div class="wrap">
+	                <div class="wrap1">
+	                    <div class="index_item_l">
+	                        <img src="${STATICS_FILESERVER_DOMAIN!}${list.mainImgUrl}" />
+	                    </div>
+	                    <div class="index_item_r">
+	                        <h3>${list.topicName}</h3>
+	                        <p>时间：${list.activityDate?string('yyyy-MM-dd')}  ${list.fromTime}-${list.endTime}</p>
+	                        <p>地点：${list.address}</p>
+	                        <p>活动：${list.summary}</p>
+	                        <a class="btn_xq" href="${webDomain!}/huodong/${list.id}.html" target="_blank">详 情 ></a>
+	                    </div>
+	                    <div class="clear"></div>
+	                    <div class="index_item_pz">
+	                        <p>${list.month!}月<span>${list.day!}日</span></p>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    </#if>
+	    </#list>
+	    <#if (topiclist?size > 4) >
+	        <div class="main_f_i color_5">
+	            <div class="wrap">
+	                <div class="wrap1">	
+		                <#list topiclist as list>
+				    	<#assign topicIndex = list_index/>
+				        <#if topicIndex == 4 || topicIndex == 5>
+	                    <div class="main_f_item">
+	                        <img src="${STATICS_FILESERVER_DOMAIN!}${list.mainImgUrl}" />
+	                        <h3>${list.topicName}</h3>
+	                        <p>时间：${list.activityDate?string('yyyy-MM-dd')}  ${list.fromTime}-${list.endTime}</p>
+	                        <p>地点：${list.address}</p>
+	                        <p>活动：参观东湖公园，公园野餐，游戏，游戏，游戏， <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;参观东湖公园，公园野餐，游戏……</p>
+	                        <a class="btn_xq" href="${webDomain!}/huodong/${list.id}.html" target="_blank">详 情 ></a>
+	                    </div>
+	                    </#if>
+	            	    </#list>
+	                    <div class="clear"></div>
+	                </div>
+	            </div>
+	        </div>
+	    </#if >
+	    </#if >
+	    <!--
+        <div class="sjct_lxfs">
+            <div class="wrap">
+                <div class="wrap1">
+                    <h2>活动时间冲突？想自己做主活动时间？<br />留下联系方式，我们为您安排”</h2>
+                </div>
+            </div>
+        </div>
+        <div class="index_tb">
+            <div class="ht60"></div>
+            <div class="wrap">
+                <h2>预约活动</h2>
+                <div class="ht20"></div>
+                <div class="wrap1">
+                    <h3>出行信息：</h3>
+                    <p><span>出行日期：</span><select><option>年</option></select><select><option>年</option></select><select><option>年</option></select></p>
+                    <p><span>出行日期：</span><select><option>年</option></select></p>
+                    <p><span>出行日期：</span><select><option>年</option></select>小孩<select><option>年</option></select>大人</p>
+                    <h3>出行信息：</h3>
+                    <p><span>出行日期：</span><input class="inp_txt" type="text" /></p>
+                    <p><span>出行日期：</span><input class="inp_txt" type="text" /></p>
+                    <p><span>出行日期：</span><input class="inp_txt" type="text" />方便讲活动方案发送至您的邮箱</p>
+                    <h3>出行信息：</h3>
+                    <p><span><input class="inp_rad" type="radio" /></span>&nbsp;&nbsp;&nbsp;随时可以联系我</p>
+                    <p><span><input class="inp_rad" type="radio" /></span>&nbsp;&nbsp;&nbsp;自定义时间<input class="inp_txt" type="text" value="例如：工作日中午12点到2点" /></p>
+                    <a class="btn_ljyy" href="#">立即预约</a>
+                </div>
+            </div>
+            <div class="ht30"></div>
+        </div>
+        <div class="foot_main_t">
+	        <div class="ht15"></div>
+	        <div class="wrap">
+	            <div class="wrap1">
+	                <p>预约须知：</p>
+	                <p>1、预约后，会有益童行工作人员会在第一时间与您取得联系并确认您的出行需求，请确保在方便联系时间内保持通话畅通</p>
+	                <p>2、工作人员确认您的出行需求后，会在三天内再次联系您并沟通为您安排的活动方案，并将方案发送至您的邮箱</p>
+	                <p>3、同意参加此次方案，只需按照方案内容指导报名即可</p>
+	            </div>
+	        </div>
+        </div>
+        -->
+    </div>
+    <!-------------------------------------- 内容结束 -------------------------------------->
+    <!-------------------------------------- 尾部开始 -------------------------------------->
+    <div class="footer">
+       
+        <div class="foot_main_m">
+            <div class="ht20"></div>
+            <div class="wrap">
+                <div class="wrap1">
+                    <ul>
+                        <li>
+                            <a class="foot_lxwm" href="#"><span><label>Conant us</label><br />联系我们</span></a>
+                        </li>
+                        <li>
+                            <a href="#"><img src="${STATIC_PAGE_IMG_SERVER_URL!}/img/ytx_gfq.png" /><span>益童行官方群<br />141510339</span></a>
+                        </li>
+                        <li>
+                            <a href="#"><img src="${STATIC_PAGE_IMG_SERVER_URL!}/img/ytx_gfyx.png" /><span>益童行官方邮箱<br />141510339</span></a>
+                        </li>
+                        <li class="foot_last_li">
+                            <a href="#"><span>益童行官方群<br />141510339</span></a>
+                        </li>
+                    </ul>
+                    <div class="clear"></div>
+                </div>
+            </div>
+        </div>
+        <div class="ht20"></div>
+    </div>
+    <!-------------------------------------- 尾部开始 -------------------------------------->
+</body>
+</html>
+<style>
+
+</style>
+<script>
+    $(function () {
+
+    });
+</script>
+<!-- note
+
+-->

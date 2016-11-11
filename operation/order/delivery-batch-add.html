@@ -1,0 +1,436 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统-汇集</title>
+	<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>  
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var data = 
+		[{
+			"text": "全国",
+			"id":-1,
+			"hasChildren":true,
+			"level":"-1",
+			"parentId":""			
+		}];	
+	var opParams={
+                title :'经营公司列表',
+				text:"cname",
+				onRowClick:opCompanyValueChange,
+                dataSource : "business/OperationCompany/0/searchOpCompany?searchValue=",
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	var tranParams={
+                title :'货运公司列表',
+				text:"cname",
+				onRowClick:tranCompanyValueChange,
+                dataSource :"",
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:customerValueChange,
+                dataSource : "business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	var recParams={
+                title :'收货公司列表',
+				text:"cname",
+				onRowClick:receiveValueChange,
+                dataSource :"",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	var addressParams={
+                title :'联系人列表',
+				text:"address",
+				limit:20,
+				onRowClick:null,
+                dataSource :"",              
+                colModel: [
+ 							 {header : '联系人', name : 'linkMan', width : 80, align : 'left'},
+							 {header : '电话', name : 'tel', width : 80, align : 'left'},
+							 {header : '地址', name : 'address', width : 280, align : 'left'}
+						 ]
+    };
+	var BType=[{dictCode:'3', dictName:'仓储'},{dictCode:'4', dictName:'运输'}];
+	$(document).ready(function(){	
+		initValidateForm("deliverypick");
+		var element = $('#nav_areadict').omBorderLayout({
+            	   panels:[{id:"center-panel",header:true,title:"",region:"center",width:"70%",height:"100%"},
+            	    {id:"west-panel",resizable:true,collapsible:true,title:"地区列表",region:"east",width:"29.5%",height:"100%"}
+            	    ]
+        });
+		$("#deliverypick").initializeInput(); //初始化
+		$("#search-panel").initializeInput(); //初始化
+		$("#panel").omPanel({title:"",collapsible:true, collapsed: false,collapsible: true, closable: true,height:'350px'});
+		loadPickData();
+		
+		$('#areaGrid').omGrid({
+				limit:15,
+				width:'90%',
+                title : '地区',
+                dataSource :'',
+                colModel : [
+				             {header : '始发点', name : 'fromAreaName', width : 110, align : 'left'},
+							 {header : '截止点', name : 'toAreaName', width : 110, align : 'left'}
+							],
+				onRowClick:function(rowIndex,rowData,event){
+				     var dataArray=[];
+					 dataArray.push(rowData);
+					 iniLine(dataArray);
+				}
+         });
+		$("#opCompanyId").initGridDropList(opParams); 
+		$("#transCompanyId").initGridDropList(tranParams); 
+		$("#customerId").initGridDropList(cusParams); 
+		$("#receiveId").initGridDropList(recParams); 	
+		$("#addressId").initGridDropList(addressParams);
+		$('#businessType').omCombo({dataSource: BType,width:'80',editable:false,optionField:'dictName',valueField : "dictCode",value:3});
+		$("#wh").omCombo('value',"WH0001");
+		$('#opCompanyId').val("广通物流有限公司").attr('_trueValue',3);//默认广通
+		opCompanyValueChange({id:3});//默认广通
+		$("#button-search-area").omButton({ 
+	    	onClick : function(event){
+  			   var transId = $("#transCompanyId").getValue();
+			   var searchValue=$("#searchValue").val();
+			   if (transId>0 && searchValue!=""){
+				  var url="finance/TransFeeSetting/0/searchTransFeeSetting?transCompanyId="+transId+"&searchValue="+searchValue;
+				  $('#areaGrid').omGrid("setData", url);
+			   }
+			}
+		});	
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [
+			 	{separtor:true},
+            	{label:"保存",id:"btnSave", 
+				  icons : {left : '/images/icon/add.png'},
+				  onClick:saveDelivery
+				},{separtor:true},
+				{label:"找货",id:"btnPick", 
+				  icons : {left : '/images/icon/edit.png'},
+				  onClick:pickStockOut
+				},{separtor:true},
+            	{label:"关闭",id:"btnClose", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		       ]
+        });									
+	});
+	
+	function iniLine(dataArray){
+		  var divbtn = $("#line");
+		  var selecteddiv=$(".button2");
+		  for(var i=0;i<dataArray.length;i++){
+			  var len=divbtn.find("div[name='"+dataArray[i].id+"']").length;
+			  if ( len <= 0){ //不存在
+				var htmltb = "<div style='margin:1px 5px 0 0; float:left;' name='"+dataArray[i].id+"'>";					
+				htmltb=htmltb+"  <table cellspacing='0' style='margin: 0px; border: 0px; padding: 0px;'>";
+				htmltb=htmltb+"	<tr><td class='button1'>"+dataArray[i].fromAreaName+"-->"+dataArray[i].toAreaName+"</td>";
+				htmltb=htmltb+"	<td style='cursor: pointer; padding: 2px; background-color: rgb(51, 102, 153);'>";
+				htmltb=htmltb+" <span style='font-size: 12pt; color: #FFFFFF;'>×</span></td></tr></table>";
+				htmltb=htmltb+"</div>";
+				if (selecteddiv.length==0){
+					divbtn.append(htmltb);
+				}else{
+				   selecteddiv.closest("div").before(htmltb);
+				}
+				divbtn.find("div[name='"+dataArray[i].id+"'] table tr:eq(0) td:eq(0)").bind("click",function(){
+					if ($(this).attr('class')=="button1"){
+						  $(".button2").each(function(index){
+								$(this).removeClass("button2").addClass("button1");
+						  });								 
+						  $(this).removeClass("button1").addClass("button2");
+					}else{
+						$(this).removeClass("button2").addClass("button1");
+					}
+				});			 
+				divbtn.find("div[name='"+dataArray[i].id+"'] table tr:eq(0) td:eq(1)").bind("click",function(){
+					$(this).closest("div").remove();
+				});			 
+			}	
+		  }
+	}
+	
+	function loadPickData(){
+	    var url='warehouse/StockIn/0/getCacheStockOut';
+	    $(".tbody_item").remove();
+	    $.ajaxPost({url:url,msg:true,success:function(json,textStatus){
+		    if(json.msgCode==1){
+				 var mutitable=$(".mutitable");
+				 var html="";
+				 var totalQty=0,totalCarton=0;
+				 for(var i=0;i<json.rows.length;i++){
+					 var carton=json.rows[i];
+					 totalCarton=totalCarton+1;
+					 html=html+"<div class='tbody_item'>";
+					 html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+					 html=html+" <tr> ";
+					 html=html+"   <td width='50'><strong><span name='cartonNo'>"+carton.cartonNo+"</span>";
+					 html=html+"       <span name='cartonId' style='display:none' >"+carton.id+"</span></strong></td>";
+					 html=html+"   <td width='80'><strong><span name='orgCartonNo'>"+carton.orgCartonNo+"</span></strong></td>";
+					 html=html+"   <td width='80' style='text-align:right;margin-right:2px;'>";
+					 html=html+"     <span name='nw'>"+carton.nw.toFixed(2)+"</span>";
+					 html=html+"   </td>";
+					 html=html+"   <td width='80' style='text-align:right;margin-right:2px;'>";
+					 html=html+"     <span name='gw'>"+carton.gw.toFixed(2)+"</span>";
+					 html=html+"   </td>";
+					 html=html+"   <td class='tbody_product' width='90'>";
+					 var packings=carton.stockOutPackings;
+					 for(var j=0;j<packings.length;j++){
+						 var packing=packings[j];
+						 html=html+"    <dl>"; 
+						 html=html+"      <dd style='display:none'>";
+						 html=html+"          <span name='stockInPackingId'>"+packing.id+"</span>";
+						 html=html+"      </dd>";
+						 html=html+"      <dd style='float:left;text-align:right;width:90px;'>";
+						 html=html+"          <span name='outQty'>"+packing.qty+"</span>";
+						 html=html+"      </dd>";
+						 html=html+"	</dl>";
+						 totalQty=totalQty+packing.qty;
+					 }
+					 html=html+"  </td>";
+					 html=html+"  <td></td>";
+					 html=html+"</tr>";
+					 html=html+"</table></div>";
+				 } 
+				 mutitable.append(html);
+				 var str="";
+				 $("#panel").omPanel("setTitle","总箱数："+totalCarton+" 总数量："+totalQty);
+			   }
+			}			
+		 });		
+	}
+	function opCompanyValueChange(data){ 
+	    var url="business/TransportCompany/0/searchTranCompany?customerCompanyId="+data.id+"&searchValue=";
+	    $('#transCompanyId').setData(url);
+	}
+	function tranCompanyValueChange(data){
+		var url='finance/TransFeeSetting/0/searchTransFeeSetting?transCompanyId='+data.id;
+		$('#areaGrid').omGrid('setData',url);
+	}
+	function saveDelivery(){ //保存送货单
+		if(validateForm("deliverypick")==false) return false;
+		var len=$(".tbody_item").length;
+		if (len<=0){
+		   $.omMessageTip.show({content :"对不起,没有出库数据！",timeout : 2000,type : 'error'});
+		   return false;
+		}
+		var line=[];
+		$("#line div").each(function(index){
+		   line.push($(this).attr("name"));
+		});	
+		var vo=$("#deliverypick").getVo();
+		vo["deliver.stockOut.manageModel"]=2;
+		vo["deliver.tls.line"]=line.join(",");
+		var url = "order/Deliver/0/saveDeliverAndStockOut";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		   loadPickData();
+		   $('#btnSave').omButton('disable');
+		   $.omMessageTip.show({content : json.msg,timeout : 2000,type:'success'});	
+		}});    
+		
+	}
+	function customerValueChange(data){ //
+	     var url="business/Receiver/0/searchReCompany?customerCompanyId="+data.id+"&searchValue=";
+		 $('#receiveId').setData(url);
+		 $('#receiveId').clearValue();
+	}
+	function receiveValueChange(data){
+		var url="business/Address/0/searchAddress?companyId="+data.id;
+		$('#addressId').setData(url);
+	}
+	function pickStockOut(){
+		var customerId=$("#customerId").getValue();
+		if ((customerId=="") || (typeof(customerId)=="undefined")){
+		   $.omMessageTip.show({content : "请选择客户！",timeout : 2000,type : 'error'});		
+		   return false;
+		}
+		var customerName=$("#customerId").getfieldById(customerId,"cname");
+		var wh=$("#wh").omCombo('value');
+		if ((wh=="") || (typeof(wh)=="undefined")){
+		   $.omMessageTip.show({content : "请选择仓库！",timeout : 2000,type : 'error'});		
+		   return false;
+		}
+		var businessType=$("#businessType").val();
+	    var paras={customerId:customerId,wh:wh,customerName:customerName,businessType:businessType,tabId:"pickStockOut001"};
+ 	    addNewTab("找货","/order/delivery-batch-pick.html",paras,function(){
+			loadPickData();
+	    });    
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="nav_areadict" title="地区"  style="width:100%; height:95%;">
+     <div id="center-panel">
+		<div id="nav_deliverypick" title="送货信息">
+			   <form id="deliverypick">	
+				<input id="id" name="deliver.id" type="hidden" />
+				<input id="deliverNo" name="deliver.deliverNo" type="hidden" />
+				<input id="stockOutId" name="deliver.stockOutId" type="hidden" />
+				<input id="soId" name="deliver.stockOut.id" type="hidden" />
+				<input id="outTime" name="deliver.stockOut.outTime" type="hidden" />
+				<input id="soStatus" name="deliver.stockOut.status" type="hidden" />
+				<input id="stockOutNo" name="deliver.stockOut.stockOutNo" type="hidden" />
+				<input id="manageModel" name="deliver.stockOut.manageModel" type="hidden" value="2" />
+				<input id="status" name="deliver.status" type="hidden" />
+				<input id="translineSettingId" name="deliver.translineSettingId" type="hidden" />
+				<input id="tId" name="deliver.tls.id" type="hidden" />
+				<input id="tlsStockOutId" name="deliver.tls.stockOutId" type="hidden" />
+				<input id="tlsline" name="deliver.tls.line" type="hidden" />
+				<input id="statusd" name="deliver.status" type="hidden" />
+				<input id="receiveOrderMan" name="deliver.receiveOrderMan" type="hidden" />
+				<input id="deliveryType" name="deliver.deliveryType" type="hidden" value="4" />
+				<input id="lastModifyTime" name="deliver.lastModifyTime" type="hidden" />
+				<input id="createTime" name="deliver.createTime" type="hidden" />
+				<input id="lastModifyBy" name="deliver.lastModifyBy" type="hidden" />
+ 				<input id="createBy" name="deliver.createBy" type="hidden" />
+				 <table class="edit-table" >		
+					<tr >
+						<td class="label">仓库：</td>
+						<td class="field" >
+							<input id="wh" name="deliver.stockOut.wh" validate="rules:['required']" pattern='combo' editable='false'
+								 remote='Warehouse' value="WH0002" />
+				        </td>	
+						<td class="label">付费方式：</td>
+						<td class="field" >
+						 <input id="payWay" name="deliver.payWay" validate="rules:['required']"
+						 pattern="combo" editable='false' remote='PayWay' value="2"/>
+						 </td>						
+					</tr>
+					<tr >
+						<td class="label">发货方式：</td>
+						<td class="field">
+						<input id="shipWay" name="deliver.shipWay"  validate="rules:['required']" pattern='combo' 
+								 remote='ShipWay'/></td>	
+						<td class="label">结算方式：</td>
+						<td class="field" >
+						   <input id="settlementWay" name="deliver.settlementWay" validate="rules:['required']"
+						  pattern="combo"  remote='SettlementWay' value="1" />			                       
+						</td>						
+					</tr>
+					<tr>
+						<td class="label">经营公司：</td>
+						<td class="field" >
+						 <input id="opCompanyId" name="deliver.opCompanyId" showtext="deliver.opCompanyName" 
+						  validate="rules:['required']" /></td>
+						<td class="label">货运公司：</td>
+						<td class="field">
+							<input id="transCompanyId" name="deliver.transCompanyId" showtext="deliver.transCompanyName"  validate="rules:['required']"/>
+						</td>  
+					</tr>
+					<tr>
+						<td class="label">客户：</td>
+						<td class="field" >
+						    <input id="customerId" name="deliver.stockOut.customerId" showtext="deliver.stockOut.customerName" 
+							validate="rules:['required']" />
+						</td>
+						 <td class="label">收货公司：</td>
+						<td class="field">
+							<input id="receiveId" name="deliver.receiveId" showtext="deliver.receiveCompanyName" 
+							validate="rules:['required']" />
+						</td>
+					</tr>
+					<tr >							                 
+						<td class="label">送货日期：</td>
+						<td class="field" >
+						    <input id="deliveryDate" name="deliver.deliveryDate" pattern='datetime' editable='false' defaultDate='now' />
+						</td>
+						<td class="label">业务类型：</td>
+						<td class="field"><input id="businessType" name="deliver.stockOut.businessType" value="3"/></td>
+					</tr>
+					<tr>
+						<td class="label">送货路线：</td>
+						<td class="field"  colspan="3"><span id="line" ></span>
+						</td>
+					</tr>
+					<tr >
+						<td class="label">详细收货地址：</td>
+						<td class="field" colspan="3">
+							 <input id="addressId" name="deliver.addressId"  showtext="deliver.consigneeAddress" 
+							 validate="rules:['required']" />
+							 
+						</td>				
+					</tr>
+					<tr >
+						<td class="label">送货单备注：</td>
+						<td class="field"  ><input id="remark" name="deliver.remark" /></td>				
+					    <td class="label">注意事项：</td>
+						<td class="field"  ><input id="remark1" name="deliver.remark1" /></td>			
+					</tr>
+				 </table>		
+				</form>	
+		</div>
+		<div id="buttonbar"></div>	
+		<div id="panel" >
+			<div class="mutitable">
+				<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+					 <thead>
+						   <tr>
+							  <td width="50">箱号</td>
+							  <td width="80" style="text-align:center;">客户箱号</td>
+							  <td width="80" style="text-align:right">净重</td>
+							  <td width="80" style="text-align:right">毛重</td>
+							  <td width="90" style="text-align:right">出库数量</td>
+							  <td style="text-align:center;"></td>
+						   </tr>
+						</thead>
+				</table>
+		    </div>
+		</div>
+	</div>
+	<div id="west-panel">
+		<div id="search-panel">
+			<table class="edit-panel">		
+			  <tr>
+				  <td>地址：</td>    
+				  <td><input id="searchValue" name="searchValue"  /></td>
+				  <td><span id="button-search-area">搜索</span></td>
+			   </tr>
+		   </table> 	  
+	    </div>
+		<div id="areaGrid"></div>
+	</div>	
+</div>
+</body>
+</html>

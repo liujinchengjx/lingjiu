@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <title>元和原浆免费领</title>
+    <link rel="stylesheet" href="css/reset.css"/>
+    <link rel="stylesheet" href="css/layout.css"/>
+    <link rel="stylesheet" href="css/sm.min.css"/>
+</head>
+<body style="background: #f0f2f5;">
+<div class="page-wrap">
+    <div class="menu">
+        <img  src="images/25year.jpg">
+    </div>
+    <div class="order-head">订单信息</div>
+    <div class="order-item">
+        <form id="coollarform"   name="form">
+            <dl class="order-list mb">
+                <dt>选择产品</dt>
+                <dd><img class="btn-default" src="images/btn-default.png" alt=""/><input class="goods-name" type="text" value="168元茅台镇元和原浆 免费领！" readonly="readonly"/>
+                <input type="hidden" name="coollarRecord.goodsId" value="1"/>
+                <input type="hidden" name="coollarRecord.activityCode" value="DW2016"/>
+                </dd>
+            </dl>
+            <dl class="order-list">
+                <dt>收货姓名</dt>
+                <dd><input type="text" name="coollarRecord.receiverName" id="receiverName"/></dd>
+            </dl>
+            <dl class="order-list">
+                <dt>手机号码</dt>
+                <dd><input type="text" name="coollarRecord.receiverMobile" id="receiverMobile"/></dd>
+            </dl>
+            <dl class="order-list">
+                <dt>所在地区</dt>
+                <dd><input type="text" name="coollarRecord.provinceName" id="city-picker" value=""/></dd>
+            </dl>
+            <dl class="order-list">
+                <dt>详细地址</dt>
+                <dd><input type="text" placeholder="请填写详细地址，不少于5个字" name="coollarRecord.address"   id="address"/></dd>
+            </dl>
+            <img  class="border-bg mb" src="images/border-bg.png" alt=""/>
+            <dl class="order-list">
+                <dt>领取瓶数</dt>
+                <dd><input type="text" placeholder="包装每箱6瓶，您可根据需要输入瓶数" name="coollarRecord.coollarQty" onchange="caluFee();" id="coollarQty"/></dd>
+            </dl>
+            <dl class="order-list">
+                <dt>快递费用</dt>
+                <dd>
+                    <input class="cost" type="text" value="29.00" readonly="readonly" name="logisticsFee_cost" id="logisticsFee_cost"/>
+                    <input type="hidden" value="2900" name="coollarRecord.logisticsFee" id="logisticsFee"/>
+                </dd>
+            </dl>
+            <dl class="order-list">
+                <dt>领取码</dt>
+                <dd><input type="text" name="coollarRecord.memberCode" id="memberCode"/></dd>
+            </dl>
+            <dl class="order-list mb order-spec">
+                <dt>付款方式</dt>
+                <dd class="payway"><img src="images/btn-default.png" alt=""/><p>货到付运费（注：西藏、青海、新疆、内蒙古等地区 每瓶需要外加10元运费</p>
+                    <input type="hidden" name="coollarRecord.payway" value="1"/>
+                </dd>
+            </dl>
+            <dl class="order-list mb order-spec">
+                <dt>留言</dt>
+                <dd><input type="text" name="coollarRecord.remark"/><p>温馨提示：领酒是选择货到付款（只需支付快递费） 任何疑问请拨打我们的联系电话：0851-85913199</p></dd>
+            </dl>
+            <div class="order-sub">
+                <input class="btn-sub" type="button" name="submit"  id="submit" value="提交订单"  onclick="postcheck();" />
+                <span class="mr20">共计<sapn class="cost"  id="total_cost">￥29.00</sapn></span>
+            </div>
+        </form>
+        <div class="order-head mt25">发货通知</div>
+        <div class="fahuo" id="fahuo">
+            
+        </div>
+        <div class="order-head mb">订单查询</div>
+        <dl class="order-list phone-query">
+            <dt><img src="images/search.png" alt=""/></dt>
+            <dd><input type="text" id="notchecktel" placeholder="请输入11位手机号进行查询"/></dd>
+        </dl>
+        <div class="btn-query" onclick="checktel();">查询</div>
+       
+        <p class="query-tip">温馨提示：你可以在收货前随时查询自己的订单，掌握订单物流的 最新动态，方便自己的收货时间安排。</p>
+        <div id="order_result_list">
+		         
+        </div>
+        <!--
+        <div class="order-head">微信公众号</div>
+        <div class="qcode-content">
+            <img src="images/qcode.png" alt=""/>
+            <p class="code-txt-top">识别或扫描二维码</p>
+            <p class="code-txt-bt">关注元和津<span>微信公众号</span>，查看更多优惠信息</p>
+        </div>
+    -->
+    </div>
+    <div class="menu">
+        <img src="/images/header.jpg"></img>
+        <img src="/images/location.jpg"></img>
+        <img src="/images/storage.jpg"></img>
+        <img src="/images/honnor.jpg"></img>
+        <img src="/images/artifact.jpg"></img>
+       
+    </div>
+</div>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/sm.min.js"></script>
+<script src="js/sm-city-picker.min.js"></script>
+<script src="/js/common.js"></script>
+<script>
+    $("#city-picker").cityPicker({
+        toolbarTemplate: '<header class="bar bar-nav">\
+    <button class="button button-link pull-right close-picker">确定</button>\
+    <h1 class="title">选择收货地址</h1>\
+    </header>'
+    });
+    function loadDelivery(){
+    	$.ajax({
+      	  type: 'GET',
+      	  url: '/jsonrest/lingjiu/CoollarRecord/0/searchTop',
+      	  dataType: 'json',
+      	  timeout: 3000,
+      	  success: function(data){
+      		  if(data.msgCode==1){
+	              		if(data.rows.length>0){
+	              			var sHtml ="";
+	              			$.each(data.rows, function(index,row){
+  								sHtml =sHtml + "<dl>";
+  								sHtml =sHtml + "<dt>"+   row.fleightTime+"&nbsp;"+row.provinceName+"的"+row.receiverName+"("+row.receiverMobile+")"+"</dt>";
+  								sHtml =sHtml + "<dd>你订购的"+   row.coollarGoods.goodsName+"已发货 请注意收货</dd>";
+  								sHtml =sHtml + "</dl>";
+  				            
+  							})
+  							$("#fahuo").html(sHtml);
+  	              			
+	              		}
+	              		
+	           	   }else{
+	           		$("#fahuo").html("暂无发货记录");
+	           	   }
+      	  },
+      	  error: function(xhr, type){
+      		$("#fahuo").html("暂无发货记录");
+      	  }
+      	})
+    	
+    	
+    }
+    function orderTrack(id){
+    	window.location.href="/order-details.html?id="+id;
+    }
+    function checktel(){
+        if (document.getElementById("notchecktel").value==""){
+            alert('请输入要查询的手机号码！');
+            document.getElementById("notchecktel").focus();
+            return false;
+        }
+        var form = /^1[3,4,5,7,8]\d{9}$/;
+        var tel = document.getElementById("notchecktel").value;
+        if (!form.test(document.getElementById("notchecktel").value)){
+            alert('手机号码格式不正确，请重新填写！');
+            document.getElementById("notchecktel").focus();
+            return false;
+        }
+        
+        $.ajax({
+        	  type: 'GET',
+        	  url: '/jsonrest/lingjiu/CoollarRecord/0/getByReceiverMobile',
+        	  dataType: 'json',
+        	  data:{searchValue:tel},
+        	  timeout: 3000,
+        	  success: function(data){
+        		  if(data.msgCode==1){
+  	              		if(data.rows.length>0){
+		  	              		var sHtml ="";
+		  	              		
+		  	              		$.each(data.rows, function(index,row){
+		              				sHtml = sHtml +'<div class="order-item">';
+		              				sHtml = sHtml +'  <dl class="order-list">';
+		              				sHtml = sHtml +'    <dt>产品</dt>';
+		              				sHtml = sHtml +'     <dd><input type="text" value="'+ row.goodsName+'" readonly="readonly"/></dd>';
+		              				sHtml = sHtml +'  </dl>';
+		        			        
+		              				sHtml = sHtml +'   <dl class="order-list">';
+		              				sHtml = sHtml +'     <dt>订单号</dt>';
+		              				sHtml = sHtml +'     <dd><input type="text" value="'+row.orderCode+'" readonly="readonly"/></dd>';
+		              				sHtml = sHtml +'    </dl>';
+		              				sHtml = sHtml +'  </div>';
+		              				sHtml = sHtml +' <div class="btn-query track" onclick="orderTrack('+row.id+')">详单追踪</div>';
+					            
+								})
+								$("#order_result_list").html(sHtml);
+  	              		}
+  	              		
+  	           	   }else{
+  	           		$("#order_result_list").html("没有该手机号对应的订单");
+  	           	   }
+        	  },
+        	  error: function(xhr, type){
+        		$("#fahuo").html("查询出错,请稍后再试");
+        	  }
+        	})
+    }
+
+    function caluFee(){
+    	var coollarQty = $("#coollarQty").attr("value");
+    	var fee = 29*coollarQty;
+    	$("#total_cost").html("￥"+fee+".00");
+    	$("#logisticsFee_cost").val(fee+".00");
+
+    }
+
+    function postcheck(){
+
+    	  try{
+            var name = /^[\u4e00-\u9fa5]{2,6}$/;
+            if (!name.test(document.form.receiverName.value)){
+                alert('姓名格式不正确，请重新填写！');
+                document.form.receiverName.focus();
+                return false;
+            }
+    	  }catch(ex){
+            }
+        
+        try{
+            if (document.form.receiverMobile.value==""){
+                alert('请填写手机号码！');
+                document.form.receiverMobile.focus();
+                return false;
+            }
+            var form = /^1[3,4,5,6,7,8]\d{9}$/;
+            if (!form.test(document.form.receiverMobile.value)){
+                alert('手机号码格式不正确，请重新填写！');
+                document.form.receiverMobile.focus();
+                return false;
+            }
+        }
+        catch(ex){
+        }
+        try{
+            var sProvinceName = $("#city-picker").val();
+            if (sProvinceName==""||sProvinceName=="请选择"){
+                alert('请选择所在地区！');
+                return false;
+            }
+        }
+        catch(ex){
+        }
+        try{
+            if (document.form.address.value==""){
+                alert('请填写详细地址！');
+                document.form.address.focus();
+                return false;
+            }
+        }
+        catch(ex){
+        }
+        try{
+            if (document.form.coollarQty.value==""){
+                alert('请填写领用数量！');
+                document.form.coollarQty.focus();
+                return false;
+            }
+        }
+        catch(ex){
+        }
+        try{
+            if (document.form.memberCode.value==""){
+                alert('请填写领用码！');
+                document.form.memberCode.focus();
+                return false;
+            }
+        }
+        catch(ex){
+        }
+         document.form.submit.disabled = true;
+         document.form.submit.value="正在提交，请稍等 >>";
+         $.ajax({
+        	  type: 'POST',
+        	  url: '/jsonrest/lingjiu/CoollarRecord/0/add',
+        	  // data to be added to query string:
+        	  data: $('#coollarform').serialize(),
+        	  // type of data we are expecting in return:
+        	  dataType: 'json',
+        	  timeout: 3000,
+        	  success: function(data){
+        		  if(data.msgCode==1){
+	              		window.location.href="/success.html";
+	           	   }else{
+	           		   	alert(data.msg);
+	           		    document.form.submit.disabled = false;
+	                    document.form.submit.value="提交订单";
+	           	   }
+        	  },
+        	  error: function(xhr, type){
+        	    alert('领用失败，请稍后重试!')
+        	    document.form.submit.disabled = false;
+                document.form.submit.value="提交订单";
+        	  }
+        	})
+
+        return false;
+    }
+    loadDelivery();
+    var mcode =  getUrlParam("mcode");
+    if(mcode!=null && mcode !="undefined"){
+
+        document.form.memberCode.value=mcode;
+    }
+
+
+</script>
+</body>
+</html>

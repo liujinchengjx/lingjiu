@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">	
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource : "business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {		
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#customerId").initGridDropList(cusParams);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+					 searchData();
+			   }
+		});
+		$('#buttonbar').initToolBar();		
+		$('#grid').omGrid({
+				autoFit:true,
+				limit:15,
+                title : '合同列表',
+                dataSource : "business/Contract/0/searchContract",
+                colModel : [
+                             {header : '档案编号', name : 'ctCode', width : 60, align : 'left'},
+							 {header : '业务类型', name : 'businessType', width : 100, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.BusinessType,colValue);
+                                 }
+							 },  
+							 {header : '甲方', name : 'buyerName', width : 120, align : 'left'}, 
+							 {header : '乙方', name : 'sellerName', width : 120, align : 'left'}, 
+ 							 {header : '审核状态', name : 'status', width : 80, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.ContractStatus,colValue);
+                                 }
+							 },
+  							 {header : '是否有效', name : 'flag', width : 100, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.IsValid,colValue);
+                                 }
+							 }, 
+							 {header : '签约日期', name : 'buyerSigndte', width : 100, align : 'left'}
+							],
+				rowDetailsProvider:function(rowData,rowIndex){
+                		return '';								
+	            }
+            });	
+	});
+	function searchData(){
+	    var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#grid').omGrid('setData', "business/Contract/0/searchContract?"+params);
+	}
+	function addContract(){
+  	    var paras={id:-1,tabId:"addcontract001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	    addNewTab("新增协议","/business/contract-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });     	     		      	     		
+	}
+	function editContract(){	 
+		 var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+		  }	
+		  var paras={contractId:rowDatas[0].id,tabId:"editcontract001"}; //tabId用方法名加001命名而成，这样就不会重复
+	      addNewTab("编辑协议","/business/contract-edit.html",paras,function(){
+		      $('#grid').omGrid('reload');//刷新grid			$
+	      });	        	     
+	}	
+	
+	
+	//预览合同
+	function previewContract(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		var url="/business/contract-preview.html?id="+rowDatas[0].id;
+	    showFullScreen(url);	
+	}
+	function viewContract(){
+	  
+	}
+	</script>	
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">		
+	<tr>
+		<td>合同号：</td>    
+		<td><input id="ctCode" name="ctCode"  onfocus="myFocus(this,'#f4eaf1')" 
+				      onblur="myblur(this,'white')" tip="这里输合同号" />
+		</td>
+		<td>客户：</td>
+		<td><input id="customerId" name="customerId"  onfocus="myFocus(this,'#f4eaf1')" 
+		   onblur="myblur(this,'white')" tip="选择客户" showtext="" />
+		</td>
+		<td>状态：</td>
+        <td colspan="2"><input id="contractStatus" name="contractStatus" pattern='combo' editable='false' 
+		    remote="ContractStatus" emptyText="请选择状态"/></td>
+			
+	</tr>	
+	<tr>
+  	    <td>业务类型：</td>    
+		<td><input id="businessType" name="businessType" pattern='combo' editable='false' width="130" remote="BusinessType"
+		 emptyText="请选择业务类型"/>
+		</td>				
+		<td>时间：</td>    
+		<td><input id="startTime" name="startTime" pattern='date' editable='false' /></td>
+		<td>到：</td>    
+		<td><input id="endTime" name="endTime" pattern='date' editable='false' /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>
+  </table> 	 
+</div>			
+	<div id="nav_contract" title="新增协议">
+		<div id="buttonbar"></div>	
+		<div id="grid"></div>
+	</div>
+</body>
+</html>

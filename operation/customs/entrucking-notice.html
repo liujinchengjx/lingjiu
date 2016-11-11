@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---装车单</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+     <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<style type="text/css">
+		.titleLN {font-size: 18px; text-align:left; padding:5px; margin-bottom:5px;}		
+	</style>
+    <script type="text/javascript">
+	$(function() {
+	     var entruckingId=getQueryString("id");
+		 var url="customs/CustomFormEntrucking/0/entruckingNotice";
+		 var vo={entruckingId:entruckingId};
+		 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $("#wrap").initializeInput({"vo":json.entity}); //初始化
+			   var vcTb=$("#wrap").find("table");
+			   var itemTr="";
+			   for(var i=0;i<json.entity.enItems.length;i++){
+				  itemTr=itemTr+"<tr><td nowrap='' class='titleLN'>";
+				  itemTr=itemTr+"<b>"+json.entity.enItems[i].orderNo+")&nbsp;"+json.entity.enItems[i].customOrderNo+
+				  "("+json.entity.enItems[i].cartons+"件;";
+				  itemTr=itemTr+"毛重"+json.entity.enItems[i].gw+"KGS)</b>";
+				  itemTr=itemTr+"</td></tr>";
+			   }	
+			   vcTb.append(itemTr);	
+			}			
+		 });
+ 		 
+	});	
+	</script>
+</head>
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px;">	
+<div style="width:98%;text-align:center;padding-top:10px; padding-left:20px;">
+<form>
+    <fieldset class="search">
+        <legend class="titleLN"><b>捆绑通知</b></legend>
+        <div id="wrap">
+            <table width="100%" border="0">
+                <tbody>
+                    <tr>
+                        <td nowrap="" class="titleLN">
+                            To: <span name="transCompanyName"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td nowrap="" class="titleLN">
+                            From: <span name="opCompanyName"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td nowrap="" class="titleLN">
+                            日期:<span name="customDate"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="titleLN" style="line-height:25pt">
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;请捆绑以下报关单,一车共<span name="cfCounts"></span>份报关单,
+							提运单<span name="blNo"></span>,共<span name="cartonCounts"></span>件货,毛重<span name="gw"></span>(kgs),
+							共<span name="cusCounts"></span>&nbsp;&nbsp;&nbsp;&nbsp;家公司的货物,车牌<span name="truckNo"></span>,司机
+							<span name="driverName"></span>(海关编码:<span name="codeTs"></span>),走皇岗口岸.
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+		<div><span><b>捆绑状况请联系深圳市后台管理有限公司，谢谢！<b></span><br />
+		     <span><b>电话：83380362<b></span><br />
+		</div>
+    </fieldset>
+    </form>
+</body>
+</html>

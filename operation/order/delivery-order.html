@@ -1,0 +1,262 @@
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---送货单</title>	
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<style type="text/css">
+	  html, body{width: 100%; height: 100%; 
+	      padding: 0; margin: 0;font-family:"宋体", "";
+	  }
+	  td{font-size: 12px;color: #000000;text-decoration: none;line-height: 18px;td-layout:fixed;word-break:break-all;}
+	  .listContent{
+		       background-color: #FFFFFF;
+		       border-collapse:collapse;
+			   font-family: verdana, helvetica, arial, sans-serif;
+			   font-size: 12px;
+			   border: #000000 1px solid;
+		}
+	 .listContent td{background-color: #ffffff;border:1px solid #000000;;height:23px;padding:1px 0px 0px 5px}
+    </style>
+    <script type="text/javascript"> 
+	$(function() {
+	    var deliverId=getQueryString("deliverId");
+		if (deliverId !=""){
+		     var url="order/Deliver/0/getDeliveryOrder?deliverId="+deliverId;
+		  	 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   $("#tbHeaders").initializeInput({"vo":json.entity}); //初始化
+				   if (json.entity.opCompanyName.indexOf("鼎丰")<0){
+				      $("#img").hide();
+				   }	  
+				   var t_qty=0,t_nw=0.0,t_gw=0.0;
+				   var socList=json.entity.stockOutCartons;
+				   var trHtml="";
+				   var cartonNo=0;
+				   for(var i=0;i<socList.length;i++){
+					  var soc=socList[i];
+					  cartonNo=soc.cartonNo;
+					  var sopList=soc.stockOutPackings;
+					  for(var j=0;j<sopList.length;j++){
+						  var sop=sopList[j];
+						  if (sopList.length==1){//如果只有一条数据
+							 soc = getSoc(socList,i,cartonNo);
+							 i=soc.index;
+							 cartonNo=soc.cartonNo;
+							 sop=soc.stockOutPackings[0];
+						  }
+						  trHtml=trHtml+"<tr height='16'>";
+						  trHtml=trHtml+"<td  height='20' align='left' nowrap=''>";
+						  trHtml=trHtml+  (j==0?cartonNo:"")+"</td>";
+						  trHtml=trHtml+"<td  height='20' align='left' nowrap=''>";
+						  trHtml=trHtml+  (j==0?soc.orgCartonNo:"")+"</td>";								  
+						  trHtml=trHtml+"<td  height='20' align='left' nowrap=''>";
+						  trHtml=trHtml+   sop.product.productName+"</td>";
+						  trHtml=trHtml+"<td  height='20' align='left' nowrap=''>";
+						  trHtml=trHtml+   sop.product.pn+"</td>";
+						  trHtml=trHtml+"<td  height='20' align='left' nowrap=''>";
+						  trHtml=trHtml+   sop.product.origin+"</td>";
+						  trHtml=trHtml+"<td  height='20' align='right' nowrap=''>";
+						  trHtml=trHtml+   toThousands(sop.qty) +"</td>";
+						  trHtml=trHtml+"<td  height='20' valign='top' align='right' nowrap=''>";
+						  trHtml=trHtml+  (j==0?soc.nw.toFixed(2):"")+"</td>";
+						  trHtml=trHtml+"<td  height='20' valign='top' align='right' nowrap=''>";
+						  trHtml=trHtml+  (j==0?soc.gw.toFixed(2):"")+"</td>";
+						  trHtml=trHtml+"<td  height='20' align='center' nowrap=''>";
+						  trHtml=trHtml+ sop.dateCode +"</td>";								  
+						  trHtml=trHtml+   " </td>";
+						  trHtml=trHtml+"<td  height='20' align='center' nowrap=''>";
+						  trHtml=trHtml+ sop.lotNum +"</td>";								  
+						  trHtml=trHtml+   " </td>";
+						  trHtml=trHtml+"<td height='20' align='left' nowrap=''>";
+						  trHtml=trHtml+   sop.customerOrderNo+"</td>";
+						  trHtml=trHtml+"<td  height='20' align='left' nowrap=''>";
+						  trHtml=trHtml+  (j==0?soc.size:"")+"</td>";								  
+						  trHtml=trHtml+   " </td>";
+						  trHtml=trHtml+"</tr>";
+						  t_qty=t_qty+sop.qty;
+					  }
+					  t_nw=t_nw+ soc.nw;
+					  t_gw=t_gw+ soc.gw;
+					}
+					addTr("items",0,trHtml);
+					$("#tqty").html(toThousands(t_qty));
+					$("#tnw").html(t_nw.toFixed(2));
+					$("#tgw").html(t_gw.toFixed(2));
+				}			
+			 });
+ 		 }
+	});	
+	function getSoc(socList,index,cartonNo){
+	    var soc=socList[index];
+		soc["index"]=index;
+		var sop=soc.stockOutPackings[0];
+		var qty=sop.qty;
+		var cartons=0;
+		for(var i=index+1;i<socList.length;i++){
+		    var tempSoc=socList[i];
+			var tempSop=tempSoc.stockOutPackings[0];
+            if ((tempSoc.stockOutPackings.length>1) || (sop.productId!=tempSop.productId) || (qty!=tempSop.qty) ){
+			  break;
+			}
+			if (tempSoc.stockOutPackings.length==1 && tempSop.lotNum ==null && tempSop.dateCode == null && tempSoc.orgCartonNo == soc.orgCartonNo){
+			   soc.nw=soc.nw.add(tempSoc.nw);
+			   soc.gw=soc.gw.add(tempSoc.gw);    
+			   soc.stockOutPackings[0].qty=soc.stockOutPackings[0].qty.add(tempSop.qty);
+			   cartons++;
+			}
+		}
+		if (cartons>0){
+		   soc["cartonNo"]=cartonNo+"~"+(cartonNo+cartons);
+		   soc["index"]=index+cartons;
+		}
+		return soc;
+	}
+	function addTr(tab, row, trHtml){
+		 var $tr=$("#"+tab+" tr").eq(row);
+		 if($tr.size()==0){
+			alert("指定的table id或行数不存在！");
+			return;
+		 }
+		 $tr.after(trHtml);
+    }
+	</script>
+</head>
+<body bgcolor="#FFFFFF" marginwidth="0" marginheight="0" leftmargin="0" rightmargin="0" topmargin="0" width="766"
+ style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px;">
+ <div style="width:98%;text-align:left;padding-top:20px; padding-left:20px;">
+<table id="tbHeaders" width="98%" border="0" cellspacing="0" cellpadding="2" align="center" style="margin-top: 10px;">
+  <tbody><tr valign="middle" width="98%"> 
+	<td width="98%" height="80" align="center">
+	     <div style="width:100%;">
+			<div style="float:left; width:8%; height:60; text-align:right;">
+			  <img src="/images/icon/gosonic.png" style="width:60;height:60;padding-left: 75px;"/>
+			</div>
+			<div style="height:60;width:90%; text-align:center;padding-top: 8px;"><b>
+				<font size="5"><span name="opCompanyName"></span></font><br /><br />
+				<font size="3" style="font-family:'Times New Roman', Times, serif"><span name="opCompanyEnName"></span></font><br />
+			</b></div>
+	    </div>
+	</td>
+  </tr>
+  <tr valign="middle" width="98%"> 
+	<td width="98%" align="center" height="15"><u>&nbsp;&nbsp;
+	 <span name="opCompanyAddress"></span>&nbsp;&nbsp;
+	 电话:<span name="opCompanyTel"></span>&nbsp;&nbsp;传真:<span name="opCompanyFax"></span>&nbsp;&nbsp;
+	</u></td>
+  </tr>
+  <tr valign="middle" width="98%"> 
+	<td width="98%" height="30" align="center">
+	  <b><font size="4">送货单<br /></font></b>
+	  Delivery Note<br />&nbsp;
+	</td>
+  </tr>
+  <tr valign="middle"> 
+    <td width="98%" height="19">
+		<table cellpadding="0" cellspacing="0" border="0" width="100%">
+			<tbody>
+			<tr>
+				<td nowrap="" width="46%">收货方:&nbsp;<span name="consigneeName"></span></td>
+				<td nowrap="" width="44%">委&nbsp;托&nbsp;方:&nbsp;<span name="customerName"></span></td>
+			</tr>
+			<tr>
+				<td nowrap="" width="46%">地&nbsp;&nbsp;址:&nbsp;<span name="address"></span></td>
+				<td nowrap="" width="44%">日&nbsp;&nbsp;&nbsp;&nbsp;期:&nbsp;<span name="outDate"></span> &nbsp;</td>
+			</tr>
+			<tr>
+				<td nowrap="" width="46%">收件人:&nbsp;<span name="linkMan"></span></td>
+				<td nowrap="" width="44%">货运公司:&nbsp;<span name="transCompanyName"></span>&nbsp;
+				  
+				</td>
+			</tr>
+			<tr>
+				<td nowrap="" width="46%">电&nbsp;&nbsp;话:&nbsp;<span name="tel"></span></td>
+				<td nowrap="" width="44%">运&nbsp;&nbsp;&nbsp;&nbsp;费:&nbsp;<span name="fare"></span>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;合同号:<span name="contractNo"></span></td>
+			</tr>
+			<tr>
+				<td nowrap="" width="46%"></td>
+				<td nowrap="" width="44%">发货方式:&nbsp;<span name="shipWayName"></span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;送货单:<span name="deliverNo"></span>
+				</td>
+			</tr>
+			</tbody>
+	   </table>
+	</td>
+  </tr>
+    <tr valign="middle"> 
+    <td width="98%" height="19" align="center">
+		<table id="items" class="listContent" cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tbody><tr>
+			<td  height="15" align="center" nowrap="" ><b>箱号</b></td>
+			<td height="15" align="center" nowrap=""><b>箱号标识</b></td>
+			<td  height="15" align="center" nowrap=""><b>品名</b></td>			
+			<td  height="15" align="center" nowrap=""><b>料号</b></td>
+			<td  height="15" align="center" nowrap=""><b>产地</b></td>
+			<td  height="15" align="center" nowrap="" style="font-weight: bold;"><b>数量</b></td>
+			<td  height="15" align="center" nowrap=""><b>净重(KGS)</b></td>
+			<td  height="15" align="center" nowrap=""><b>毛重(KGS)</b></td>
+			<td  height="10" align="center" nowrap=""><b>DateCode</b></td>
+			<td  height="10" align="center" nowrap=""><b>LotNum</b></td>
+			<td  height="15" align="center" nowrap=""><b>客户识别号</b></td>
+			<td  height="15" align="center" nowrap=""><b>尺寸</b></td>
+		</tr>
+		<tr>
+			<td  height="15" align="left" nowrap="" colspan="5"><b>合计:&nbsp;&nbsp;</b></td>
+			<td  height="15" align="right" nowrap=""><b>&nbsp;<span id="tqty"></span></b></td>
+			<td  height="15" align="right" nowrap=""><b>&nbsp;<span id="tnw"></span></b></td>
+			<td  height="15" align="right" nowrap=""><b>&nbsp;<span id="tgw"></span></b></td>
+			<td  height="15" align="right" nowrap=""><b>&nbsp;</b></td>
+			<td  height="15" align="right" nowrap=""><b>&nbsp;</b></td>
+			<td  height="15" align="right" nowrap=""><b>&nbsp;</b></td>
+			<td  height="15" align="right" nowrap=""><b>&nbsp;</b></td>
+		</tr>
+		<tr>
+			<td  height="15" align="left" colspan="9">
+			  备注：<span name='remark'></span>
+			</td>
+		</tr>
+		<tr>
+			<td height="30" align="left" colspan="12">
+			<b>单据要求：<span><span name="documentsRequired"></span><br /></span></b>
+			<b>温馨提示：</b><span>尊敬的客户，请您按照本表单所列货物名称、数量及件数签收。如发生货损、货差等异常情况，请在签收时务必列明，并在24小时内通知到我司，否则逾期无法受理。<br /></span>
+			  </td>
+		</tr>
+		</tbody></table>
+	</td>
+  </tr>
+  <tr width="100%"> 
+    <td width="98%" align="left">
+		<table cellpadding="0" cellspacing="0" border="0" width="100%">
+		<tr>
+			<td width="20%" height="50">制单：<span name="oper"></span></td>
+			<td width="20%" height="50">复核：<span name='receiveOrderMan'></span></td>
+			<td width="60%" height="50">客户签收：</td>
+		</tr>
+		<tr>
+			<td width="20%">审核：</td>
+			<td width="20%">出库：</td>
+			<td width="60%">
+			<u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</u>
+			请签名、盖章并注明日期</td>
+		</tr>
+		</table>
+	</td>
+  </tr>
+</tbody></table>
+</div>
+<img src="/images/icon/sh.jpg" id="img" style="z-index:-1;position:relative;top:-72;left:50;float:left;width:181;height:118;">
+</body>
+</html>

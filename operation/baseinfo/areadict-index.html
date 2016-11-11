@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<script type="text/javascript" src="/js/jquery.js"></script>	
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	 <script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+		var data = 
+			[{
+				"text": "全国",
+				"id":-1,
+				"hasChildren":true,
+				"level":"-1",
+				"parentId":""			
+			}];	
+	$(document).ready(function() {	
+	      var element = $('#nav_areadict').omBorderLayout({
+            	   panels:[{id:"center-panel",header:true,title:"地区信息",region:"center",width:"100%",height:700},
+            	    {id:"west-panel",resizable:true,collapsible:true,title:"地区列表",region:"west",width:300,height:700}
+            	    ]
+          });
+	     		
+		 $("#areaTree").omTree({
+				dataSource : data,
+				simpleDataModel: true,
+				onBeforeExpand : function(node){				  
+					var nodeDom = $("#"+node.nid);
+					if(nodeDom.hasClass("hasChildren")){
+						nodeDom.removeClass("hasChildren");
+						var level;
+						if (node.level=="-1"){
+							level=1;
+						}else{ 
+						    level=(parseInt(node.level)+1)
+						}						
+						var url="baseinfo/AreaDict/"+node.id+"/getAreaByPLevel?ad.level="+level;
+						$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+							$("#areaTree").omTree("insert", json.entity, node);								  
+						   }	
+						});					
+					 }
+					 return true;
+				},
+				onSelect: function(node){					
+				   $("#name").val(node.text);					
+				}				
+			}); 
+		$('#areaTree').omTree('expandAll'); 
+	//	$("#west-panel").omScrollbar({ thick:10});
+		
+		$('#buttonbar').initToolBar();
+		       			 
+	});
+		
+	function addAreaDict(){	
+		 var areaTree=$('#areaTree').omTree('getSelected');	
+		 var name = $('#name').val();
+		 if (areaTree!=null){ 			    	     			
+			 var url =  "baseinfo/AreaDict/0/add";
+			 if (name!=""){				     				 
+				 var vo={"ad.name":name,"ad.level":areaTree.level=="-1"?1:parseInt(areaTree.level+1),"ad.parentId":areaTree.id};
+				 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+					   var newareaTree=json.entity;						      						      
+					   $('#areaTree').omTree('insert',newareaTree,areaTree);							   
+					   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});					 
+					}
+				 });		
+			 } else{
+			    $.omMessageTip.show({title : '提示',content : '地区不能为空！'});    
+			 }
+		 }else{
+			$.omMessageTip.show({title : '提示',content : '请选添加地区的上级地区！'});
+		 }
+	}	
+		
+	function editAreaDict(){		    	    		
+		var areaTree=$('#areaTree').omTree('getSelected');	
+		 var name = $('#name').val();
+		 if (areaTree!=null){ 			    	     			
+			 var url =  "baseinfo/AreaDict/0/edit";
+			 if (name!=""){			 
+				 var vo={"ad.id":areaTree.id,"ad.name":name,"ad.level":areaTree.level,"ad.parentId":areaTree.parentId};
+				 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+						   $("#areaTree").omTree("modify", areaTree, {"id":areaTree.id,"level":areaTree.level,"nid":areaTree.nid,
+										"parentId":areaTree.parentId,"hasChildren":areaTree.hasChildren,"text":name});	
+						  $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});					 
+					 }
+				 });		
+			 } else{
+			    $.omMessageTip.show({title : '提示',content : '地区不能为空！'});    
+			 }
+		 }else{
+			$.omMessageTip.show({title : '提示',content : '请选地区的上级地区！'});
+		 }      	     
+	}	
+	function deleteAreaDict(){
+	
+	}
+	function viewAreaDict(){
+	}
+	</script>	
+</head>
+<body class="dfbody">	
+<div id="nav_areadict" title="地区"  style="width:100%; height:95%;">
+	<div id="center-panel">	
+    	<div id="buttonbar"></div>			    	
+		<div style="margin:20px 20px 15px 10px">
+		    <table>		
+			<tr>
+			    <td class="label">地区：</td>
+				<td class="field" ><input id="name" name="ad.name" class="ui-textbox"/></td>							
+			</tr>
+		</table>
+		</div>			
+	</div>
+	<div id="west-panel">
+		<ul id="areaTree"></ul>
+	</div>						
+</div>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#customerCompanyId").initGridDropList(cusParams);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});			
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '客户供应商司列表',
+                dataSource :"business/Supplier/0/searchCusSuppler",
+                colModel : [
+							 {header : '编码', name : 'ccode', width : 70, align : 'left'}, 
+                             {header : '客户', name : 'company.cname', width : 120, align : 'left'},
+							 {header : '审核状态', name :'status', width : 50, align : 'left',
+							        renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getDictName(Dictionary.CompanyStatus,colValue);
+								    }
+							 },	 
+							 {header : '名称', name : 'cname', width : 100, align : 'left'},
+							 {header : '法人代表', name : 'legalName', width : 100, align : 'left'},
+							 {header : '联系人', name : 'linkMan', width : 100, align : 'left'},
+ 							 {header : '联系电话', name : 'tel', width : 50, align : 'left'},
+  							 {header : '手机', name : 'phone', width : 50, align : 'left'}, 
+							 {header : '时间', name : 'createTime', width : 100, align : 'left'},
+                             {header : '公司地址', name : 'address', align : 'left', width : 'autoExpand'} ]
+            });			
+
+	});
+	function searchData(){
+	    var vo=$("#search-panel").getVo();
+		var params=convertParamToUrl(vo);
+		$('#grid').omGrid('setData', "business/Supplier/0/searchCusSuppler?"+params); 
+	}
+	function addSupplier(){
+	     var paras={tabId:"addSupplier001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	     addNewTab("新加供应商","/business/supplier-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });     	     
+	}
+	function editSupplier(){
+		 var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		  }		
+	   var paras={supplierId:rowDatas[0].id,cusid:rowDatas[0].company.id,
+	   status:rowDatas[0].status,tabId:"editSupplier001"};
+ 	   addNewTab("编辑供应商","/business/supplier-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });       	     
+	}
+	function auditSupplier(){ //审核供应商
+		 var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			 return;
+		 }
+		 if(rowDatas[0].status >= 20 ){
+			 $.omMessageTip.show({content :"对不起，供应商必须是在待审核状态才可以审核！",timeout : 2000,type : 'error'});
+			 return;
+		 } 
+		 var url = "business/Supplier/0/audit?supplierId="+rowDatas[0].id+"&status=20";		
+		 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   $('#grid').omGrid('reload');//刷新grid
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		 }});		
+	
+	}
+	function backSupplier(){ //返回供应商
+	     var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		 }
+		 if(rowDatas[0].status != 20 ){
+			 $.omMessageTip.show({content :"对不起，供应商必须是在已审核状态才可以返回！",timeout : 2000,type : 'error'});
+			 return;
+		 } 
+		 var url = "business/Supplier/0/audit?supplierId="+rowDatas[0].id+"&status=30";	
+		 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){	
+		   $('#grid').omGrid('reload');//刷新grid
+		   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});					  
+		 }});		
+	}
+	function viewSupplier(){
+	} 
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">
+	<tr>
+		<td>客户：</td>    
+		<td><input id="customerCompanyId" name="customerCompanyId"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" 
+		showtext=""  /></td>
+		<td>审核状态：</td>    
+		<td><input id="status" name="status" pattern='combo' editable='false' remote="CompanyStatus" /> </td>
+		<td>关键字：</td>
+		<td><input id="ccode" name="searchValue" onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" tip="输入关键字" /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>
+  </table> 	 
+</div>		
+	<div id="nav_supplier" title="供应商">
+       <div id="buttonbar"></div>	
+	   <div id="grid"></div>
+	</div>	
+</body>
+</html>

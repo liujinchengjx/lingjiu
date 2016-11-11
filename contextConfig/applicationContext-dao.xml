@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+	<bean id="baseDAO" class="com.liu.qinziyou.dao.impl.BaseDAOImpl">
+		<property name="daoSupport">
+			<ref bean="daoSupport" />
+		</property>
+	</bean>
+	<!-- 系统框架管理  (系统框架管理的模块dao请写在这里)systemmanager  -->
+	<bean id="departmentDao" class="com.liu.qinziyou.dao.systemmanager.impl.DepartmentDaoImpl" parent="baseDAO"/>
+	<bean id="roleDao" class="com.liu.qinziyou.dao.systemmanager.impl.RoleDaoImpl" parent="baseDAO"/>
+	<bean id="userDao" class="com.liu.qinziyou.dao.systemmanager.impl.UserDaoImpl" parent="baseDAO"/>
+	<bean id="popedomDao" class="com.liu.qinziyou.dao.systemmanager.impl.PopedomDaoImpl" parent="baseDAO"/>
+	<bean id="frameworkSubsystemsDao" class="com.liu.qinziyou.dao.systemmanager.impl.FrameworkSubsystemsDaoImpl" parent="baseDAO"/>
+	<bean id="frameworkModulesDao" class="com.liu.qinziyou.dao.systemmanager.impl.FrameworkModulesDaoImpl" parent="baseDAO"/>
+	<bean id="frameworkButtonsDao" class="com.liu.qinziyou.dao.systemmanager.impl.FrameworkButtonsDaoImpl" parent="baseDAO"/>
+	<bean id="userInRoleDao" class="com.liu.qinziyou.dao.systemmanager.impl.UserInRoleDaoImpl" parent="baseDAO"/>
+	<bean id="popedomInRoleDao" class="com.liu.qinziyou.dao.systemmanager.impl.PopedomInRoleDaoImpl" parent="baseDAO"/>
+	<bean id="popedomInUserDao" class="com.liu.qinziyou.dao.systemmanager.impl.PopedomInUserDaoImpl" parent="baseDAO"/>
+	
+
+		
+	
+<!-- 基础信息管理类  (基础信息模块的dao请写在这里)baseinfo  -->
+	<bean id="systemDictDao" class="com.liu.qinziyou.dao.baseinfo.impl.SystemDictDaoImpl" parent="baseDAO"/>
+	<bean id="areaDictDao" class="com.liu.qinziyou.dao.baseinfo.impl.AreaDictDaoImpl" parent="baseDAO"/>
+	
+<!-- 业务管理模块  (业务管理模块的dao请写在这里)business  -->	
+	
+	<bean id="companyDao" class="com.liu.qinziyou.dao.business.impl.CompanyDaoImpl" parent="baseDAO" />
+	
+	<bean id="activityRegistratorDao" class="com.liu.qinziyou.dao.qinziyou.impl.ActivityRegistratorDaoImpl" parent="baseDAO"/>
+	<bean id="activityTopicDao" class="com.liu.qinziyou.dao.qinziyou.impl.ActivityTopicDaoImpl" parent="baseDAO"/>
+	<bean id="activityImgDao" class="com.liu.qinziyou.dao.qinziyou.impl.ActivityImgDaoImpl" parent="baseDAO"/>
+	
+	<!-- 领酒 -->
+	<bean id="coollarGoodsDao" class="com.liu.qinziyou.dao.lingju.impl.CoollarGoodsDao" parent="baseDAO"/>
+	<bean id="coollarMemberDao" class="com.liu.qinziyou.dao.lingju.impl.CoollarMemberDao" parent="baseDAO"/>
+	<bean id="coollarRecordDao" class="com.liu.qinziyou.dao.lingju.impl.CoollarRecordDao" parent="baseDAO"/>
+	
+<!-- 订单管理模块  (订单管理模块的dao请写在这里)order -->
+
+	
+
+	<!-- 日志管理 -->
+	<bean id="logDao" class="com.liu.qinziyou.dao.log.impl.LogDaoImpl" parent="baseDAO" />
+</beans>
+

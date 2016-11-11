@@ -1,0 +1,141 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>    
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var tranParams={
+                title :'物流公司列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource : "business/TransportCompany/0/searchTranCompany?searchValue=",              
+                colModel: [
+ 							 {header : '编码', name : 'ccode', width : 250, align : 'left'},
+							 {header : '名称', name : 'cname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#tranId").initGridDropList(tranParams);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});				
+		$('#buttonbar').initToolBar();	
+		$('#grid').omGrid({				
+				limit:20,
+				autoFit:true,
+                title : '卡车列表',
+                dataSource :"business/Truck/0/searchTruck",
+                colModel : [
+                             {header : '所属运输公司', name : 'tranName', width : 120, align : 'left'}, 
+							 {header : '配送司机', name : 'driverName', width : 100, align : 'left'}, 
+							 {header : '吨位', name : 'tonnageName', width : 50, align : 'left'},
+							 {header : '实际载重', name : 'actualLoadWeight', width : 50, align : 'left', sortable : true},
+							 {header : '车牌(香港)', name : 'carnoHk', width : 50, align : 'left'},
+							 {header : '车牌(内地)', name : 'carnoCh', width : 50, align : 'left'},
+							 {header : '车辆类型', name : 'typeName', width : 100, align : 'left'},
+ 							 {header : '海关编码', name : 'hsCode', width : 80, align : 'left'},
+  							 {header : '状态', name : 'status', width : 80, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.TruckStatus,colValue);
+								 }
+							 } 
+ 							],
+				rowDetailsProvider:function(rowData,rowIndex){
+                		return '';								
+	            }
+            });			         
+	});
+	function searchData(){
+		var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#grid').omGrid('setData',"business/Truck/0/searchTruck?"+params);
+	}
+	function addTruck(){	
+	   var paras={tabId:"addTruck001"}; 
+	   addNewTab("新加车辆","/business/truck-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });      
+		
+	}	
+	function editTruck(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+	   }		
+	   var paras={truckId:rowDatas[0].id,tabId:"editTruck001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	   addNewTab("编辑车辆","/business/truck-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });       		
+	}	
+	function deleteTruck(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			 return;
+		}	
+		$.omMessageBox.confirm({title:'确认',content:'确定要删除吗？',onClose:function(v){
+			if(v){
+			    var url = "business/Truck/0/del?truckId="+rowDatas[0].id;	
+				$.ajaxPost({url:url,msg:false,success:function(json,textStatus){	
+				   $('#grid').omGrid('reload');//刷新grid
+				   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			     }});	
+			  }	
+		}});
+	 }
+	   
+	function viewTruck(){
+	   
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">		
+	<tr >
+	    <td>车牌：</td>    
+		<td><input id="carno" name="carno"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>物流公司：</td>   
+		<td><input id="tranId" name="tranId"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  showtext="" /></td>
+		<td>吨位：</td>    
+		<td><input id="tonnage" name="tonnage"  pattern='combo' editable='false'  width="120" remote="Tonnage"   /></td>
+	</tr>
+	<tr>	  
+	   <td>车辆状态：</td>   
+	   <td><input id="truckStatus" name="truckStatus" pattern='combo' editable='false'  width="120" remote="TruckStatus" /></td>
+	   <td>车辆类型：</td>
+	   <td><input id="truckType" name="truckType" pattern='combo' editable='false' width="120" remote="TruckType"/></td>
+	   <td colspan="2"><span id="button-search">搜索</span></td>
+	</tr>	
+  </table> 	 
+</div>
+<div id="buttonbar"></div>	
+<div id="grid"></div>
+</body>
+</html>

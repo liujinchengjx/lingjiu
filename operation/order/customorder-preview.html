@@ -1,0 +1,195 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---一般贸易订单</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {
+	    var customOrderId=getQueryString("id");
+		if (customOrderId !=""){
+		     var url="order/CustomOrder/0/previewCustomOrder?customOrderId="+customOrderId;
+		  	 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					   var vcTb=$("#tbItems");
+					   $("#coOrderNo").html(json.entity.coOrderNo);
+					   $("#customerName").html(json.entity.customerName);
+					   $("#buyerName").html(json.entity.buyerName);
+					   $("#sellerName").html(json.entity.sellerName);
+					   $("#fromWh").html(Dictionary.getDictName(Dictionary.Warehouse,json.entity.fromWh));
+					   $("#toWh").html(Dictionary.getDictName(Dictionary.Warehouse,json.entity.toWh));
+					   $("#dealType").html(Dictionary.getDictName(Dictionary.DealType,json.entity.dealType));
+					   $("#shipmentPort").html(json.entity.shipmentPort);
+					   $("#destPort").html(json.entity.destPort);
+					   $("#packingType").html(Dictionary.getDictName(Dictionary.PackingType,json.entity.packingType));
+					   $("#currency").html(Dictionary.getDictName(Dictionary.Currency,json.entity.currency));
+					   $("#opType").html(Dictionary.getDictName(Dictionary.OpType,json.entity.opType));
+					   var cocList=json.entity.customOrderCartons;
+					   cartonIds=[];
+					   var itemTable="";
+					   
+					   var id = "";
+					   var qty = "";
+					   var pn = "";
+					   var v = 1;
+					   var cartonNo = 0;
+					   var cartonNo1 = 0;
+					   var nwSum = 0;
+					   var gwSum = 0;
+					   var qtySum = 0;
+					   
+					   for(var i=0;i<cocList.length;i++){
+						   var coc=cocList[i];
+						   var copList=coc.customOrderPackings;
+						   for(var j=0;j<copList.length;j++){
+							  var cop=copList[j];
+							  if (cartonIds.in_array(coc.id)==false){
+								  cartonIds.push(coc.id);
+								  ifExt=false;
+							  }else{
+								  ifExt=true;
+							  }
+							  
+							  if(id == cop.product.id && qty == cop.qty && pn == cop.product.pn){ //后面有重复记录
+								  v = v + 1;
+								  nwSum = nwSum + coc.nw;
+								  gwSum = gwSum + coc.gw;
+								  qtySum = qtySum + qty;
+								  itemTable = itemTable.substring(0,itemTable.lastIndexOf("#"));
+								  cartonNo = cartonNo1 +"~"+ coc.cartonNo;
+								  var items = "#";
+								  items=items+"<tr><td height='20' align='left'>"+(ifExt==false?cartonNo:"") +"</td>";
+								  items=items+"<td height='20' align='left'>"+(ifExt==false?coc.orgCartonNo:"") +"</td>";
+								  items=items+"<td height='20' align='left'>"+cop.product.productName+"</td>";
+								  items=items+"<td height='20' align='left'>"+cop.product.pn+"</td>";
+								  items=items+"<td height='20' align='center'>"+cop.product.brand+"</td>";
+								  items=items+"<td height='20' align='center'>"+(coc.nw * v).toFixed(2)+"</td>";
+								  items=items+"<td height='20' align='center'>"+(coc.gw * v).toFixed(2)+"</td>";
+								  items=items+"<td height='20' align='right'>"+qty * v+"</td>";
+								  items=items+"<td height='20' align='center'>"+cop.product.origin+"</td></tr>";
+								   
+								  itemTable = itemTable + items;
+								  continue;
+							   }
+							   
+							   v = 1;
+							   id = cop.product.id;
+							   qty = cop.qty;
+							   cartonNo = coc.cartonNo;
+							   cartonNo1 = coc.cartonNo;
+							   pn = cop.product.pn;
+							   if(ifExt == false){
+									nwSum = nwSum + coc.nw;
+									gwSum = gwSum + coc.gw;
+							   }
+							   qtySum = qtySum + qty;
+							   
+							  var items = "#";
+							  items=items+"<tr><td height='20' align='left'>"+(ifExt==false?cartonNo:"") +"</td>";
+							  items=items+"<td height='20' align='left'>"+(ifExt==false?coc.orgCartonNo:"") +"</td>";
+							  items=items+"<td height='20' align='left'>"+cop.product.productName+"</td>";
+							  items=items+"<td height='20' align='left'>"+cop.product.pn+"</td>";
+							  items=items+"<td height='20' align='center'>"+cop.product.brand+"</td>";
+							  items=items+"<td height='20' align='center'>"+(ifExt==false?coc.nw.toFixed(2):"")+"</td>";
+							  items=items+"<td height='20' align='center'>"+(ifExt==false?coc.gw.toFixed(2):"")+"</td>";
+							  items=items+"<td height='20' align='right'>"+qty * v+"</td>";
+							  items=items+"<td height='20' align='center'>"+cop.product.origin+"</td></tr>";
+							  
+							  itemTable = itemTable + items;
+						  }
+						}
+						var tr = "";
+						tr=tr+"<tr><td height='20' align='left'></td>";
+						tr=tr+"<td height='20' align='left'></td>";
+						tr=tr+"<td height='20' align='left'></td>";
+						tr=tr+"<td height='20' align='left'></td>";
+						tr=tr+"<td height='20' align='center'></td>";
+						tr=tr+"<td height='20' align='center'>"+nwSum.toFixed(2)+"</td>";
+						tr=tr+"<td height='20' align='center'>"+gwSum.toFixed(2)+"</td>";
+						tr=tr+"<td height='20' align='right'>"+qtySum+"</td>";
+						tr=tr+"<td height='20' align='center'></td></tr>";
+						itemTable = itemTable + tr;
+						itemTable = itemTable.replace(/#/g,"");
+						vcTb.append(itemTable);	
+				}			
+			 });
+ 		 }
+	});	
+	</script>
+</head>
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px;">	
+	<div style="width:98%;text-align:center;padding-top:20px; padding-left:20px;">
+		<div>
+			<table id="tbHeader" class="listContent" width="100%">	
+			  <tbody>
+			     <tr>
+				    <td class="clsInvoiceRBT">订单编码:</td>
+					<td class="clsInvoiceRBT"><span id="coOrderNo"></span></td>
+					<td class="clsInvoiceRBT">客户:</td>
+					<td class="clsInvoiceRBT"><span  id="customerName"></span></td>
+				 </tr>
+				 <tr>
+				    <td class="clsInvoiceRBT">买家:</td>
+					<td class="clsInvoiceRBT"><span  id="buyerName"></span></td>
+					<td class="clsInvoiceRBT">卖家:</td>
+					<td class="clsInvoiceRBT"><span  id="sellerName"></span></td>
+				 </tr>
+				 <tr>
+				    <td class="clsInvoiceRBT">到货仓库:</td>
+					<td class="clsInvoiceRBT"><span  id="fromWh"></span></td>
+					<td class="clsInvoiceRBT">目的仓库:</td>
+					<td class="clsInvoiceRBT"><span  id="toWh"></span></td>
+				 </tr>
+				 <tr>
+				    <td class="clsInvoiceRBT">成交方式:</td>
+				    <td class="clsInvoiceRBT"><span  id="dealType"></span></td>
+				    <td class="clsInvoiceRBT">装船口岸:</td>
+				    <td class="clsInvoiceRBT"><span  id="shipmentPort"></span></td>
+				 </tr>
+				 <tr>
+					<td class="clsInvoiceRBT">目的口岸:</td>
+					<td class="clsInvoiceRBT"><span  id="destPort"></span></td>
+					<td class="clsInvoiceRBT">包装方式:</td>
+					<td class="clsInvoiceRBT"><span  id="packingType"></span></td>
+				 </tr>
+				 <tr>
+				    <td class="clsInvoiceRBT">交易币种:</td>
+					<td class="clsInvoiceRBT"><span  id="currency"></span></td>
+					<td class="clsInvoiceRBT">操作模式:</td>
+					<td class="clsInvoiceRBT"><span  id="opType"></span></td>
+				 </tr>
+				 </tbody>
+			  </table>			
+		</div>
+		<div style=" margin-top:5px;">
+			<table id="tbItems" class="listContent" width="100%">
+				<tbody>
+					<tr>
+						<td class="clsInvoice" height="20" align="center" width="20"><b>箱号</b></td>
+						<td class="clsInvoice" height="20" align="center" width="20"><b>客户箱号</b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="22%"><b>品名</b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="120"><b>型号</b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="12%"><b>品牌</b></td>
+                        <td class="clsInvoiceRBT" height="20" align="center" width="12%"><b>净重</b></td>
+                        <td class="clsInvoiceRBT" height="20" align="center" width="12%"><b>毛重</b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="12%" style="font-weight: bold;"><b>数量</b></td>
+						<td class="clsInvoiceRBT" height="20" align="center" width="12%"><b>原产地</b></td>
+					</tr>
+				 </tbody>
+			</table>
+		</div>
+	</div>
+</body>
+</html>

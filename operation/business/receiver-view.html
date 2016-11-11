@@ -1,0 +1,128 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	 <script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+    <script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {	
+   	   $("#search-panel").omPanel({title : "",collapsed:true});	
+	   var receiverId=getIframeParm("receiverId");	
+	   if (receiverId !=""){
+		     var url="business/Receiver/0/get?receiverId="+receiverId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				 $("#receiver").initializeInput({"vo":json.entity}); //初始化
+				 loadAddress(json.entity.addList); //加载收货公司地址
+			   }			
+			 });
+ 	   }
+	});
+	
+	function loadAddress(addressList){
+		 var mutitable=$(".mutitable");
+		 $(".tbody_item").remove();
+		 var html="";
+		 for(var i=0;i<addressList.length;i++){
+			 var add=addressList[i];
+			 html=html+"<div class='tbody_item'>";
+			 html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+			 html=html+" <tr> ";
+			 html=html+"   <td width='100'><span name='linkMan' >"+add.linkMan+"</span></td>";;
+			 html=html+"   <td width='100'><span name='tel'>"+add.tel+"</span></td>";
+			 html=html+"   <td style='text-align:left;'>";
+			 html=html+"       <span name='address' >"+add.address+"</span>";
+			 html=html+"   </td>";	
+			 html=html+"</tr>";
+			 html=html+"</table></div>";
+		 } 
+		 mutitable.append(html);
+	}	
+	</script>	
+</head>
+<body class="dfbody">
+<div id="search-panel"></div>
+	<div id="nav_receiver" title="新增收货公司">
+	    <form id="receiver">
+		<input type="hidden" id="id" name="rec.id"  />
+		<input id="companyType" name="rec.companyType" type="hidden" />
+		<input type="hidden" id="flag" name="rec.flag" />
+		<input type="hidden" id="status" name="rec.status" />
+		<input type="hidden" id="lastModifyTime" name="rec.lastModifyTime" />
+		<input type="hidden" id="createTime" name="rec.createTime" />
+		<input type="hidden" id="lastModifyBy" name="rec.lastModifyBy" />
+ 		<input type="hidden" id="createTime" name="rec.createBy" />
+
+		<table class="edit-table">		
+			<tr>
+				<td class="label">档案编号(只读)：</td>
+				<td class="field"><input  id="ccode" name="rec.ccode" disabled="" /></td>				
+				<td class="label">客户：</td>
+				<td class="field">
+				<input id="customerCompanyId" name="customerCompanyId" showtext="rec.company.cname" validate="rules:['required']" /></td>
+			</tr>
+			<tr>
+   			    <td class="label">中文名称：</td>
+				<td class="field" >
+				<input id="cname" name="rec.cname" validate="rules:['required']" /></td>
+				<td class="label">英文名称：</td>
+				<td class="field" ><input id="ename" name="rec.ename" validate="rules:['required']" /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">中文简称：</td>
+				<td class="field" >
+				<input id="csname" name="rec.csname" validate="rules:['required']" /></td>
+				<td class="label">英文简称：</td>
+				<td class="field" ><input id="esname" name="rec.esname" validate="rules:['required']" /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">拼音：</td>
+				<td class="field" ><input id="pinyin" name="rec.pinyin" validate="rules:['required']" /></td>
+   			    <td class="label">邮箱：</td>
+				<td class="field" ><input id="email" name="rec.email"  /></td>	
+
+			</tr>
+			<tr>
+				<td class="label">传真：</td>
+				<td class="field" ><input id="fax" name="rec.fax"  /></td>
+				<td class="label">邮政编码：</td>
+				<td class="field" ><input id="pcode" name="rec.pcode"  /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">备注：</td>
+				<td class="field" colspan="3" ><textarea id="remark" name="rec.remark" style="height:50px;" ></textarea></td>				
+			</tr>
+		</table>
+		</form>		
+	</div>
+	<div id="buttonbar"></div>
+	<div class="mutitable">
+		<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+			 <thead>
+				   <tr>
+					  <td width="100">联系人</td>
+					  <td width="100" >电话</td>
+					  <td style="text-align:center;">地址</td>
+				   </tr>
+			</thead>
+	   </table>
+   </div>
+</body>
+</html>

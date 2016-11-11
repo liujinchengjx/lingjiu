@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>元和津订单列表</title>
+<meta content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
+<meta content="" name="description">
+<meta content="" name="keywords">
+<link href="/css/style.css" rel="stylesheet">
+<script src="/js/zepto.min.js"></script>
+<script src="/js/common.js"></script>
+<script>
+var type=getUrlParam("orderType");
+</script>
+<link href="/css/style.css" rel="stylesheet">
+<style type="text/css">
+body{background-color:#fff}
+.viewport{ border-top:1px solid #C9C9C9}
+.p01{padding:0 0.5em}
+.order_list{ padding:1em;}
+.list_nav{box-sizing:border-box;overflow:hidden; margin-bottom:1em; padding:0 1em; border:1px solid #c9c9c9}
+.list_nav dt{ font-size:1.4em; line-height:2em; border-bottom:1px solid #eee}
+.list_nav dd{border-bottom:1px solid #eee;background:#fff;}
+.list_nav dd:last-child{border-bottom:none}
+.list_nav .abox{position:relative;display:block;box-sizing:border-box}
+.list_nav .items{margin-top:-1em;color:#51545a;height: 3.8em;width:100%;display:-moz-box;display:-webkit-box;display:box;-moz-box-align: center;-webkit-box-align: center;box-align: center}
+.list_nav .items:first-child{margin-top:0}
+.list_nav .img{width:6.8em;height:6.8em;margin:0 0.5em;overflow:hidden;background-size:cover;}
+.list_nav .img img{width:100%}
+.list_nav .info{-moz-box-flex:1;-webkit-box-flex:1;box-flex:1; height:8em;}
+.list_nav .name{font-size:1.3em;color:#000;float:left; line-height:2em;}
+.list_nav .price{font-size:1.3em;color:#848484;float:right;line-height:2em; text-align:right;}
+.list_nav .totalPrice{ padding:0.5em 0; font-size:1.5em; line-height:1.5em;}
+.icon_arrow:after{content:"\0020";display:block;width:1em;height:1em;border-top:2px solid #c9c9c9;border-right:2px solid #c9c9c9;position:absolute;top:50%;right:1.0em;margin-top:-0.5em;-webkit-transition:0.2s ease;-moz-transition:0.2s ease;-o-transition:0.2s ease;transition:0.2s ease;-webkit-transform:rotate(45deg);-moz-transform:rotate(45deg);-ms-transform:rotate(45deg);-o-transform:rotate(45deg);transform:rotate(45deg)}
+.no_goods_box{ padding:5em 0 1em; background-color:#FFF;}
+.no_goods{ background:url(/images/detail/no_goods.gif) center top  no-repeat;-moz-background-size:cover;-webkit-background-size:cover;-o-background-size:cover;background-size:cover; width:11em; height:9em; margin:0 auto 1em;}
+.no_goods_box .tip01{ font-size:1.5em; line-height:2em;}
+.no_goods_box .tip02{ font-size:1.2em; line-height:2em; color:#888;}
+.no_goods_btn{ width:12em; margin:1em auto;}
+.button{ font-size:1.2em;}
+.cred{ color:#ea3f51;}
+</style>
+</head>
+<body>
+<div class="header">
+	<div class="back"><a href="/user/user-center.html"><span class="icon-23"></span></a></div>
+	<div class="tit">
+		<h3 id="header_title"></h3>
+	</div>
+	<div class="right">
+		<ul>
+			<!-- <li class="cart"><a title="" href="/order/cart-index.html"><span class="icon-2"></span><span class="tip hide" id="ShoppingCartNum"></span></a></li> -->
+		</ul>
+	</div>
+</div>
+<div class="viewport">
+	<div class="order_list" id="order_list">
+	</div>
+</div>
+<div class="footer">
+	<div class="links">
+		<p><a href="/user/login.html" id="footer_login"><span>登录</span></a><a href="javascript:window.scrollTo(0,0);"><span>返回顶部</span></a></p>
+	</div>
+</div>
+<textarea id="no_goods" class="hide">
+<div class="no_goods_box tc">
+<div class="no_goods"></div>
+<p class="tip01">这里木有订单?</p>
+<p class="tip02">马上去分享推广!</p>
+<div class="no_goods_btn"><a class="baijia_button" href="/user/user-center.html"><span>去推广</span></a></div>
+</div>
+</textarea>
+<script type="text/javascript">
+var param = {
+	currentPage:null			//页码
+}
+var GLOBAL = {
+	pageCount:0,						//存储产品数量
+	pageSize:20					
+}
+//获取订单列表
+function getOrderList(){
+	var urlStr="/jsonrest/lingjiu/CoollarRecord/0/searchMemberOrder";
+
+	$.ajax({
+		url:urlStr,//必须,不能为空
+		type:'post',//非必须.默认get
+		dataType:'json',//非必须.默认text
+		async:false,//非必须.默认true
+		cache:false,//非必须.默认false
+		timeout:30000,//非必须.默认30秒
+		error:function(){
+			showTips("提示:加载数据有误");
+		}, //非必须
+		success:getOrderListSuccess
+	});
+}
+
+function getOrderListSuccess(data){
+	if(data.msgCode==3){
+		window.location.href = "/user/login.html?tourl="+encodeURIComponent(window.location.href);
+		return;
+	}
+	if(data.msgCode!=1) return;
+
+	var	headerTitleStr='全部订单';
+	var nullOrderStr=$("#no_goods").val();
+	var dataList = data.rows;
+	var dataLength = dataList.length;
+	var html = '';
+	if(dataLength >0){
+		for(var i=0;i<dataLength;i++){
+			html += '<dl class="list_nav"><dt><span class="fr cred">'+dataList[i].stateName+'</span>订单号：'+dataList[i].orderCode+'</dt>';
+				html +='<dd><a class="abox" href="/order-details.html';
+				html += '?id=';
+				html += dataList[i].id;
+				html += '"><div class="items">';
+				html +='<ul class="info"><li class="name">';
+				html += '<p>'+dataList[i].coollarGoods.goodsName+'</p>';
+				//html +='</li><li class="price"><p>'+toPenny(dataList[i].logisticsFee)+'元</p>';
+				
+				html +='</p></li></ul></div></a></dd>';
+			html +='<dd class="totalPrice"><p>商品数量：'+dataList[i].coollarQty+'</p><p>应付总额：'+toPenny(dataList[i].totalFee)+'元</p>';
+			html +='<p>领用人：'+dataList[i].receiverName+'</p>';
+			html +='<p>电话：'+dataList[i].receiverMobile+'</p>';
+			html +='<p>地址：'+dataList[i].fullAddress+'</p>';
+			html +='<p>发货状态：<span class="cred">'+dataList[i].fleightStateName+'</span></p>';
+			html +='<p>订单奖励：'+toPenny(dataList[i].prize)+'元</p>';
+		
+			html +='</dd></dl>';	
+		}	
+	}else{
+		html += '<strong>'+nullOrderStr+'</strong>';
+	}
+	$("#header_title").html(headerTitleStr);
+	$("#order_list").html(html);
+	//GLOBAL['pageCount'] = Math.ceil(data.entity.recordCount / GLOBAL.pageSize);//如分页再用
+	//$("#proCount").html(data.entity.recordCount);//显示找到的产品数
+	//updatePageInfo();
+}
+(function(){
+	getOrderList();
+	loginHide();
+})();
+</script>
+
+</body>
+</html>

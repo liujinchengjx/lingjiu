@@ -1,0 +1,306 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var params={
+                title :'客户列表',
+				text:"cname",
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",
+				onRowClick:customerValueChange,
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {	
+	$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("foreignexchangepurchasing");
+		var fepId=getIframeParm("fepId");
+		if (fepId !=""){ //编辑状态
+		     var url="finance/ForeignExchangePurchasing/0/get?fepId="+fepId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					$("#foreignexchangepurchasing").initializeInput({"vo":json.entity}); //初始化
+					$("#customerId").attr("disabled", "disabled"); 											
+				}			
+			 });
+ 		}else{
+			$("#foreignexchangepurchasing").initializeInput(); //初始化								
+			$("#customerId").initGridDropList(params);
+		}				
+		var element = $('#nav_areadict').omBorderLayout({
+            	   panels:[{id:"center-panel",header:true,title:"购汇申请",region:"center",width:"70%",height:"100%"},
+            	    {id:"west-panel",resizable:true,collapsible:true,title:"供应商列表",region:"east",width:"29.5%",height:"100%"}
+            	    ]
+        });
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveForeignExchangePurchasing
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });
+		
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '一般贸易进口列表',
+				singleSelect : false,
+                dataSource :"order/CustomOrder/0/searchOrderByCheck",
+                colModel : [
+							 {header : '订单号码', name : 'coOrderNo', width : 70, align : 'left'},
+                             {header : '客户', name : 'customerName', width : 140, align : 'left'}, 
+						     {header : '状态', name : 'status', width : 40, align : 'left',
+							  	renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.CustomOrderStatus,colValue);
+								}
+							 },
+							 {header : '报关日期', name : 'customDate', width : 110, align : 'left'},
+							 {header : '贸易金额', name : 'actualAmt', width : 80, align : 'right'}, 
+							 {header : '可购金额', name : 'canPurchasingPayAmt', width : 80, align : 'right'},
+							 {header : '交易币种', name : 'currency', width : 50, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.Currency,colValue);
+                                 }
+							 },
+							 {header : '本次购汇金额', name : 'purchasingPayAmt', width : 'autoExpand', align:'left',
+							 	renderer : function(colValue, rowData, rowIndex) {
+									var html="<input id='pPayAmt"+rowData.id+"'";
+									html=html+" value='"+rowData.purchasingPayAmt+"'  />";
+									return html;
+							      }
+							 },
+							 {header : '超出金额部分', name : 'overStypeAmt', width : 110, align : 'left',
+							 	renderer : function(colValue, rowData, rowIndex) {
+									 var html="<input id='overAmt"+rowData.id+"' value='"+0.00+"'/>";
+									 return html;
+							      }
+							 },
+							],
+				onRowClick:function(rowIndex,rowData,event){
+					$('#foreignCurrency').omCombo('value',rowData.currency);
+     			},
+				onRefresh:function(nowPage,pageRecords,event){
+                    $('#grid').find("input").omNumberField({allowDecimals:true,decimalPrecision:10});       
+     			}
+         });
+		
+		$('#supplierGrid').omGrid({
+				width:'90%',
+				autoFit:true,				
+                title : '供应商',
+				limit:0,
+                dataSource :'',
+                colModel:[
+						 {header : '购汇金额', name : 'amt', width : 80, align : 'left',
+							 renderer : function(colValue, rowData, rowIndex) {
+							     var html= "<span class='color_red'>*</span>";
+								 html=html+"<input name='amt"+rowData.id+"' "; 
+								 html=html+" style='width:90%;margin-right:2px;text-align: right;' />";                                 			                                 return html;	
+							 } 
+						 },
+						 {header : '供应商', name : 'cname', width : 120, align : 'left'}
+					],
+				onRefresh:function(nowPage,pageRecords,event){
+                    $('#supplierGrid').find("input").omNumberField({allowDecimals:true,decimalPrecision:10});       
+     			}
+         });
+	
+	});
+	
+	function saveForeignExchangePurchasing(){
+		//获取业务类型
+		var vo=$("#foreignexchangepurchasing").getVo();
+		var v=vo["fep.purType"];
+		if(v==1){
+			var url = "finance/ForeignExchangePurchasing/0/add";
+			var purchasingRecords = $('#grid').omGrid('getSelections',true);
+			if(purchasingRecords.length <= 0 ||purchasingRecords.length>1){
+				 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选贸易订单(单行)！'});
+				 return false;
+			}
+			if(validateForm("foreignexchangepurchasing")==false)return false; 
+			if (vo["fep.locCurrency"]==vo["fep.foreignCurrency"]){
+			   $.omMessageTip.show({content : "对不起！支付币种和购买币种不能相等！",timeout : 2000,type : 'error'});
+			   return false;
+			}
+			var purchasingRows=[];
+			var totalCanPayAmt=0.0,totalPurchasingAmt=0.0,totalSupplierAmt=0.0;
+			//获取余额+超出金额价格
+			var id=purchasingRecords[0].id;
+			var overAmt=$("#overAmt"+id).val();
+			totalCanPayAmt=(parseFloat(purchasingRecords[0].canPurchasingPayAmt)+parseFloat(overAmt)).toFixed(2);
+			vo["fep.purCountAmt"]=parseFloat(purchasingRecords[0].canPurchasingPayAmt).toFixed(2);
+			vo["fep.overPurAmt"]=parseFloat(overAmt).toFixed(2);
+			vo["fep.cashInId"]=purchasingRecords[0].cashInId;
+			if (vo["fep.foreignCurrency"]!=purchasingRecords[0].currency){
+			    $.omMessageTip.show({content : "对不起，购买币种跟贸易订单币种不一致！",timeout : 2000,type : 'error'});
+			    return false;
+			}
+			detail={};
+			detail["customOrderId"]=purchasingRecords[0].id; 
+			detail["currency"]=purchasingRecords[0].currency; 
+			var amt=$("#pPayAmt"+id).val();
+			detail["actualAmt"]=amt; 
+			totalPurchasingAmt=totalPurchasingAmt.add(amt);
+			purchasingRows.push(detail);
+			var purchasingList = JSON.stringify(purchasingRows); 
+			vo["purchasingDetails"]=purchasingList;
+			var suppliersRows=[];
+			var supArray=$("#supplierGrid").omGrid('getData').rows;
+			for(var i=0;i<supArray.length;i++){
+			   supplier={};
+			   supplier["customerId"]=vo["fep.customerId"]; 
+			   supplier["payCompanyId"]=1;   //付汇公司 经营公司默认1
+			   supplier["receiveCompanyId"]=supArray[i].id;//收汇公司
+			   supplier["payCurrency"]=vo["fep.foreignCurrency"]; 
+			   var amt=$("#supplierGrid input[name=amt"+supArray[i].id+"]").val();
+			   if (parseFloat(amt)>0){
+				   totalSupplierAmt=totalSupplierAmt.add(amt);
+				   supplier["actualPayAmt"]=amt; 
+				   suppliersRows.push(supplier);
+			   }
+			}
+			//如果余额+预付金额小于实际购汇金额则不允许保存
+			if(totalCanPayAmt<totalPurchasingAmt){
+				 $.omMessageTip.show({content : "对不起，可够金额（包括预购金额总和）和付汇金额（本次购汇金额）必须大于或相等！",timeout : 4000,type : 'error'});
+			   	 return false;
+			}
+			if ((totalSupplierAmt!=totalPurchasingAmt) && totalPurchasingAmt>0){
+			   $.omMessageTip.show({content : "对不起，付汇金额（本次购汇金额）和付汇金额（供应商金额）必须相等！",timeout : 4000,type : 'error'});
+			   return false;
+			}
+			var suppliersRowsList = JSON.stringify(suppliersRows); 
+			vo["foreignExchangePays"]=suppliersRowsList;
+			$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+				   $("#id").val(json.entity);
+				   $('#btnSave').omButton('disable');
+				   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+				   $('#grid').omGrid('reload');
+				}
+			});  	            
+		}else{
+			//预购汇
+			var url = "finance/ForeignExchangePurchasing/0/addPur";
+			var vo=$("#foreignexchangepurchasing").getVo();
+			var v=vo["fep.purType"];
+			if (vo["fep.locCurrency"]==vo["fep.foreignCurrency"]){
+			   $.omMessageTip.show({content : "对不起！支付币种和购买币种不能相等！",timeout : 2000,type : 'error'});
+			   return false;
+			}
+			//直接提交信息
+			$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+				   $("#id").val(json.entity);
+				   $('#btnSave').omButton('disable');
+				   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+				}
+			});
+		}
+	}
+	function customerValueChange(rowData){
+		$('#grid').omGrid('setData',
+		"order/CustomOrder/0/searchOrderByCheck?customerId="+rowData.id);
+		$('#supplierGrid').omGrid('setData',
+		              "business/Supplier/0/searchCusSuppler?customerCompanyId="+rowData.id);
+	}
+	//切换
+	function exchangeView(obj){
+		var v=obj.value;
+		if(v=="预购汇"){
+			$("#pAmtLabel").show();
+			$("#pAmt").show();
+			$("#grid").hide();
+			$("#west-panel").hide();
+		}else{
+			$("#pAmtLabel").hide();
+			$("#pAmt").hide();
+			$("#grid").show();
+			$("#west-panel").show();
+		}
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>					
+<div id="nav_areadict" style="width:100%; height:95%;">
+	<div id="center-panel">
+		<div id="nav_foreignexchangepurchasing" title="购汇">
+			<form id="foreignexchangepurchasing">	
+			<input id="id" name="fep.id" type="hidden" />
+			<input id="status" name="fep.status" type="hidden" />
+			<input id="lastModifyTime" name="fep.lastModifyTime" type="hidden" />
+			<input id="createTime" name="fep.createTime" type="hidden" />
+				<table class="edit-table">	
+					<tr>
+					<td class="label">客户：</td>
+					<td class="field">
+						<input id="customerId" name="fep.customerId" validate="rules:['required']" showtext="fep.customerName" />
+					</td>
+					<td class="label">申请时间：</td>
+					<td class="field" >
+						<input id="applyTime"  name="fep.applyTime" validate="rules:['required']" pattern="datetime" editable="false"
+						defaultDate="now"  />
+					</td>
+					</tr>	
+					<tr>
+						<td class="label">支付币种：</td>
+						<td class="field">
+						<input id="locCurrency" name="fep.locCurrency"  pattern='combo' validate="rules:['required']" editable='false' remote='Currency' value="142"/></td>							
+						<td class="label">购买币种：</td>
+						<td class="field">
+						<input id="foreignCurrency" name="fep.foreignCurrency" validate="rules:['required']" pattern='combo' editable='false' remote='Currency'/></td>
+					</tr>
+					<tr>
+					<td class="label">购汇类型：</td>
+					<td class="field">
+						<input id="purType" name="fep.purType" pattern='combo' validate="rules:['required']" editable='false' remote='PurType' value="1" onblur="exchangeView(this);"/></td>
+					<td class="label" id="pAmtLabel" style="display: none">预购汇金额：</td>
+					<td class="field" id="pAmt" style="display: none">
+					<input id="purAmt" name="fep.purCashAmt"/></td>
+					</tr>
+				</table>
+			</form>	
+		</div>
+		<div id="buttonbar"></div>
+		<div id="grid"></div>
+	</div>
+	<div id="west-panel">
+		<div id="supplierGrid"></div>
+	</div>
+</div>
+</body>
+</html>

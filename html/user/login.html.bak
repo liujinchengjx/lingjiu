@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>百加商城 用户登录</title>
+<meta content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
+<meta content="手机版百加商城客户端可以随时随地参与预约抢购百加手机，轻松下单购买，实时查询订单信息掌握物流状态，百加商城app手机客户端还有新品信息通知推送功能，所有商品信息随身掌握。" name="description">
+<meta content="百加商城,百加V6手机,百加V6,百加手机,百加商城app,百加商城app下载" name="keywords">
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+<link href="/css/style.css" rel="stylesheet">
+<script type="text/javascript" src="/js/jquery.min.js"></script>
+<script type="text/javascript" src="/js/jquery.form.js"></script>
+<script type="text/javascript" src="/js/common.js"></script>
+<style type="text/css">
+.login_view{padding:1em 3em;}
+.login_view .login_container{overflow:hidden; margin:auto;}
+.login_container h2{font-size:18px; margin:1em 0; font-weight:normal;}
+.input_container{margin-bottom:0.6em;}
+.input_container input{border:none; border-bottom:1px solid #6c6c6c; height:40px; line-height:20px; padding:10px 10px 10px 45px; display:block; font-size:14px; width:100%; display:block;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box;}
+.input_box{position:relative; margin:1em 0;}
+.input_container .username{ background:url(/images/module/icon_12.png) -4px center no-repeat;}
+.input_container .password{ background:url(/images/module/icon_10.png) -4px center no-repeat;}
+.tips_login {color:#999999;font-size:1em;line-height: 1.5;margin: 20px 0;}
+.tips_login a{ color:#2695fd;}
+.login_btn{border:none; width:100%;display:block;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box; }
+.error_ico{position:absolute; width:19px; height:19px; background:url(/images/module/icon_14.png) -16px -16px no-repeat; right:0; top:12px;}
+.error_tips{ position:absolute;right:10px;bottom:35px;color:#fff;font-size:1em;}
+.et_con{ position:relative;}
+.et_con p{padding:6px 10px;min-height:16px;line-height:1.5;background:#fb6f7d;border-radius:3px;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box;}
+.et_con em{position:absolute;bottom:-6px;right:3px;width:9px;height:7px;background:url(/images/module/icon_15.png) no-repeat;}
+.login_reg{ padding:1em 0;line-height:1; font-size:1em;}
+.login_reg a{ color:#2695FD;}
+.mr1{margin-right:1em;}
+</style>
+</head>
+
+<body>
+<div class="header">
+	<div class="back"><a href="/"><span class="icon-23"></span></a></div>
+	<div class="tit">
+		<h3>登录</h3>
+	</div>
+</div>
+<div class="login_view">
+	<form method="POST" name="loginForm" id="loginForm">
+		<div class="login_container">
+			<h2 id="loginTitle">欢迎登录百加账户</h2>
+		</div>
+		<div class="input_container">
+			<div class="input_box">
+				<input type="text" class="username" placeholder="输入您的用户名" name="loginString" onblur="validate('username',this.value);"> 
+				<em class="error_ico"></em>
+				<div class="error_tips">
+					<div class="et_con">
+						<p id="errorMsg"></p>
+						<em></em>
+					</div>
+				</div>
+			</div>
+			<input type="password" class="password" placeholder="输入您的密码" name="password" onblur="validate('password',this.value)">
+		    <input type="hidden" name="userType" value="2"/>
+		</div>
+		<p class="h_box"><a href="javascript:;" onClick="btnSubmit();" class="button active_button flex_1">登录</a></p>
+	
+	</form>
+</div>
+<script type="text/javascript">
+function baiduUserLogin(){
+    var referrer=$.trim(document.referrer);
+	//1111活动页面
+	if(referrer.indexOf('1212') != -1){
+		referrer = MOBILE_URL+'/index.html';
+	}
+    window.location.href=TERMINAL_URL+"/jsonrest/mobile/user/BaiduUserLogin/0/login?display=mobile&returnUrl="+referrer;
+}
+function qqUserLogin(){
+    var referrer=$.trim(document.referrer);
+	//1111活动页面
+	if(referrer.indexOf('1212') != -1){
+		referrer = MOBILE_URL+'/index.html';
+	}
+    window.location.href=TERMINAL_URL+"/jsonrest/mobile/user/QQUserLogin/0/login?display=mobile&returnUrl="+referrer;
+}
+function btnSubmit(){
+	$('#loginForm').ajaxSubmit({
+		url:TERMINAL_URL+'/jsonrest/mobile/user/UserLogin/0/login',
+		type : 'post',
+		dataType : 'json',
+		error : function(){return;},
+		beforeSubmit:submitLoginForm,
+		success: function(data) {
+			if(data.msgCode==1){
+				var channelCode = localStorage.getItem('channelCode');
+				var userChannelCode = localStorage.getItem('userChannelCode');
+				if(channelCode != ''  && channelCode != null){
+					localStorage.removeItem('channelCode');
+					localStorage.removeItem('userChannelCode');
+					window.location = '/product/channel-buy.html?c='+channelCode+'&u='+userChannelCode;
+					return;
+				}
+				var referrer=$.trim(document.referrer);
+				var url=decodeURIComponent(getUrlParam('tourl')); 
+				if(url==""&&referrer.indexOf('login.html')==-1&&referrer.indexOf('register.html')==-1)url=referrer;
+				if(url=="")url="/user/user-center.html";
+				//活动
+				if(url.indexOf('1212') != -1){
+					url = '/index.html';
+				}
+				window.location = url;
+			}else {
+			   $(".error_ico,.error_tips").show();
+			   $('#errorMsg').html(data.msg);
+			}
+		}
+	});
+}
+function submitLoginForm (){
+    var username = $("input[name='loginString']").val();
+    var password = $("input[name='password']").val();
+    if(username==null||username==""){
+     $(".error_ico,.error_tips").show();
+     $("#errorMsg").html("用户名或密码不能为空");
+     return false;
+    }
+    if(password==null||password==""){
+     $(".error_ico,.error_tips").show();
+     $("#errorMsg").html("用户名或密码不能为空");
+     return false;
+    }
+    $(".error_ico,.error_tips").hide();
+	return true;
+}
+function validate(name,value){
+   if(value==null||value==""){
+     if(name=="username"){
+       $(".error_ico,.error_tips").show();
+       $("#errorMsg").html("用户名不能为空");
+       return;
+     }
+     if(name=="password"){
+      $(".error_ico,.error_tips").show();
+      $("#errorMsg").html("密码不能为空");
+      return;
+     }
+   }
+   $(".error_ico,.error_tips").hide();
+}
+(function(){
+	$(".error_ico,.error_tips").hide();
+	if(window.localStorage.getItem('jcode')){
+		$("#loginTitle").html("加码验证成功，请登录百加账户");
+	}
+	var refer = document.referrer;
+	//活动
+	if(refer.indexOf('1212') != -1){
+		refer = '/index.html';
+	}
+	window.localStorage.setItem('loginBefore',refer);
+})();
+</script>
+<p class="hide">
+
+</p>
+</body>
+</html>

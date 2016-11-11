@@ -1,0 +1,680 @@
+html, body{width: 100%; height: 100%; padding: 0; margin: 0;font-family:"宋体", "";}
+
+.dfbody{width: 100%;height:100%;}
+/****/
+.header { background-image: url("images/header-bg1-gaoya.jpg") !important; background-repeat: repeat-x scroll 0 0;height:200px;}
+.top-logo{width:60%;line-height:40px;float:left;  display:inline;
+background: url("/images/logo-top.png") no-repeat; position:absolute; z-index:3; margin-top:8px;margin-left:20px;vertical-align:middle ;}
+#search-panel{margin-bottom:10px;background-color:#FFF}
+#search-panel span.label{
+	margin-left: 10px;
+}
+#search-panel .input-text {
+	border: 1px solid #6D869E;
+	height: 18px;
+	vertical-align: middle;
+	width: 137px;
+}
+#south-panel{
+	background: url("images/header-bg.png") repeat-x scroll 0 0;
+	height:20px;
+	text-align: center;
+	font-size:12px;
+	color:#FFF;
+}
+#search-panel span.om-combo,#search-panel span.om-calendar{
+	vertical-align: middle;
+} 
+
+.om-dialog .om-dialog-content{
+	 padding: 0 10px 0 10px; margin: 0;
+}
+.om-grid {
+	overflow: visible;
+	position: relative;
+}
+
+/* edit table for normal */
+.map-table{
+   width: 1024;
+   height:100%;
+   border:0; 
+   font-size:10;
+   font-weight:bold;
+   background:  #AAAAAA;
+   cellspacing:1;
+   cellpadding:0;  
+   
+}
+.map-table div{
+    margin-bottom:0;
+	width:100%;
+	height:100%;
+	text-align:left;
+	vertical-align:bottom;
+    padding: 0;
+    border: 0; 
+	left:0;
+	bottom:0;
+	font-size:10px;
+}
+.map-table .unselect{
+   background: #EEEEEE;
+   width:5%;
+   height:50px;
+   cursor: pointer;
+   
+}
+.map-table .select{
+   background:#F9EAC8;
+   width:5%;
+   height:50px;
+   cursor: pointer;
+   
+}
+.edit-table
+{
+	color: #333;
+	border-top: solid 1px #adb6bd;
+	border-left: solid 1px #adb6bd;
+	width: 100%;
+	border-collapse: collapse;
+}
+.edit-table th
+{
+	background: url(images/page/title-bg.png) repeat-x 50% 50%;
+	height: 30px;
+	line-height: 30px;
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	text-align: left;
+	font-size: 14px;
+	padding-left: 10px;
+}
+.edit-table i, .edit-panel i
+{
+	margin-right: 5px;
+	color: red;
+	font-style: normal;
+	font-size: 14px;
+}
+.edit-table em
+{
+	color: #666;
+	font-style: normal;
+}
+.edit-table .cell
+{
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	padding: 3px 3px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 11px;
+	text-align: left;
+	height: 18px;
+}
+.edit-table .label
+{
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	background: url(images/page/edit-label-bg.png);
+	padding: 3px 8px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 12px;
+	text-align: right;
+	height: 18px;
+	width: 15%;
+}
+.edit-table .field
+{
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	padding: 3px 3px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 11px;
+	text-align: left;
+	height: 18px;
+	width: 35%;
+}
+.edit-table .label3
+{
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	background: url(images/page/edit-label-bg.png);
+	padding: 3px 8px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 12px;
+	text-align: right;
+	height: 18px;
+	width: 10%;
+}
+.edit-table .field3
+{
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	padding: 3px 3px 3px 8px;
+	font-family: Verdana, Arial;
+	font-size: 11px;
+	text-align: left;
+	height: 18px;
+	width: 23%;
+}
+.edit-table .labelx
+{
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	background: url(images/page/edit-label-bg.png);
+	padding: 3px 8px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 12px;
+	text-align: right;
+	height: 18px;
+}
+.edit-table .fieldx
+{
+	border-right: solid 1px #adb6bd;
+	border-bottom: solid 1px #adb6bd;
+	padding: 3px 3px 3px 8px;
+	font-family: Verdana, Arial;
+	font-size: 11px;
+	text-align: left;
+	height: 18px;
+}
+/* ע */
+.edit-table .postilable
+{
+	border-bottom: solid 1px #060;
+}
+/* ע */
+.edit-table .postiled
+{
+	border-bottom: solid 2px #a00;
+}
+.edit-table input, .edit-panel textarea
+{
+	background-color: #f9fffe;
+	border-top: solid 1px #666;
+	border-right: solid 1px #ccc;
+	border-bottom: solid 1px #ccc;
+	border-left: solid 1px #666;
+	padding-left: 1px;
+	padding-top: 1px;
+	font-size: 12px;
+	height: 17px;
+	line-height: 17px;
+	color: #000;
+}
+/*
+		.edit-table input {width:90%;}
+		*/
+.edit-panel textarea
+{
+	width: 80%;
+	height: 50px;
+}
+.edit-table .focus
+{
+	border: solid 1px #00c000;
+}
+.edit-table .error
+{
+	border: solid 1px #ff0000;
+}
+
+/* edit table 2 */
+.edit2-table
+{
+	width: 100%;
+	border-collapse: collapse;
+}
+.edit2-table th
+{
+	height: 30px;
+	line-height: 30px;
+	border-bottom: dashed 1px #adb6bd;
+	text-align: left;
+	font-size: 14px;
+	padding-left: 10px;
+}
+.edit2-table i
+{
+	margin-right: 5px;
+	color: red;
+	font-style: normal;
+	font-size: 14px;
+}
+.edit2-table em
+{
+	color: #666;
+	font-style: normal;
+}
+.edit2-table .label
+{
+	border-bottom: dashed 1px #adb6bd;
+	padding: 3px 3px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 12px;
+	text-align: right;
+	height: 18px;
+	width: 15%;
+	color: #666;
+}
+.edit2-table .field
+{
+	border-bottom: dashed 1px #adb6bd;
+	padding: 3px 3px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 11px;
+	text-align: left;
+	height: 18px;
+	width: 35%;
+}
+.edit2-table .label3
+{
+	border-bottom: dashed 1px #adb6bd;
+	padding: 3px 3px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 12px;
+	text-align: right;
+	height: 18px;
+	width: 10%;
+	color: #666;
+}
+.edit2-table .field3
+{
+	border-bottom: dashed 1px #adb6bd;
+	padding: 3px 3px 3px 3px;
+	font-family: Verdana, Arial;
+	font-size: 11px;
+	text-align: left;
+	height: 18px;
+	width: 23%;
+}
+.edit2-table input, .edit2-panel textarea
+{
+	background-color: #f9fffe;
+	border-top: solid 1px #666;
+	border-right: solid 1px #ccc;
+	border-bottom: solid 1px #ccc;
+	border-left: solid 1px #666;
+	padding-left: 2px;
+	padding-top: 2px;
+	font-size: 12px;
+	height: 17px;
+	line-height: 17px;
+	color: #000;
+}
+
+.footbar
+{
+	background: #d7f1f7 url(images/page/bg-toolbar.gif) repeat-x left top;
+	height: 24px;
+	padding-top: 6px;
+	padding-bottom: 6px;
+	border: solid 1px #b8c9d6;
+	margin: 0 auto;
+	text-align: right;
+	padding-right: 10px;
+}
+.ui-textbox
+{
+	background-color: #f9fffe;
+	border-top: solid 1px #666;
+	border-right: solid 1px #ccc;
+	border-bottom: solid 1px #ccc;
+	border-left: solid 1px #666;
+	padding-left: 1px;
+	padding-top: 1px;
+	font-size: 12px;
+	height: 17px;
+	line-height: 17px;
+	color: #000;
+	width: 90%;
+}
+.ui-numbox
+{
+	background-color: #f9fffe;
+	border-top: solid 1px #666;
+	border-right: solid 1px #ccc;
+	border-bottom: solid 1px #ccc;
+	border-left: solid 1px #666;
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-top: 2px;
+	font-size: 12px;
+	height: 17px;
+	line-height: 17px;
+	color: #000;
+	width: 100px;
+	text-align: right;
+}
+.ui-datebox
+{
+	background-color: #f9fffe;
+	border-top: solid 1px #666;
+	border-right: solid 1px #ccc;
+	border-bottom: solid 1px #ccc;
+	border-left: solid 1px #666;
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-top: 2px;
+	font-size: 12px;
+	height: 17px;
+	line-height: 17px;
+	color: #000;
+	width: 100px;
+	text-align: left;
+}
+.ui-datetimebox
+{
+	background-color: #f9fffe;
+	border-top: solid 1px #666;
+	border-right: solid 1px #ccc;
+	border-bottom: solid 1px #ccc;
+	border-left: solid 1px #666;
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-top: 2px;
+	font-size: 12px;
+	height: 17px;
+	line-height: 17px;
+	color: #000;
+	width: 140px;
+	text-align: left;
+}
+.choose-box
+{
+	border-top: solid 1px #ccc;
+	border-right: solid 1px #666;
+	border-bottom: solid 1px #666;
+	border-left: solid 0px #ccc;
+	font-size: 12px;
+	padding: 2px;
+	line-height: 17px;
+	height: 17px;
+	width: 24px;
+	color: #000;
+}
+
+.button-table
+{
+	color: #333;
+	border: 0px;
+	width: 95%;
+	margin-left: 15px;
+}
+
+.v-middle
+{
+	vertical-align: middle;
+}
+
+.edit-panel
+{
+}
+.edit-panel td{
+   border: solid 1px #EEEEEE;
+   padding-top: 0px;
+}
+.edit-panel input, .edit-panel textarea
+{
+	background-color: #f9fffe;
+	padding-left: 1px;
+	padding-right: 1px;
+	padding-top: 0px;
+	font-size: 12px;
+	height: 14px;
+	line-height: 14px;
+	color: #000;
+}
+.edit-panel .focus
+{
+	border: solid 1px #00c000;
+}
+.edit-panel .error
+{
+	border: solid 1px #ff0000;
+}
+.x-show-ko
+{
+	position: absolute;
+	width: 13px;
+	height: 13px;
+	background: url(./images/x-ko.png);
+	cursor: hand;
+	overflow: hidden;
+	z-index: 1;
+}
+.x-show-ge
+{
+	position: absolute;
+	width: 13px;
+	height: 13px;
+	background: url(./images/x-ge.png);
+	cursor: hand;
+	overflow: hidden;
+	z-index: 1;
+}
+.date-show
+{
+	position: absolute;
+	width: 20px;
+	height: 20px;
+	background: url(./images/calc.png);
+	cursor: hand;
+	overflow: hidden;
+	z-index: 1;
+}
+.btn28
+{
+	height: 28px;
+	margin: 4px 4px 4px;
+	letter-spacing: 2px;
+	background: #e0e0de;
+	font-family: Verdana, Arial;
+	font-size: 11px;
+}
+
+.color_red
+{
+	color: red;
+}
+
+label.error{
+        background: #fff6bf url(images/validation/alert.png) center no-repeat;
+		background-position: 5px 50%;
+		text-align: left;
+		padding: 1px 2px 1px 20px;
+		border: 1px solid #ffd324;
+		display: none;
+		width: auto;
+		margin-left: 1px;
+		z-index:1000;
+}
+
+/* combo  */
+
+.om-droplist td,th {
+        border: 1px solid black;
+    }
+    
+.om-droplist th {
+        color: purple;
+        background-color: #CAD9EA;
+}
+
+/*按钮*/
+
+/*添加*/
+.icon-add {
+	background:url(./images/icons/add.png) no-repeat;
+}
+/*编辑*/
+.icon-edit {
+	background:url(./images/icons/edit.png) no-repeat;
+}
+/*删除*/
+.icon-delete {
+	background:url(./images/icons/delete.png) no-repeat;
+}
+/*查看*/
+.icon-view {
+	background:url(./images/icons/search.png) no-repeat;
+}
+/*关闭*/
+.icon-close {
+	background:url(./images/icons/remove.png) no-repeat;
+}
+/*返回*/
+.icon-back {
+	background:url(./images/icons/icons.png) no-repeat;
+}
+/*保存*/
+.icon-save {
+	background:url(./images/icons/save.gif) no-repeat;
+}
+/*确定*/
+.icon-ok {
+	background:url(./images/icons/icons.png) no-repeat;
+}
+/*取消*/
+.icon-cancel {
+	background:url(./images/icons/icons.png) no-repeat;
+}
+/*否决*/
+.icon-no {
+	background:url(./images/icons/icons.png) no-repeat;
+}
+/*搜索*/
+.icon-search {
+	background:url(./images/icons/icons.png) no-repeat;
+}
+/*打印*/
+.icon-print {
+	background:url(./images/icons/icons.png) no-repeat;
+}
+/*扫描*/
+A.icon-scan {
+	background:url(./images/icons/icons.png);
+}
+
+/*权限配置*/
+
+/*TABLE START*/
+
+td{font-size: 12px;color: #000000;text-decoration: none;line-height: 18px;td-layout:fixed;word-break:break-all;}
+.listContent{background-color: #000000;border-collapse:collapse;font-family: verdana, helvetica, arial, sans-serif;font-size: 12px;}
+
+.listContent td{background-color: #ffffff;border:1px solid #000000;;height:23px;padding:1px 0px 0px 5px}
+/*TABLE END*/
+
+TD.clsInvoice {  border-BOTTOM: #000000 1px solid; border-LEFT: #000000 1px solid; border-RIGHT: #000000 1px solid; border-TOP: #000000 1px solid;}
+TD.clsInvoiceLB {  border-BOTTOM: #000000 1px solid; border-LEFT: #000000 1px solid;}
+TD.clsInvoiceB {  border-BOTTOM: #000000 1px solid;}
+TD.clsInvoiceL {  border-LEFT: #000000 1px solid;}
+TD.clsInvoiceR {  border-RIGHT: #000000 1px solid;}
+TD.clsInvoiceT {  border-TOP: #000000 1px solid;}
+TD.clsInvoiceLT {  border-LEFT: #000000 1px solid;border-TOP: #000000 1px solid;}
+TD.clsInvoiceRT {  border-RIGHT: #000000 1px solid;border-TOP: #000000 1px solid;}
+TD.clsInvoiceT {  border-TOP: #000000 1px solid;}
+TD.clsInvoiceLR {  border-LEFT: #000000 1px solid; border-RIGHT: #000000 1px solid;}
+TD.clsInvoiceLRT {  border-LEFT: #000000 1px solid; border-RIGHT: #000000 1px solid;border-TOP: #000000 1px solid;}
+TD.clsInvoiceBT {  border-BOTTOM: #000000 1px solid; border-TOP: #000000 1px solid;}
+TD.clsInvoiceLBT {  border-LEFT: #000000 1px solid; border-BOTTOM: #000000 1px solid; border-TOP: #000000 1px solid;}
+TD.clsInvoiceRBT {  border-RIGHT: #000000 1px solid; border-BOTTOM: #000000 1px solid; border-TOP: #000000 1px solid;}
+TD.clsInvoiceRBL {  border-RIGHT: #000000 1px solid; border-BOTTOM: #000000 1px solid; border-LEFT: #000000 1px solid;}
+TD.clsInvoiceRB {  border-RIGHT: #000000 1px solid; border-BOTTOM: #000000 1px solid;}
+
+fieldset.header{
+     position:relative;
+     padding:10px 20px 10px 10px;
+	 margin:4px 0px 0 0!important;
+	 margin:0px 0px 0 0;
+	/* border:1px solid #CDCDCD*/
+}
+
+
+fieldset.main{
+     padding:28px 10px 3px 10px;
+	 margin:0px 0px 0 0!important;
+	 margin:8px 0px 0 0;
+	 /*border:1px solid #CDCDCD*/
+}
+
+
+fieldset LEGEND{
+     font-weight:bold;
+}
+
+TABLE.tablesorter {
+	 MARGIN: 2px 0pt 15px; WIDTH: 100%; FONT-FAMILY: arial; BACKGROUND-COLOR: #cdcdcd; TEXT-ALIGN: left
+}
+TABLE.tablesorter THEAD TR TH {
+	BORDER-RIGHT: #fff 1px solid; PADDING-RIGHT: 4px; BORDER-TOP: #fff 1px solid; PADDING-LEFT: 4px; FONT-SIZE: 8pt; PADDING-BOTTOM: 4px; BORDER-LEFT: #fff 1px solid; PADDING-TOP: 4px; BORDER-BOTTOM: #fff 1px solid; BACKGROUND-COLOR: #e6eeee;white-space:nowrap;
+}
+TABLE.tablesorter TFOOT TR TH {
+	BORDER-RIGHT: #fff 1px solid; PADDING-RIGHT: 4px; BORDER-TOP: #fff 1px solid; PADDING-LEFT: 4px; FONT-SIZE: 8pt; PADDING-BOTTOM: 4px; BORDER-LEFT: #fff 1px solid; PADDING-TOP: 4px; BORDER-BOTTOM: #fff 1px solid; BACKGROUND-COLOR: #e6eeee
+}
+TABLE.tablesorter THEAD TR .header {
+	CURSOR: pointer; BACKGROUND-REPEAT: no-repeat
+}
+TABLE.tablesorter TBODY TD {
+	PADDING-RIGHT: 4px; PADDING-LEFT: 4px; PADDING-BOTTOM: 4px; VERTICAL-ALIGN: top; COLOR: #3d3d3d; PADDING-TOP: 4px;white-space:nowrap;
+}
+TABLE.tablesorter TBODY TR {
+	BACKGROUND-COLOR: #F4F4F4;
+}
+TABLE.tablesorter TBODY TR.odd TD {
+	BACKGROUND-COLOR: #f0f0f6
+}
+TABLE.tablesorter THEAD TR .headerSortUp {
+	BACKGROUND-IMAGE: url(asc.gif)
+}
+TABLE.tablesorter THEAD TR .headerSortDown {
+	BACKGROUND-IMAGE: url(desc.gif)
+}
+TABLE.tablesorter THEAD TR .headerSortDown {
+	BACKGROUND-COLOR: #8dbdd8
+}
+TABLE.tablesorter THEAD TR .headerSortUp {
+	BACKGROUND-COLOR: #8dbdd8
+}
+TABLE.tablesorter TBODY TR TD.noPadding{margin:0;padding:0;}
+
+table.tablesorter tbody tr.mainTr td{background:#efebde}
+table.secondary td,table.secondary td span{font-size:11px;}
+
+.button1 {
+	width: 100%;
+	text-align: left; 
+	padding: 1px 1px 1px 10px; 
+	margin: 0px;
+	font-weight: bold; 
+	font-style: normal; 
+	font-variant: normal;
+	font-size: 13px;
+	line-height: normal;
+	font-family: 宋体; 
+	color: rgb(255, 255, 255);
+	border: 1px solid rgb(51, 102, 153);
+    cursor: pointer; 
+	background-color: rgb(51, 102, 153);
+}
+.button2 {
+	width: 100%;
+	text-align: left; 
+	padding: 1px 1px 1px 10px;
+	margin: 0px;
+	font-weight: bold; 
+	font-style: normal; 
+	font-variant: normal;
+	font-size: 13px;
+	line-height: normal;
+	font-family: 宋体; 
+	color: rgb(255, 255, 255);
+	border: 1px solid rgb(51, 102, 153);
+    cursor: pointer; 
+	background-color: #B2C5DF;
+}
+.error{ color:#ee3e43;}
+

@@ -1,0 +1,126 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var params={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource : "business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+     };
+	$(function() {	
+		$("#nav_storagelocation").omPanel({title : "编辑储位",collapsed:false});		
+		initValidateForm("storagelocation");
+		var storageLocationId=getIframeParm("storageLocationId");
+		if (storageLocationId !=""){ //编辑状态
+		     var url="warehouse/StorageLocation/0/get?storageLocationId="+storageLocationId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					$("#storagelocation").initializeInput({"vo":json.entity}); //初始化
+			   }			
+			 });
+ 		 }else{
+			$("#storagelocation").initializeInput(); //初始化								
+		 }
+		$("#customerId").initGridDropList(params);
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveStoragelocation
+				},
+				{separtor:true},
+            	{label:"关闭",id:"btnClose", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });
+	});
+	
+	function saveStoragelocation(){	 
+	    if(validateForm("storagelocation")==false)return false;
+		var vo=	$("#storagelocation").getVo(); 
+		if ((vo["sl.useType"]==2) && (vo["sl.customerId"]<=0)){
+			$.omMessageTip.show({content :"私用储位必须选择客户",timeout : 2000,type :'error'});
+		    return ;
+		}
+		if (vo["sl.useType"]==1){ //临时储位 没有客户
+		    vo["sl.customerId"]=""; //
+		}
+		var url = $("#id").val()=="" ? "warehouse/StorageLocation/0/add" : "warehouse/StorageLocation/0/edit";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+				$("#id").val(json.entity);
+				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		   }
+		});
+	}	
+	
+	</script>
+</head>
+<body class="dfbody">	
+<div id="nav_storagelocation">
+	<form id="storagelocation">	
+	<input id="id" name="sl.id" type="hidden" />
+	<input type="hidden" id="flag" name="sl.flag" />
+	<input type="hidden" id="indexXy" name="sl.indexXy" />
+	<input type="hidden" id="status" name="sl.status" />
+	<table class="edit-table">		
+		<tr>
+			<td class="label">储位号：</td>
+			<td class="field" ><input id="slno" name="sl.slno" validate="rules:['required']" /></td>
+			<td class="label">客户：</td>
+			<td class="field"><input id="customerId" name="sl.customerId" showtext="sl.customerName"  /></td>
+		</tr>
+		<tr>
+			<td class="label">仓库：</td>
+			<td class="field"><input id="wh" name="sl.wh" validate="rules:['required']" pattern='combo' editable='false' 
+			remote='Warehouse' /></td>
+			<td class="label">储位类型：</td>
+			<td class="field"><input id="type" name="sl.type" validate="rules:['required']" pattern='combo' editable='false' remote='StoragelocationType' /></td>	
+		</tr>
+		<tr>
+			<td class="label">使用类型：</td>
+			<td class="field" ><input id="useType" name="sl.useType" validate="rules:['required']" 
+			 pattern='combo' editable='false' remote='StoragelocationUserType' /></td>				
+			<td class="label">功能用途</td>
+			<td class="field" ><input id="functionUse" name="sl.functionUse" 
+			 pattern='combo' editable='false' remote='FunctionUse' /></td>				
+		</tr>
+	</table>
+	</form>	
+</div>
+<div id="buttonbar"></div>	
+</body>
+</html>

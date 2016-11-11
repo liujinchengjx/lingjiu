@@ -1,0 +1,408 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/js/ajaxfileupload.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>  
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<style type="text/css">
+		input {vertical-align:middle;margin:0;padding:0; left:0px;}
+		.file-box {position:relative;margin-top:5px;width:620px; }
+		.txt {height:22px;border:1px solid #cdcdcd;width:450px;}
+		.btn {background-color:#FFF;border:1px solid #CDCDCD;margin-right:10px;padding:3px;}
+    </style>
+    <script type="text/javascript">
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource : "business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+    var dialog = null;
+	$(function() {
+		dialog=$("#nav_uploadFiles").omDialog({autoOpen:false,draggable:false,resizable:false,height:250,width:700,modal:true,
+		   onClose : function(event) {$('#grid').omGrid('reload');}
+		});
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#customerId").initGridDropList(cusParams);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+					searchData();
+			   }
+		});				
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({				
+				limit:20,
+				autoFit:true,
+                title : '委托单列表',
+                dataSource :"order/EntrustOrder/0/searchEntrustOrder",
+                colModel : [
+							 {header : '委托单号码', name : 'eoOrderNo', width : 110, align : 'left'},
+                             {header : '客户', name : 'customerName', width : 150, align : 'left'},
+							 {header : '业务类型', name : 'businessType', width : 80, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getDictName(Dictionary.BusinessType,colValue);
+								 }
+							 },
+							 {header : '金额', name : 'actualAmt', width : 80, align : 'right'},
+							 {header : '币种', name : 'currency', align : 'left', width : 40,
+							     renderer : function(colValue, rowData, rowIndex) {
+                                      return Dictionary.getDictName(Dictionary.Currency,colValue);
+                                 }
+							 },
+							 {header : '订单状态', name : 'status', width : 40, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+                                     return Dictionary.getDictName(Dictionary.EntrustOrderStatus,colValue);
+								}
+							 },
+							 {header : '货物状态', name : 'goodsStatus', width : 40, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.EntrustGoodsStatus,colValue);
+								}
+							 },
+							 {header : '仓库', name : 'inWh', width : 40, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.Warehouse,colValue);
+								 }
+							 },
+							 {header : '制单人', name : 'createBy', width : 50, align : 'center'},
+							 {header : '引用号', name : 'refNo', width : 80, align : 'center'},
+							 {header : '管理模式', name : 'manageModel', width : 50, align : 'center',
+							     renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.ManageModel,colValue);
+								 }
+							 },
+							 {header : '订单时间',name:'orderTime',align:'left',width:'100'},
+							 {header : '附件', name : 'fileNum', width : 28, align : 'center',
+							     renderer : function(colValue, rowData, rowIndex) {
+								    if (colValue>0){
+									   var str="<a class='files' name='"+rowData.eoOrderNo+"' rId='"+rowData.id+"' ";
+									   str=str+" href='javascript:void(0)'><b>("+colValue+")</b></a>";	
+									   return str; 
+									}
+									return "";
+								 }
+							 },
+							 {header : '验核信息',name:'checkInfo',align:'left',width:'autoExpand'} ],
+				onRowClick:function(rowIndex,rowData,event){
+			        if ((rowData.status==20) || (rowData.status==30)){
+					    //$('#btn13').omButton('disable');
+					}else if (rowData.status==10) {
+					    $('#btn13').omButton('enable');
+					}
+			    },
+				onRefresh : function(nowpage, records){
+						  $("#grid .files").omButton({
+							   onClick : function(event){
+								  $file=$(this);
+								  loadUpLoadFile($file.attr("name"),$file.attr("rId"),false);
+								  dialog.omDialog("option", "title", '附件');
+								  dialog.omDialog("open");//显示dialog
+								  event.stopPropagation(); 
+							   }	
+						  })      
+				 }
+            });
+            $('#abtnfileupload').omButton({width : 60,
+		      onClick : function(event){	
+			    	var fileurl=$("#textfield").val();
+					var rowDatas = $('#grid').omGrid('getSelections',true);
+					if(rowDatas.length <= 0 ){
+						$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+						return;
+					}
+					var url=baseUrl+'attachment/UpLoadFile/0/importAttachment?ulf.fileType=STIN&ulf.relationId='+rowDatas[0].eoOrderNo;
+					$.ajaxFileUpload({url:url,secureuri:false,fileElementId:'fileField',dataType:'json',
+						success: function (json, status){
+						    if (json.msgCode==1){
+								loadUpLoadFile(rowDatas[0].eoOrderNo,rowDatas[0].id,true);
+								$("#textfield").val("");
+							   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+						    }else $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'error'});			
+						},
+						error: function (data, status, e){
+						}
+					});
+				
+			  }
+		  });		
+
+	});
+	function searchData(){
+		 var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#grid').omGrid('setData', "order/EntrustOrder/0/searchEntrustOrder?"+params);
+	}
+	function addEntrustOrder(){
+	     var paras={tabId:"addEntrustOrder001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	     addNewTab("新加委托单","/order/entrustorder-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });     	     
+	}
+	 //确定
+	function confirmEntrustOrder(){
+		$.omMessageBox.confirm({title:'确认委托单',content:'委托单确定之后，委托单状态（不可恢复），你确定要这样做吗？',onClose:function(v){
+		if(v){
+			 var rowDatas = $('#grid').omGrid('getSelections',true);
+			 if(rowDatas.length <= 0 ){
+				$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录行！'});
+				return;
+			 }		
+			if(rowDatas[0].status >= 20 ){
+				$.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起，该委托单已经确定！',type : 'error'});
+				return;
+			}		
+			var url="order/EntrustOrder/0/confirmEntrustOrder?etOrderId="+rowDatas[0].id;
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){					
+				$('#grid').omGrid('reload');//刷新grid					   
+				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+			  }
+			});
+		 }
+       }});
+	}
+	function editEntrustOrder(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		}		
+	   var paras={etOrderId:rowDatas[0].id,customerId:rowDatas[0].customerId,supplierId:rowDatas[0].supplierId,companyId:rowDatas[0].companyId,
+	      tabId:"editEntrustOrder001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	   addNewTab("编辑委托单","/order/entrustorder-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });       	     
+	}
+	//编辑模版数据
+	function editEntrustTemplate(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择委托单！'});
+			 return;
+	   }		
+	   var param=[];
+	   param.push('etOrderId='+rowDatas[0].id);
+	   param.push('status='+rowDatas[0].status);
+	   param.push('tabId='+"editPackInvData001");
+	   param.push('eoOrderNo='+rowDatas[0].eoOrderNo);
+	   param.push('customerName='+rowDatas[0].customerName);
+	   var url="/order/entrustorder-template.html?"+param.join('&');
+	   if (rowDatas[0].manageModel==2){// 按批管理
+	      var url="/order/entrustorder-batch-template.html?"+param.join('&');
+	   }
+	   showFullScreen(url); 	     
+	}	
+	
+	function entrustEmpty(){ //清空数据
+	    $.omMessageBox.confirm({title:'确认清空',content:'委托单数据清空之后，委托单的数据（不可恢复），你确定要这样做吗？',onClose:function(v){
+		if(v){
+			   var rowDatas = $('#grid').omGrid('getSelections',true);
+			   if(rowDatas.length <= 0 ){
+				   $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+				   return;
+			   }
+			   if(rowDatas[0].status ==20 || rowDatas[0].status==30 ){
+				  $.omMessageTip.show({content : "对不起，必须是待定状态才可以删除",timeout : 2000,type : 'error'});
+				   return;
+			   }		
+			   if (rowDatas[0].id>0){
+				   var url="order/EntrustTemplate/0/entrustEmpty?etOrderId="+rowDatas[0].id;
+				   $.ajaxPost({url:url,msg:false,success:function(json,textStatus){					
+						$('#grid').omGrid('reload');//刷新grid
+						$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+					}
+				  });
+			   }else{
+				  $.omMessageTip.show({content : "对不起，不能删除！",timeout : 2000,type : 'error'});
+			   }
+	    }
+       }});
+	}
+	function checkPrice(){ //价格比对
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+	   var url="/order/entrustorder-checkprice.html?etOrderId="+rowDatas[0].id;
+	   showFullScreen(url);
+	}
+	function orgInvoce(){ //原发票
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			 return;
+		}	 
+		var url=baseUrl+"order/EntrustOrder/0/outInvoce?entrusOrderId="+rowDatas[0].id;
+		showFullScreen(url);
+	}
+	function orgContract(){ //原合同
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			 return;
+		}	 
+		var url=baseUrl+"order/EntrustOrder/0/outContract?entrusOrderId="+rowDatas[0].id;
+		showFullScreen(url);
+	}
+	function orgPacking(){ //原箱单
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			 return;
+		}	 
+		var url=baseUrl+"order/EntrustOrder/0/outPacking?entrusOrderId="+rowDatas[0].id;
+		showFullScreen(url);
+	}
+	function checkInfo(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if (rowDatas.length <= 0 ){
+		  $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+		  return;
+	   }
+	   var paras={etOrderId:rowDatas[0].id,tabId:"checkInfo0001"};
+ 	   addNewTab("编辑订单","/order/customorder-checkinfo.html",paras,function(){
+		   
+	   });       	   
+	}
+	function viewEntrustOrder(){
+	}
+	function uploadFile(){ //附件上传信息
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		loadUpLoadFile(rowDatas[0].eoOrderNo,rowDatas[0].id,true);
+		dialog.omDialog("option", "title",'附件');
+		dialog.omDialog("open");//显示dialog
+	}
+	function loadUpLoadFile(stockInId,rId,isUpload){		
+		if (isUpload){$(".file-box").show();}else{$(".file-box").hide();}	
+		var $file=$("#upLoadSpan");
+		$file.html("");
+		var url="attachment/Files/0/searchFiles?limit=100&fileType=STIN&relationId="+stockInId+"&fileId="+rId;		
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			var files = "";
+			for (var i =0;i<json.rows.length;i++){
+				var f = json.rows[i];
+				files = files+ "<span style='line-height:25px; font-weight:bold'>("+(i+1)+")";
+				files = files+ " <a target='_blank' href='"+f.fileUrl+"'>"+f.fileName+" </a></span>";
+				files = files+ " <a href='#' onclick='btnDeleteFile(this);return false;' name='"+json.rows[i].id+"' rId='"+stockInId+"' >";
+				files = files+ " <img src='/images/icon/close_inline.gif' border='0'></a> <br />";
+			}
+		  	$file.html(files);
+		}			
+		});
+	}
+	//删除附件方法
+	function btnDeleteFile(obj){
+	   $this=$(obj);
+	   var fileId=$this.attr("name");
+	   var stockInId=$this.attr("rId");
+	   if (fileId>0){
+	      var url="attachment/Files/0/deleteFile?fileId="+fileId;		
+		  $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+		   		loadUpLoadFile(stockInId,fileId,false);
+		  }			
+		  });
+	   }
+	}
+	//子状态获取
+	function getStatus(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+	   }
+	   var paras={ids:rowDatas[0].id,eoOrderNo:rowDatas[0].eoOrderNo,tabId:"orgStatus001"};
+ 	   addNewTab("定单状态列表","/order/orderSatePage.html", paras,function(){
+	   });       
+	}
+	
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">		
+	<tr>   
+		<td>委托单号：</td>
+		<td><input id="eoOrderNo" name="eoOrderNo"  onfocus="myFocus(this,'#f4eaf1')" 
+				      onblur="myblur(this,'white')" tip="这里输入订单号" />
+		</td>
+		<td>客户：</td>
+		<td><input id="customerId" name="customerId"  onfocus="myFocus(this,'#f4eaf1')" 
+		   onblur="myblur(this,'white')" tip="选择客户" showtext="" />
+		</td>
+		<td>引用号：</td>
+		<td><input id="refNo" name="refNo"  onfocus="myFocus(this,'#f4eaf1')" 
+				      onblur="myblur(this,'white')" tip="" />
+		</td>
+		<td>仓库：</td>
+        <td><input id="wh" name="wh" pattern='combo' editable='false' remote="Warehouse" emptyText="请选择仓库"/></td>
+		
+		<td>业务类型：</td>
+		<td ><input id="businessType" name="businessType" pattern='combo' editable='false' width="130" remote="BusinessType" emptyText="请选择业务类型"/>
+		</td>		
+	</tr>	
+	<tr>
+	    <td>管理模式：</td>
+		<td><input id="manageModel" name="manageModel" pattern='combo' editable='false'  width="120" remote="ManageModel"/></td>
+		<td>状态：</td>
+		<td><input id="orderStatus" name="orderStatus" pattern='combo' editable='false'  width="120" remote="EntrustOrderStatus"
+		 emptyText="请选择订单状态"/></td>
+	    <td>货物状态：</td> 
+		<td><input id="goodsStatus" name="goodsStatus" pattern='combo' editable='false' width="120" remote="EntrustGoodsStatus"
+		 emptyText="请选择货物状态"/></td>
+		<td>时间：</td> 
+		<td><input id="startTime" name="startTime" pattern='date' editable='false' /></td>
+		<td>到：</td> 
+		<td><input id="endTime" name="endTime" pattern='date' editable='false' /></td>
+		<td><span id="button-search">搜索</span></td>	
+	</tr>
+  </table> 	 
+</div>			
+	<div id="nav_EntrustOrder" >
+       <div id="buttonbar"></div>	
+	   <div id="grid"></div>
+	</div>
+<div id="nav_uploadFiles" title="附件" style="display:none;">
+	<div class="file-box" >
+		<input type='text' name='textfield' id='textfield' class='txt' />
+		<span class='btn'>浏览...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+		<input type="file" name="fileField" 
+		  style="position:absolute;top:0;left:0px;height:22px;filter:alpha(opacity:0);opacity: 0;width:530px;" id="fileField" 
+		  onchange="document.getElementById('textfield').value=this.value" />
+		<span id="abtnfileupload" name="abtnfileupload" />上&nbsp;传</span>
+	</div>
+	<div style="margin-top:10px; margin-bottom:5px;">
+	   <span id="upLoadSpan"></span>
+	</div>
+</div>
+</body>
+</html>

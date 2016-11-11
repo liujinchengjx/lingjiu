@@ -1,0 +1,264 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+			<title>后台管理系统---查看箱单</title> <script type="text/javascript"
+				src="/js/jquery.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+			<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+			<script type="text/javascript" src="/js/common.js"></script>
+			<script type="text/javascript" src="/js/dictionary.js"></script>
+			<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+			<style type="text/css">
+html,body {
+	width: 100%;
+	height: 100%;
+	padding: 0;
+	margin: 0;
+	font-family: "宋体", "";
+}
+
+td {
+	font-size: 12px;
+	color: #000000;
+	text-decoration: none;
+	line-height: 18px;
+	td-layout: fixed;
+	word-break: break-all;
+}
+
+.listContent {
+	background-color: #FFFFFF;
+	border-collapse: collapse;
+	font-family: verdana, helvetica, arial, sans-serif;
+	font-size: 15px;
+	border: #000000 1px solid;
+}
+
+.listContent td {
+	background-color: #ffffff;
+	border: 1px solid #000000;
+	height: 23px;
+	padding: 1px 0px 0px 5px;
+	font-size: 15px
+}
+</style>
+<script type="text/javascript">
+	$(function() {
+	    var customOrderId=getQueryString("customOrderId");
+		if (customOrderId !=""){
+		     var url="order/CustomOrder/0/outPacking?customOrderId="+customOrderId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   json.entity.currency=Dictionary.getDictName(Dictionary.Currency,json.entity.currency);
+				   $(".listContent").initializeInput({"vo":json.entity}); //初始化
+				   var vcTb=$("#tbItems");
+				   var cocList=json.entity.cocList;
+				   var items="";
+				   var cartonNo = 0;
+				   var totalQty=0,totalGw=0.0,totalNw=0.0;
+					for(var i=0;i<cocList.length;i++){
+					   var coc=cocList[i];
+					   var copList=coc.customOrderPackings;
+					   cartonNo=coc.cartonNo;
+					   for(var j=0;j<copList.length;j++){
+						   var cop=copList[j];
+						   if(copList.length==1){//如果只有一条数据
+							 coc = getCoc(cocList,i,cartonNo);
+							 i=coc.index;
+							 cartonNo=coc.cartonNo;
+							 cop=coc.customOrderPackings[0];
+						   }
+						   var Dqty=toThousands(parseFloat(cop.qty).toFixed(2));
+						   items=items+"<tr><td height='15' align='left'>"+(j==0?cartonNo:"")+"</td>";
+						   items=items+"<td height='15' align='left'>"+(j==0?coc.orgCartonNo:"")+"</td>";
+						   
+						   items=items+"<td height='15' align='left'>"+cop.product.productName+"</td>";
+						   items=items+"<td height='15' align='left'>"+cop.product.pn+"</td>";
+						   items=items+"<td height='15' align='center'>"+cop.product.brand+"</td>";
+						   items=items+"<td height='15' align='right'>"+Dqty+"</td>";
+						   items=items+"<td height='15' align='center'>"+cop.unit+"</td>";
+						   items=items+"<td height='15' align='right'>"+(j==0?coc.nw.toFixed(2):"")+"</td>";
+						   items=items+"<td height='15' align='right'>"+(j==0?coc.gw.toFixed(2):"")+"</td>";
+						   items=items+"<td height='15' align='center'>"+cop.product.origin+"</td>";
+					   }
+				  }
+				  items=items+ "<tr><td height='15' align='left' colspan='5'>total:</td>";
+				  items=items+"<td height='15' align='right'>"+toThousands(json.entity.totalQty.toFixed(2))+"</td>";
+				  items=items+"<td height='15' align='right'></td>";
+				  items=items+"<td height='15' align='right'>"+toThousands(json.entity.totalNw.toFixed(2))+"</td>";
+				  items=items+"<td height='15' align='right'>"+toThousands(json.entity.totalGw.toFixed(2))+"</td>";
+				  items=items+"<td height='15' align='center' colspan='4' ></td></tr>";
+				  vcTb.append(items);	
+				}			
+			 });
+ 		 }
+	});	
+	
+	function getCoc(cocList,index,cartonNo){
+	    var coc=cocList[index];
+		coc["index"]=index;
+		var cop=coc.customOrderPackings[0];
+		var qty=cop.qty;
+		var cartons=0;
+		for(var i=index+1;i<cocList.length;i++){
+		    var tempCoc=cocList[i];
+			var tempCop=tempCoc.customOrderPackings[0];
+            if ((tempCoc.customOrderPackings.length>1) || (cop.productId!=tempCop.productId) || (qty!=tempCop.qty) ){
+			  break;
+			}
+			if (tempCoc.customOrderPackings.length==1){
+			   coc.nw=coc.nw.add(tempCoc.nw);
+			   coc.gw=coc.gw.add(tempCoc.gw);    
+			   coc.customOrderPackings[0].qty=coc.customOrderPackings[0].qty.add(tempCop.qty);
+			   cartons++;
+			}
+		}
+		if (cartons>0){
+		   coc["cartonNo"]=cartonNo+"~"+(cartonNo+cartons);
+		   coc["index"]=index+cartons;
+		}
+		return coc;
+	}
+	</script>
+	</head>
+	<body
+		style="font-size: 15px; margin-top: 0px; margin-left: 0px; margin-right: 0px; line-height: 18px; margin: 0px;">
+		<div
+			style="width: 98%; text-align: center; padding-top: 20px; padding-left: 20px;">
+			<div align="center" style="font-size: 15px; font-weight: bold">
+				<span>PACKING</span>
+			</div>
+			<div>
+				<table class="listContent" width="100%"
+					style='border-collapse: collapse; table-layout: fixed; width: 1008pt;font-size: 15px'>
+					<tbody>
+						<tr>
+							<td align="left" width="15%">
+								Contract No.:
+							</td>
+							<td align="left" colspan="3">
+								<span name="contractNo"></span>
+							</td>
+						</tr>
+						<tr>
+							<td align="left" width="15%">
+								Invoice No.:
+							</td>
+							<td align="left">
+								<span name="invoiceNo"></span>
+							</td>
+							<td align="left" width="15%">
+								Invoice Date:
+							</td>
+							<td align="left">
+								<span name="invoiceDate"></span>
+							</td>
+						</tr>
+						<tr>
+							<td align="left" width="15%">
+								Sold To:
+							</td>
+							<td align="left" colspan="3">
+								<span name="buyerCompany"></span>
+							</td>
+						</tr>
+						<tr>
+							<td align="left" width="15%">
+								Address:
+							</td>
+							<td align="left" colspan="3">
+								<span name="buyerAddress"></span>
+							</td>
+						</tr>
+						<tr>
+							<td align="left" width="15%">
+								Seller:
+							</td>
+							<td align="left" colspan="3">
+								<span name="seller"></span>
+							</td>
+						</tr>
+						<tr>
+							<td align="left" colspan="4">
+								Tel:
+								<span name="buyerTel"></span>&nbsp;&nbsp; Fax:
+								<span name="buyerFax"></span>&nbsp;&nbsp; 货币:
+								<span name="currency"></span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div style="margin-top: 5px;">
+				<table id="tbItems" class="listContent" width="100%"
+					style='border-collapse: collapse; table-layout: fixed; width: 980pt;font-size: 15px'>
+					<col width=50
+						style='mso-width-source: userset; mso-width-alt: 3360; width: 60pt'>
+						<col width=119
+							style='mso-width-source: userset; mso-width-alt: 3808; width: 89pt'>
+							<col width=96
+								style='mso-width-source: userset; mso-width-alt: 3072; width: 120pt'>
+								<col width=164
+									style='mso-width-source: userset; mso-width-alt: 5248; width: 123pt'>
+									<col width=124
+										style='mso-width-source: userset; mso-width-alt: 3968; width: 123pt'>
+										<col width=172
+											style='mso-width-source: userset; mso-width-alt: 5504; width: 99pt'>
+											<col width=96
+												style='mso-width-source: userset; mso-width-alt: 3072; width: 72pt'>
+												<col width=164
+													style='mso-width-source: userset; mso-width-alt: 5248; width: 100pt'>
+													<col width=124
+														style='mso-width-source: userset; mso-width-alt: 3968; width: 123pt'>
+														<col width=172
+															style='mso-width-source: userset; mso-width-alt: 5504; width: 99pt'>
+					<tbody>
+						<tr>
+							<td class="clsInvoice" height="15" align="center">
+								<b>箱号</b>
+							</td>
+							<td class="clsInvoice" height="15" align="center">
+								<b>客户箱号</b>
+							</td>
+							<td class="clsInvoiceRBT" height="15" align="center">
+								<b>品名</b>
+							</td>
+							<td class="clsInvoiceRBT" height="15" align="center">
+								<b>型号</b>
+							</td>
+							<td class="clsInvoiceRBT" height="15" align="center">
+								<b>品牌</b>
+							</td>
+							<td class="clsInvoiceRBT" height="15" align="center"
+								style="font-weight: bold;">
+								<b>数量</b>
+							</td>
+							<td class="clsInvoiceRBT" height="15" align="center"
+								style="font-weight: bold;">
+								<b>单位</b>
+							</td>
+							<td class="clsInvoiceRBT" height="15" align="center"
+								style="font-weight: bold;">
+								<b>净重</b>
+							</td>
+							<td class="clsInvoiceRBT" height="15" align="center"
+								style="font-weight: bold;">
+								<b>毛重</b>
+							</td>
+							<td class="clsInvoiceRBT" height="15" align="center">
+								<b>原产地</b>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</body>
+</html>

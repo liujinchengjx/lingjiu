@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	 <script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-ajaxsubmit.js"></script>	
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var userAccountId="",opType="";
+	$(function() {	
+   	    $("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("useraccountdetail");	
+	    userAccountId=getIframeParm("userAccountId");	
+		opType=getIframeParm("opType");
+		$("#useraccountdetail").initializeInput(); //初始化			
+		$('#buttonbar').omButtonbar({
+            	 width : "100%",
+            	 btns : [{label:"保存",
+            		     id:"button1" ,
+            		     icons : {left : '/images/icon/add.png'},
+            	 		 onClick: saveUserAccountDetail
+            			},
+						{separtor:true},
+						{label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);
+						  }
+						 }	           			
+            	 ]
+          }); 	
+			
+		
+	});
+	
+	function saveUserAccountDetail(){
+		if(validateForm("useraccountdetail")==false)return false; 
+	    var vo=	$("#useraccountdetail").getVo(); 
+		vo["uad.userAccountId"]=userAccountId;
+		vo["uad.opType"]=opType;
+		var url ="finance/UserAccount/0/addDetail";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $("#id").val(json.entity);
+			   $.omMessageTip.show({content :json.msg,timeout : 2000,type : 'success'});				 
+			}
+		 });		    	            
+	}		
+	</script>	
+</head>
+<body class="dfbody">
+<div id="search-panel"> 	 
+</div>	
+	<div id="nav_useraccountdetail" title="新增明细">
+	    <form id="useraccountdetail">
+		<input  type="hidden" id="id" name="uad.id"  />
+		<input id="createTime" name="uad.createTime" type="hidden" />
+		<input id="lastModifyTime" name="uad.lastModifyTime" type="hidden" />
+		<table class="edit-table">		
+			<tr>
+				<td class="label">金额</td>
+				<td class="field">
+				<input  id="amt" name="uad.actualAmt" validate="rules:['required']" pattern='float' /></td>				
+				<td class="label"></td>
+				<td class="field"></td>
+			</tr>
+			<tr>
+   			    <td class="label">相关单号：</td>
+				<td class="field" colspan="3"><input id="referNo" name="uad.referNo" /></td>				
+			</tr>			
+		</table>
+		</form>		
+	</div>
+	<div id="buttonbar"></div>
+</body>
+</html>

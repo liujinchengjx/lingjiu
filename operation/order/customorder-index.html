@@ -1,0 +1,467 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">		
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>  
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource : "business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	var dgAudit=null,dgConfirm=null;
+	$(function() {	
+	     dgAudit=$("#nav_audit").omDialog({autoOpen:false,draggable:false,resizable:false,height:200,width:700,modal:true,
+			buttons: [{
+                text : "确定", 
+                click : auditCustomOrder
+            	},{ text : "取消",click : function(){ 
+						dgAudit.omDialog("close");
+				  }
+				}
+			]
+		});
+		dgConfirm=$("#nav_confirm").omDialog({autoOpen:false,draggable:false,resizable:false,height:400,width:600,modal:true,
+			buttons: [{
+                text : "确定转单", 
+                click : confirmCustomOrder1
+            	},{ text : "取消",click : function(){ 
+						dgConfirm.omDialog("close");
+				  }
+				}
+			]
+		});
+		$("#search-panel").omPanel({width:'fit',title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#customerId").initGridDropList(cusParams);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});				
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '一般贸易进口列表',
+                dataSource :"order/CustomOrder/0/searchCustomOrder?useType=6&orderStatus=10",
+                colModel : [
+							 {header : '订单号码', name : 'coOrderNo', width : 40, align : 'left'},
+							 {header : '委托单号', name : 'refNo', width : 55, align : 'left'},
+                             {header : '客户', name : 'customerName', width : 120, align : 'left'}, 
+							 {header : '报关日期', name : 'customDate', width : 50, align : 'left'}, 							 
+							 {header : '进口口岸', name : 'destPortName', width : 50, align : 'left'}, 							 
+							 {header : '金额', name : 'actualAmt', width : 60, align : 'right'}, 							 
+							 {header : '交易币种', name : 'currency', width : 40, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+                                     return Dictionary.getDictName(Dictionary.Currency,colValue);
+                                 }
+							 },
+							 {header : '状态', name : 'status', width : 50, align : 'left',
+							  	renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.CustomOrderStatus,colValue);
+								}
+							 }, 		
+  		                     {header : '制单日期', name : 'makeDate', width : 50, align : 'left'}, 							 
+  							 {header : '操作模式', name : 'opType', width : 40, align : 'left',
+								   renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.OpType,colValue);
+									}
+							 },
+							 {header : '成交方式', name : 'dealType', width : 50, align : 'left',
+							      renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.DealType,colValue);
+								  }
+							 },
+							 {header : '制单人', name : 'createBy', width : 50, align : 'left'}
+							 ]
+            });			
+	});
+	function searchData(){
+	   var vo=$("#search-panel").getVo();
+	   var params=convertParamToUrl(vo);
+	   $('#grid').omGrid('setData',"order/CustomOrder/0/searchCustomOrder?"+params);
+	}
+	function addCustomOrder(){
+	    var paras={tabId:"addCustomOrder001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	    addNewTab("新增贸易订单","/order/customorder-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });     	     
+	}
+	function editCustomOrder(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if  (rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			return;
+	    }
+	    var paras={customOrderId:rowDatas[0].id,buyerId:rowDatas[0].buyerId,sellerId:rowDatas[0].sellerId,cusid:rowDatas[0].customerId,
+	      opType:rowDatas[0].opType,tabId:"editCustomOrder"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	    addNewTab("编辑贸易订单","/order/customorder-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	    });       	     
+	}
+	function confirmCustomOrder(){ //确定报关单
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if (rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			return false;
+		}
+		if (rowDatas[0].status >= 20){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起，该订单已经确定！',type : 'error'});
+			return false;
+		}
+		var url="order/CustomOrder/0/checkPrice?customOrderId="+rowDatas[0].id;
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			  var items=json.entity.items;
+			  var vtb=$("#nav_confirm .edit-table");
+			  vtb.find("tr").remove();
+			  var html="";
+			  for(var i=0;i<items.length;i++){
+				  var it=items[i];
+				  if (it.checkflag==1){
+					 html=html+"<tr><td class='label'>型号：</td><td class='field'>"+it.pn+"</td><td class='label'>比对结果：</td>";
+					 html=html+"<td class='field'>低于10%</td></tr>";
+				  }else if(it.checkflag==2){
+				     html=html+"<tr><td class='label'>型号：</td><td class='field'>"+it.pn+"</td><td class='label'>比对结果：</td>";
+					 html=html+"<td class='field'>高于10%</td></tr>";
+				  }
+			  }
+			  vtb.append(html);
+			  dgConfirm.omDialog("option","title",rowDatas[0].coOrderNo+' 价格比对结果：详细情况请参考价格比对报表！');
+			  dgConfirm.omDialog("open");//显示dialog
+		}});
+	}
+	function confirmCustomOrder1(){ //确定报关单
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if (rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			return false;
+		}
+		if(rowDatas[0].status >= 20 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起，该订单已经确定！',type : 'error'});
+			return false;
+		}			
+		$.omMessageBox.confirm({title:'订单确认',content:'一般贸易订单确定之后，订单状态（不可恢复），你确定要这样做吗？',onClose:function(v){
+		if(v){	
+			var url = "order/CustomOrder/0/confirmCustomOrder?orderStatus=20&customOrderId="+rowDatas[0].id;
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   dgConfirm.omDialog("close");
+			   $('#grid').omGrid('reload');//刷新grid
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			}});
+		 }							        
+		}});		 
+	}
+	function auditConfirmCustomOrder(){ //复合确定
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录行！'});
+			 return false;
+		}
+		if (rowDatas[0].status != 20){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起！不是确定的订单不能复核！',type : 'error'});
+			 return false;
+		}			
+		var url="order/CustomOrder/0/outPacking?customOrderId="+rowDatas[0].id;
+	    $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   var vo={};
+			   vo["currency"]=Dictionary.getDictName(Dictionary.Currency,json.entity.currency);
+			   vo["dealType"]=Dictionary.getDictName(Dictionary.DealType,json.entity.dealType);
+			   var cocList=json.entity.cocList;
+			   var totalCarton = 0;
+			   var totalQty=0,totalGw=0.0,totalNw=0.0,totalAmt=0.0;
+			   for(var i=0;i<cocList.length;i++){
+				   var coc=cocList[i];
+				   totalCarton=totalCarton+1;
+			  }		
+			  vo["totalCarton"]=totalCarton;
+			  vo["totalQty"]=json.entity.totalQty;
+			  vo["totalNw"]=json.entity.totalNw.toFixed(2);
+			  vo["totalGw"]=json.entity.totalGw.toFixed(2);
+			  vo["totalAmt"]=json.entity.totalAmt;
+			  dgAudit.initializeInput({"vo":vo}); //初始化
+			  dgAudit.omDialog("option", "title", rowDatas[0].coOrderNo+' 复核确定');
+			  dgAudit.omDialog("open");//显示dialog	
+		  }
+		});		 
+	}
+	function auditCustomOrder(){
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录行！'});
+			 return false;
+		}
+		if(rowDatas[0].status != 20 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起！不是确定的订单不能复核！',type : 'error'});
+			 return false;
+		}			
+		$.omMessageBox.confirm({title:'订单确认',content:'一般贸易订单确定之后，订单状态（不可恢复），你确定要这样做吗？',onClose:function(v){
+		if(v){	
+			var url = "order/CustomOrder/0/confirmCustomOrder?orderStatus=25&customOrderId="+rowDatas[0].id;
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   dgAudit.omDialog("close");//显示dialog	 
+			   $('#grid').omGrid('reload');//刷新grid
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+			  }
+			});
+		 }							        
+		}});		 
+	}
+	//撤销
+	function cancelCustomOrder(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return false;
+		}
+		if(rowDatas[0].status >= 25 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起，该订单已经确定！不能撤销！',type : 'error'});
+			 return false;
+		}				
+	  $.omMessageBox.confirm({title:'订单撤销',content:'一般贸易订单撤销之后，相关数据将会被删除，你确定要这样做吗？',onClose:function(v){
+	  if(v){
+			var url = "order/CustomOrder/0/cancelCustomOrder?customOrderId="+rowDatas[0].id;
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   $('#grid').omGrid('reload');//刷新grid
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+			 }
+			});
+	   }							        
+	  }});		 
+	}
+	
+	function checkPrice(){ //价格比对
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		var url="/order/customorder-checkprice.html?id="+rowDatas[0].id;
+	    showFullScreen(url);
+	}
+	function checkInfo(){ //价格验核
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if (rowDatas.length <= 0 ){
+		  $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+		  return;
+	   }
+	   var paras={customOrderId:rowDatas[0].id,tabId:"checkInfo0001"};
+ 	   addNewTab("编辑订单","/order/customorder-checkinfo.html",paras,function(){
+	   });       	     
+	}
+	function editPrice(){ //修改单价
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+        if(rowDatas.length <= 0 ){
+        	$.omMessageTip.show({title : '提示',content : '请选择编辑行！',timeout : 2000});
+        	return false;
+        }
+		if(rowDatas[0].status >=40 ){
+        	$.omMessageTip.show({title : '提示',content : '对不起！修改订单的产品的单价必须是通关之前的状态下才可以！',
+			timeout : 2000,type : 'error'});
+        	return false;
+        }
+	    var paras={customOrderId:rowDatas[0].id,coOrderNo:rowDatas[0].coOrderNo,modifyType:1,
+	    customerName:rowDatas[0].customerName,status:rowDatas[0].status,tabId:"editProduct001"}; //
+	    addNewTab("修改单价","/customs/product-price.html",paras,function(){
+	    });
+	}
+	function editProduct(){ //修改产品
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+        if(rowDatas.length <= 0 ){
+        	$.omMessageTip.show({title : '提示',content : '请选择编辑行！',timeout : 2000});
+        	return false;
+        }
+		if(rowDatas[0].status >=40 ){
+        	$.omMessageTip.show({title : '提示',content : '对不起！修改订单的产品必须是通关之前的状态下才可以！',
+			timeout : 2000,type : 'error'});
+        	return false;
+        }
+	    var paras={customOrderId:rowDatas[0].id,coOrderNo:rowDatas[0].coOrderNo,modifyType:1,
+	    customerName:rowDatas[0].customerName,status:rowDatas[0].status,tabId:"editProduct001"}; //
+	    addNewTab("修改产品","/customs/product-edit.html",paras,function(){
+	    });			
+	}
+	function editGwNw(){ //改重
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+        if(rowDatas.length <= 0 ){
+        	$.omMessageTip.show({title : '提示',content : '请选择编辑行！',timeout : 2000});
+        	return false;
+        }
+		if(rowDatas[0].status >40 ){
+        	$.omMessageTip.show({title : '提示',content : '对不起！已经通关或是已经结算的贸易订单不能拆单！',timeout : 2000,type : 'error'});
+        	return ;
+        }
+	    var paras={customOrderId:rowDatas[0].id,coOrderNo:rowDatas[0].coOrderNo,
+	    customerName:rowDatas[0].customerName,tabId:"editProduct001"}; //
+	    addNewTab("改重","/order/customordercarton-edit.html",paras,function(){
+	    });
+	}
+	function orgInvoice(){
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+	    if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录行！'});
+			 return;
+		}	 
+		var url="/order/customorder-invoice.html?customOrderId="+rowDatas[0].id;
+		showFullScreen(url);
+	}
+	function orgContract(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		}	 
+		var url=baseUrl+"order/CustomOrder/0/outContract?customOrderId="+rowDatas[0].id;
+		showFullScreen(url);
+	}
+	function orgPacking(){ //导出箱单
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		}	 
+		var url="/order/customorder-packing.html?customOrderId="+rowDatas[0].id;
+		showFullScreen(url);
+	}
+	function bsContract(){ //购销合同
+	 var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			 return;
+		}
+		var url="/order/purchase-contract.html?customOrderId="+rowDatas[0].id;
+		showFullScreen(url);   
+	}
+	function dlContract(){ //代理合同
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+		}	   
+	    var url="/order/agent-contract.html?customFormId="+rowDatas[0].id;
+	    showFullScreen(url);	
+	}
+	function previewCustomOrder(){ //预览
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		var url="/order/customorder-preview.html?id="+rowDatas[0].id;
+	    showFullScreen(url);
+	}
+    function viewCustomOrder(){
+	}
+	//子状态
+	function getStatus(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+	   }
+	   var paras={ids:rowDatas[0].id,eoOrderNo:rowDatas[0].coOrderNo,tabId:"orgStatus001"};
+ 	   addNewTab("定单状态列表","/order/orderSatePage.html", paras,function(){
+	   });       
+	}
+	</script>
+</head>
+<body class="dfbody">	
+   <div id="search-panel">
+	   <table class="edit-panel">		
+		<tr >
+			<td>订单号：</td>    
+			<td><input id="coOrderNo" name="coOrderNo"  onfocus="myFocus(this,'#f4eaf1')" 
+						  onblur="myblur(this,'white')"  />
+			</td>
+			<td>&nbsp;客户：</td>   
+			<td><input id="customerId" name="customerId"  onfocus="myFocus(this,'#f4eaf1')" 
+			   onblur="myblur(this,'white')"  showtext="" />
+			</td>
+			<td>&nbsp;到货仓库：</td>   
+			<td><input id="fromWh" name="fromWh" pattern='combo' editable='false' remote="Warehouse" /></td>	
+			<td>目的仓库：</td>   
+			<td><input id="toWh" name="toWh" pattern='combo' editable='false' remote="Warehouse" /></td>				
+			<td>操作模式：</td>   
+			<td><input id="opType" name="opType" pattern='combo' editable='false' width="130" remote="OpType" /></td>
+		</tr>
+		<tr>	 
+		   <td>委托单号：</td>    
+		   <td><input id="refNo" name="refNo"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  />
+		   </td> 
+		   <td>订单状态：</td>   
+		   <td><input id="orderStatus" name="orderStatus" pattern='combo' editable='false'  width="120" 
+		   remote="CustomOrderStatus" /></td>
+			<td>&nbsp;币种：</td>
+			<td><input id="currency" name="currency" pattern='combo' editable='false' width="120" remote="Currency"/></td>
+			 <td>&nbsp;制单时间：</td>
+			<td><input id="startTime" name="startTime" pattern='date' editable='false' /></td>
+			<td>到：</td>
+			<td><input id="endTime" name="endTime" pattern='date' editable='false' /></td>
+			<td colspan="2"><span id="button-search">搜索</span></td>
+		</tr>	
+	  </table> 	 
+  </div>			
+  <div id="nav_customOrder" title="新增订单">
+       <div id="buttonbar"></div>	
+	   <div id="grid"></div>
+  </div>
+<div id="nav_audit" title="复核确定" style="display:none;">
+	 <table class="edit-table">		
+		<tr>
+			<td class="label">总箱数：</td>
+			<td class="field"><span  name="totalCarton"></span></td>				
+			<td class="label">总数量：</td>
+			<td class="field" ><span name="totalQty" /></span></td>
+		</tr>
+		<tr>
+			<td class="label">总金额：</td>
+			<td class="field" ><span name="totalAmt" /></span></td>
+			<td class="label">币种：</td>
+			<td class="field" ><span name="currency" /></span></td>
+		</tr>
+		<tr>
+			<td class="label">总净重：</td>
+			<td class="field" ><span name="totalNw" /></span></td>
+			<td class="label">总毛重</td>
+			<td class="field" ><span name="totalGw" /></span></td>
+		</tr>
+		<tr>
+			<td class="label">交易方式：</td>
+			<td class="field" ><span name="dealType" /></span></td>
+			<td class="label"></td>
+			<td class="field"></td>
+		</tr>
+	</table>
+</div>	
+<div id="nav_confirm" title="确定" style="display:none;">
+	 <table class="edit-table">		
+		
+	</table>
+</div>	
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	 <script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/jc.validation.js"></script>		
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <style type="text/css">
+		input {vertical-align:middle;margin:0;padding:0; left:0px;}
+		.file-box {position:relative;margin-top:5px;width:620px; }
+		.txt {height:22px;border:1px solid #cdcdcd;width:450px;}
+		.btn {background-color:#FFF;border:1px solid #CDCDCD;margin-right:10px;padding:3px;}
+    </style>
+    <script type="text/javascript">
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#customerCompanyId").initGridDropList(cusParams);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			        searchData();
+			   }
+		});			
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({
+				autoFit:true,
+				limit:20,
+                title : '收货公司列表',
+                dataSource : "business/Receiver/0/searchReCompany",
+                colModel : [
+							 {header : '编码', name : 'ccode', width : 70, align : 'left'}, 
+							 {header : '客户', name : 'company.cname', width : 120, align : 'left'},
+							 {header : '名称', name : 'cname', width : 100, align : 'left'},
+							 {header : '审核状态', name :'status', width : 50, align : 'left',
+							        renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getDictName(Dictionary.CompanyStatus,colValue);
+								    }
+							 },	 
+							 //{header : '联系人', name : 'linkMan', width : 80, align : 'left'},
+ 							 //{header : '联系电话', name : 'tel', width : 80, align : 'left'},
+  							 {header : '手机', name : 'phone', width : 100, align : 'left'}, 
+							 {header : '传真', name : 'fax', width : 80, align : 'left'},
+							 {header : '联系地址', name : 'address', align : 'left', width : 150} ]
+            });				
+		
+	});
+	function searchData(){
+	     var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#grid').omGrid('setData', "business/Receiver/0/searchReCompany?"+params);  
+	}
+	function addReceiver(){	
+	    var paras={tabId:"addReceiver001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	    addNewTab("新加收货公司","/business/receiver-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });
+	}
+	function editReceiver(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+	   }	
+	   var paras={receiverId:rowDatas[0].id,status:rowDatas[0].status,tabId:"editReceiver001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	   addNewTab("编辑收货公司","/business/receiver-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });
+	}
+	function auditReceiver(){ //审核收货公司
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			 return;
+		 }
+		 if(rowDatas[0].status >= 20 ){
+			 $.omMessageTip.show({content :"对不起，收货公司必须是在待审核状态才可以审核！",timeout : 2000,type : 'error'});
+			 return;
+		 } 
+		 var url = "business/Receiver/0/audit?receiverId="+rowDatas[0].id+"&status=20";		
+		 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   $('#grid').omGrid('reload');//刷新grid
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		 }});		
+	}
+	function backReceiver(){ //返回收货公司
+		 var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		 }
+		 if(rowDatas[0].status != 20 ){
+			 $.omMessageTip.show({content :"对不起，收货公司必须是在已审核状态才可以返回！",timeout : 2000,type : 'error'});
+			 return;
+		 } 
+		 var url = "business/Receiver/0/audit?receiverId="+rowDatas[0].id+"&status=30";	
+		 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){	
+		   $('#grid').omGrid('reload');//刷新grid
+		   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});					  
+		 }});		
+	}
+	
+	function viewReceiver(){
+		 var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录行！'});
+			 return;
+		  }		
+		 var paras={receiverId:rowDatas[0].id,tabId:"viewReceiver001"}; 
+	   	 addNewTab("预览收货公司","/business/receiver-view.html",paras,function(){
+	    });       
+	}
+	</script>	
+</head>
+<body class="dfbody">
+<div id="search-panel">
+   <table class="edit-panel">
+	<tr>
+		<td>客户：</td>    
+		<td><input id="customerCompanyId" name="customerCompanyId"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"
+		showtext=""  /></td>
+		<td>关键字：</td>
+		<td><input id="searchValue" name="searchValue" onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" tip="输入关键字" /></td>
+		<td><span id="button-search">搜索</span>  <!--&nbsp;<a onclick="aa();">导入</a>--></td>
+	</tr>
+  </table> 	 
+</div>	
+<div id="import_work" title="工作单附件" style="display:none;">
+     	<form id="work">
+        <div class="file-box"><span >
+		<input type='text' name='textfield' id='textfield' class='txt' />
+		<span class='btn'>浏览...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+		<input type="file" name="fileField" style="position:absolute;top:0;left:0px;height:22px;filter:alpha(opacity:0);opacity: 0;width:530px" id="fileField" onchange="document.getElementById('textfield').value=this.value" />
+		<span name="abtnfileupload" id="abtnfileupload"  value="上传" />上传</span>
+    </div>
+    <br />
+        <div style="margin:10 0 0 30px;">
+		附件列表: <span id="upLoadSpan"></span>
+        </div>
+		</form>		
+</div>
+	<div id="nav_receiver" title="收货公司">
+	   	<div id="buttonbar"></div>	
+		<div id="grid"></div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#customerId").initGridDropList(cusParams);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+					searchData(); 
+			   }
+		});				
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '出库单列表',
+                dataSource :"warehouse/StockOut/0/searchStockOut",
+                colModel : [
+							 {header : '出库单号', name : 'stockOutNo', width : 120, align : 'left'},
+                             {header : '客户', name : 'customerName', width : 120, align : 'left'}, 
+							 {header : '业务类型', name : 'businessType', width : 100, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getDictName(Dictionary.BusinessType,colValue);
+									}
+							 },
+							 {header : '出库货仓库', name : 'wh', width : 100, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.Warehouse,colValue);
+								 }
+							 },
+							 {header : '出库状态', name : 'status', width : 100, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+										 return Dictionary.getDictName(Dictionary.StockOutStatus,colValue);
+									}
+							 },
+							 {header : '管理模式', name : 'manageModel', width : 50, align : 'center',
+							     renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.ManageModel,colValue);
+								 }
+							 },
+							 {header : '出库时间', name : 'outTime', width : 100, align : 'left'}
+							 ],
+				onRowClick:function(rowIndex,rowData,event){
+			    }
+            });			
+	});	
+	function searchData(){
+		var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#grid').omGrid('setData',"warehouse/StockOut/0/searchStockOut?"+params);
+	}
+	//编辑出库单
+	function editStockOut(){
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		var paras={id:rowDatas[0].id,tabId:"editStockOutOrder001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	    addNewTab("编辑出库单","/warehouse/stockout-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	    });   
+	}
+	function confirmStockOut(){ //确定
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		if (rowDatas[0].status >= 20 ){
+			$.omMessageTip.show({content :"对不起！出库单状态已经确认！",timeout : 2000,type:'error'});		
+			return ;
+		}
+		 $.omMessageBox.confirm({title:'出库单确定',content:'，出库单状态（不可恢复），你确定要这样做吗？',onClose:function(v){
+		 if (v){
+				var url = "warehouse/StockOut/0/confirmStockOut?stockOutId="+rowDatas[0].id;
+				$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					  $('#grid').omGrid('reload');//刷新grid
+					  $.omMessageTip.show({content : json.msg,timeout : 2000,type:'success'});
+				   }
+				});   	 
+			}							        
+		  }});
+	}
+	function stockOutToCustomOrder(){//仓储转一般贸易
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return false;
+		}
+		if(rowDatas[0].status != 20 ){ //不能是确定状态
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '状态必须是确定状态才可以！',type:'error'});
+			 return false;
+		}
+		if(rowDatas[0].businessType != 3 ){ //必须是仓储类型才可以转一般贸易
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '业务类型必须是仓储才能转一般贸易！',type:'error'});
+			 return false;
+		} 
+	    var url = "order/CustomOrder/0/stockOutToCustomOrder?stockOutId="+rowDatas[0].id;
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			$('#grid').omGrid('reload');//刷新grid
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type:'success'});
+		}});   
+	}
+	function stockOutPackingArrange(){ //箱单整理  此方法暂不用
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		var paras={stockOutId:rowDatas[0].id,tabId:"stockOutPackingArrange001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	    addNewTab("整理箱单(出库)","/warehouse/stockout-packingarrange.html",paras,function(){
+		   // $('#grid').omGrid('reload');//刷新grid
+	    });     
+	}
+	function addValueService(){ //增值服务费 此方法暂不用
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+		  $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+		  return false;
+	   }		
+	   if(rowDatas[0].etOrderId<=0){
+	      $.omMessageTip.show({content: "对不起！此类入库单属于系统自动生成，无增值服务！",timeout : 2000,type : 'error'});
+	      return false;
+	   }
+	   var paras={stockOutId:rowDatas[0].id,stockOutNo:rowDatas[0].stockOutNo,deliverId:rowDatas[0].deliverId,
+	   customerName:rowDatas[0].customerName,refOrderNo:rowDatas[0].refOrderNo,
+	   wh:rowDatas[0].wh,customerId:rowDatas[0].customerId,tabId:"stockOutAddValueService001"};
+ 	   addNewTab("增值服务工作单","/warehouse/stockout-addvalue.html",paras,function(){
+
+	   });       	    
+	}
+	//出库单数据预览
+	function previewStockOut(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		var url="/warehouse/stockout-preview.html?stockOutId="+rowDatas[0].id;
+	    showFullScreen(url);
+	}
+	
+	function makeDelivery(){ //生成送货单
+	 	var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas[0].status != 20 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '出库单必须是确定状态才可以！',type:'error'});
+			 return;
+		}
+		$.omMessageBox.confirm({title:"送货单生成确认",
+		  content:"您现在选择了仓库为"+rowDatas[0].wh+" 的出库单"+rowDatas[0].stockOutNo+"，确定生成生成送货单吗？",
+		   onClose:function(v){
+			    if (v){
+				     var url = "order/Deliver/0/add";
+					 var vo={"deliver.stockOutId":rowDatas[0].id};
+					 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+						  $.omMessageTip.show({content:json.msg,timeout : 10000,type:'success'});
+					   }
+					});   
+				}							        
+		   }});
+	}
+	function viewStockOut(){
+	
+	}
+	//子状态
+	function getStatus(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+	   }
+	   var paras={ids:rowDatas[0].id,eoOrderNo:rowDatas[0].stockOutNo,tabId:"orgStatus001"};
+ 	   addNewTab("定单状态列表","/order/orderSatePage.html", paras,function(){
+	   });       
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">		
+	<tr>   
+		<td>出仓号：</td>
+		<td><input id="stockOutNo" name="stockOutNo"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" tip="这里输出仓号" />
+		</td>
+		<td>客户：</td>
+		<td><input id="customerId" name="customerId"  onfocus="myFocus(this,'#f4eaf1')" 
+		   onblur="myblur(this,'white')" tip="选择客户" showtext="" />
+		</td>
+		<td>仓库：</td>
+        <td><input id="wh" name="wh" pattern='combo' editable='false' remote="Warehouse" emptyText="请选择仓库"/></td>
+		<td>业务类型：</td>
+		<td><input id="businessType" name="businessType" pattern='combo' editable='false' width="130" remote="BusinessType"
+		 emptyText="请选择业务类型"/>
+		</td>
+	</tr>	
+	<tr>
+	    <td>管理模式：</td>
+		<td><input id="manageModel" name="manageModel" pattern='combo' editable='false'  width="120" remote="ManageModel"/></td>
+		<td>状态：</td>
+   		<td><input id="orderStatus" name="orderStatus" pattern='combo' editable='false'  width="120" remote="StockOutStatus"
+		 emptyText="请选择出库单状态"/></td>
+		<td>时间：</td>
+		<td><input id="startTime" name="startTime" pattern='date' editable='false' /></td>
+		<td>到：</td>
+		<td><input id="endTime" name="endTime" pattern='date' editable='false' /></td>
+		<td colspan="2"><span id="button-search">搜索</span></td>						
+	</tr>
+  </table> 	 
+</div>			
+	<div id="nav_stockout" title="">
+       <div id="buttonbar"></div>	
+	   <div id="grid"></div>
+	</div>	
+</body>
+</html>

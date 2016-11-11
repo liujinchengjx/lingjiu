@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<script type="text/javascript" src="/js/jquery.js"></script>	
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var positionCode=getIframeParm("positionCode");
+	$(document).ready(function() {
+	    loadPositionList();
+		$('#buttonbar').omButtonbar({
+            	 width : "100%",
+            	 btns : [{label:"保存",
+            		     id:"btnSave" ,
+            		     icons : {left : '/images/icon/save.png'},
+            	 		 onClick: savePosition
+            			},
+						{separtor:true},
+						{label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);
+						  }
+						 }	           			
+            	 ]
+          }); 
+	});
+	
+	function loadPositionList(){
+	     $("#positionTree").empty();
+		 var url="systemmanager/Position/0/loadPositionTreeAll?positionCode="+positionCode;
+	     $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			 var ptNode=$("#positionTree").omTree({
+				dataSource : json.entity,
+				simpleDataModel: true,
+				onSelect: function(node){	
+				    var modeValue = $('#txtMode').omCombo('value');
+				}				
+			});  
+			var data=ptNode.omTree('getData'); 
+			for(var i=0;i<data.length;i++){
+			   if (data[i].select==true){
+				  ptNode.omTree('select',data[i]);
+			   }
+			}
+	     }});
+	}
+	
+	function savePosition(){
+		var pSelectNode=$('#positionTree').omTree('getSelected');	
+		if (pSelectNode!=null){
+		      var userId=getIframeParm("userId");
+		      var params=[];
+			  params.push("userId="+userId);
+			  params.push("positionCode="+pSelectNode.id);
+			  var url="systemmanager/User/0/updatePosition?"+params.join("&");
+			  $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			        positionCode=pSelectNode.id;
+			        loadPositionList();
+					$.omMessageTip.show({content:json.msg,timeout:2000,type:'success'});					 
+				}
+			  });
+		}else{
+			$.omMessageTip.show({title: '提示',content:'请选该职位的上级职位！',type:'error'});
+		}
+	}
+	
+	</script>	
+</head>
+<body class="dfbody">	
+<div id="nav_position" title="职位"  style="width:100%; height:95%;">		
+	<div id="buttonbar"></div>
+	<ul id="positionTree"></ul>
+</div>
+</body>
+</html>

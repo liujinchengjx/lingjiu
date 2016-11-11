@@ -1,0 +1,289 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>后台管理系统</title>
+    <meta http-equiv="keywords" content="keyword1,keyword2,keyword3">
+    <meta http-equiv="description" content="this is my page">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    
+    <!--<link rel="stylesheet" type="text/css" href="./styles.css">-->
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+	<script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>  
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+  	<script type="text/javascript">
+  	var refOrder=getIframeParm("etOrderId");
+  	var workOrderId=getIframeParm("workId");
+  	var rowInfo=getIframeParm("rowInfo");
+  	var createBy=getIframeParm("createBy");
+  	var createTime=getIframeParm("createTime");
+  	var customerId=getIframeParm("customerId");
+  	var customerName=getIframeParm("customerName");
+  	var deliverId=getIframeParm("deliverId");
+  	var etOrderId=getIframeParm("etOrderId");
+  	var fileNum=getIframeParm("fileNum");
+  	var fileUrl=getIframeParm("fileUrl");
+  	var workOrderId=getIframeParm("workId");
+  	var lastModifyBy=getIframeParm("lastModifyBy");
+  	var lastModifyTime=getIframeParm("lastModifyTime");
+  	var makeDate=getIframeParm("makeDate");
+  	var refOrderNo=getIframeParm("refOrderNo");
+  	var serviceMan=getIframeParm("serviceMan");
+  	var refOrderNo=getIframeParm("refOrderNo");
+  	var status=getIframeParm("status");
+  	var stockOutRemark=getIframeParm("stockOutRemark");
+  	var type=getIframeParm("type");
+  	var wh=getIframeParm("wh");
+  	var workInfo=getIframeParm("workInfo");
+  	var workOrderNo=getIframeParm("workOrderNo");
+  	var refOrderId=(refOrder>0)?refOrder:(deliverId>0)?deliverId:workOrderId;
+  	//获取工作单信息-通过工作单ID获取币种信息
+  	$(document).ready(function(){
+  		//布局
+  		var element = $('#nav_workorder').omBorderLayout({
+            	   panels:[{id:"center-panel",header:true,title:"应收工作表",region:"center",width:"100%",height:"100%"},
+          ]
+        });	
+        //初始化按钮
+        $('#buttonbar').omButtonbar({
+            	 width : "100%",
+            	 btns : [{label:"完成应收",
+            		     id:"btnSave" ,
+            		     icons : {left : '/images/icon/add.png'},
+            	 		 onClick: completeValue
+            			},{label:"保存应收信息",
+            		     id:"btnSave" ,
+            		     icons : {left : '/images/icon/save.png'},
+            	 		 onClick: saveCoinValue
+            			},
+            			{label:"关闭",id:"btnClose",
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);
+						  }
+						 }           			
+            	 ]
+          });
+        var coinValue="";
+        $('#coinValueCom').omCombo({dataSource :Dictionary.Currency,
+		width:'90',editable:false,optionField:'dictName',valueField : "dictCode",value:0});
+  		var table=$("#reciveTable tbody");
+  		var url="business/ValueAddedServices/0/loadValueAddedServicesTree?refOrderId="+refOrderId+"&type="+type;
+  		currValueAddArr=[];
+  		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+  			addValueTree=$("#addValueTree").omTree({
+					dataSource : json.rows,
+					showCheckbox:true,
+					showIcon:false,
+					simpleDataModel: true,
+					onCheck : function(nodeData){
+						chkSingleNodes(nodeData);
+						if (nodeData.pid!=""){
+						   var $input = $("#"+nodeData.nid).find("span[name="+nodeData.id+"]");
+						   var isCheck=addValueTree.omTree('isCheck',nodeData);
+						   if(isCheck){
+							   if ($input.length<=0){
+							       if(nodeData.showFee=="1" && status==60){
+							       	   //判断费用是否为0为0则显示为0不为0
+									   var $this = $("#"+nodeData.nid).find("a");
+									   var input="<span name='"+nodeData.id+"' style='height:12px;' >&nbsp;应收费用：<input name='count'"; 
+									   input=input+"style='width:50px;margin-left:0px;text-align: right;'/>"
+									   +nodeData.feeUnit;
+									   input=input+" &nbsp;<input type='hidden' name='payAmt' style='width:40px;' />";
+									   input=input+" &nbsp;备注：<input type='text' name='remark' style='width:80px;' /></span>";
+									   $(input).insertAfter($this);
+									   var $html=$("#"+nodeData.nid);
+									   $html.find("input[name=count]").omNumberField({allowDecimals:true,decimalPrecision:2});
+									   $html.find("input[name=count]").val(nodeData.count);
+									   $html.find("input[name=payAmt]").omNumberField({allowDecimals:true,decimalPrecision:2});
+									   $html.find("input[name=payAmt]").val(nodeData.payAmt);
+									   $html.find("input[name=remark]").val(nodeData.remark);
+							       }else{
+							           if(status==60){
+								           var $this = $("#"+nodeData.nid).find("a");
+										   var input="<span name='"+nodeData.id+"' style='height:12px;' >&nbsp;应收费用：<input name='count'"; 
+										   input=input+"style='width:50px;margin-left:0px;text-align: right;'/>"
+										   +nodeData.feeUnit;
+										   input=input+" &nbsp;<input type='hidden' name='payAmt' style='width:40px;' />";
+										   input=input+" &nbsp;备注：<input type='text' name='remark' style='width:80px;' /></span>";
+										   $(input).insertAfter($this);
+										   var $html=$("#"+nodeData.nid);
+										   $html.find("input[name=count]").omNumberField({allowDecimals:true,decimalPrecision:2});
+										   $html.find("input[name=count]").val(nodeData.payAmt);
+										   $html.find("input[name=payAmt]").omNumberField({allowDecimals:true,decimalPrecision:2});
+										   $html.find("input[name=payAmt]").val(nodeData.payAmt);
+										   $html.find("input[name=remark]").val(nodeData.remark);
+							           }else{
+								           var $this = $("#"+nodeData.nid).find("a");
+										   var input="<span name='"+nodeData.id+"' style='height:12px;' >&nbsp;应收费用：<input name='count'"; 
+										   input=input+"style='width:50px;margin-left:0px;text-align: right;'/>"
+										   +nodeData.feeUnit;
+										   input=input+" &nbsp;<input type='hidden' name='payAmt' style='width:40px;' />";
+										   input=input+" &nbsp;备注：<input type='text' name='remark' style='width:80px;' /></span>";
+										   $(input).insertAfter($this);
+										   var $html=$("#"+nodeData.nid);
+										   $html.find("input[name=count]").omNumberField({allowDecimals:true,decimalPrecision:2});
+										   $html.find("input[name=count]").val(nodeData.count);
+										   $html.find("input[name=payAmt]").omNumberField({allowDecimals:true,decimalPrecision:2});
+										   $html.find("input[name=payAmt]").val(nodeData.payAmt);
+										   $html.find("input[name=remark]").val(nodeData.remark);
+							           }
+							       }
+							   }
+						   }else{
+							  $input.remove();
+						   }
+						}else{
+						   addValueTree.omTree('expand',nodeData);
+						}
+					}
+			}); 
+			if (json.entity!=null){
+			   $("#workorder").initializeInput({"vo":json.entity}); //初始化
+			   $.each(json.entity.workOrderDetailList, function(i, obj){
+					currValueAddArr.push(obj.scode);
+					var target = addValueTree.omTree("findNode", "id", obj.scode);
+					addValueTree.omTree('check',target);
+			   });
+		   }
+  		}});
+  	});
+  	
+  	//保存货币信息
+  	function saveCoinValue(){
+  		if(status !=60){
+			$.omMessageTip.show({content : "对不起！该工作单不在完成应付状态！",timeout : 2000,type : 'error'});
+			return false;
+		}
+  		var selectedNodes =addValueTree.omTree('getChecked',true);
+		selectedNodes=getSelectedValueAddService(selectedNodes); 
+		var woDetails=[],tempscodeArr=[];
+	    for (var i=0;i<selectedNodes.length;i++){ 
+			var woDetail={};
+			if(selectedNodes[i].workOrderDetailId>0){
+			   woDetail["id"]=selectedNodes[i].workOrderDetailId;
+			   woDetail["flag"]=1; 
+			}else{
+			   woDetail["flag"]=2; 
+			}
+			var feeItemVo=$("span[name="+selectedNodes[i].id+"]").getVo();
+			if(typeof (feeItemVo.count)=="undefined" || feeItemVo.count<0){
+			   $.omMessageTip.show({content:"对不起！("+selectedNodes[i].pidName+")---> "+selectedNodes[i].text+" 没有输入值，请重新操作！",
+			   timeout : 2000,type : 'error'});
+			   return false; 
+			}
+			woDetail["workOrderId"]=workOrderId;
+			woDetail["serviceName"]=selectedNodes[i].pidName;
+			woDetail["feeUnit"]=selectedNodes[i].feeUnit;
+			woDetail["valueAddedServicesId"]=selectedNodes[i].addValueId;
+			woDetail["variableName"]=selectedNodes[i].text;
+			woDetail["scode"]=selectedNodes[i].id;
+			woDetail["count"]= feeItemVo.count;
+			woDetail["payAmt"]= feeItemVo.payAmt;
+			woDetail["remark"]= feeItemVo.remark;
+			tempscodeArr[i]=selectedNodes[i].id;
+			woDetails.push(woDetail);
+		}
+		for (var i=0;i<currValueAddArr.length;i++){
+		    if(tempscodeArr.in_array(currValueAddArr[i])==false){
+			   var woDetail={};
+			   woDetail["scode"]=currValueAddArr[i]; 
+			   woDetail["flag"]=3; //表示要删掉的意思
+			   woDetails.push(woDetail);
+			}
+		}		
+		if(woDetails.length<=0) return false;
+		var vo={};
+		vo["wo.createBy"]=createBy;
+		vo["wo.createTime"]=createTime;
+		vo["wo.customerId"]=customerId;
+		vo["wo.customerName"]=customerName;
+		vo["wo.deliverId"]=deliverId;
+		vo["wo.etOrderId"]=etOrderId;
+		vo["wo.fileNum"]=fileNum;
+		vo["wo.fileUrl"]=fileUrl;
+		vo["wo.id"]=workOrderId;
+		vo["wo.lastModifyBy"]=lastModifyBy;
+		vo["wo.lastModifyTime"]=lastModifyTime;
+		vo["wo.makeDate"]=makeDate;
+		vo["wo.refOrderNo"]=refOrderNo;
+		vo["wo.serviceMan"]=serviceMan;
+		vo["wo.status"]=status;
+		vo["wo.stockOutRemark"]=stockOutRemark;
+		vo["wo.type"]=type;
+		vo["wo.wh"]=wh;
+		vo["wo.workInfo"]=workInfo;
+		vo["wo.workOrderNo"]=workOrderNo;
+		var woDetailList= JSON.stringify(woDetails); 
+		vo["workOrderDetails"]=woDetailList;
+	    var url= "order/WorkOrder/0/saveWorkOrder";
+	    $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		   		$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		 	}
+		});
+  	}
+  	function getSelectedValueAddService(selectedNodes){//获取选中的子节点
+	     var tempArr=[];
+		 for (var i=0;i<selectedNodes.length;i++){ 
+			  var addValueId=selectedNodes[i].addValueId;
+			  if (addValueId>0){
+				 tempArr.push(selectedNodes[i]);
+			  }
+		 }
+		 return tempArr;
+	}
+	function completeValue(){	
+		if(status !=60){
+			$.omMessageTip.show({content : "对不起！该工作单不在完成应付状态！",timeout : 2000,type : 'error'});
+			return false;
+		}  
+		$.omMessageBox.confirm({
+                title:'确定',
+                content:'确定要完成编辑应收吗?',
+                onClose:function(v){
+                   if(v){
+                   	if(status !=60){
+		  			 $.omMessageTip.show({content : "对不起！该工作单不在完成应付状态！",timeout : 2000,type : 'error'});
+		  			 return false;
+				   }
+		  			 var url="order/WorkOrder/0/confirmWorkOrder?workOrderId="+workOrderId+"&orderStatus=65";
+		   			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+		   			 	status = 65;
+			  		 	$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+					}});
+                   }
+               }
+        });
+	}
+  </script>
+  </head>
+  <body >
+  <div id="nav_workorder" title="应收工作单" style="width:100%; height:85%;">
+  <div id="center-panel">	
+  		<div id="buttonbar"></div>
+		<div id="make-tab">
+				<ul id="addValueTree"></ul>	
+		</div>
+  </div>
+ </div>
+  </body>
+</html>

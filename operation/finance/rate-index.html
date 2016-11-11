@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null;
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});				
+		dialog=$( "#nav_rate").omDialog({autoOpen: false,draggable : false,resizable : false,height: 450,width:750,modal: true,
+				buttons: [{
+					text : "确定", 
+					click : saveRate 
+				}, {
+					text : "取消", 
+					click : function () {                   
+						dialog.omDialog("close");
+					}
+				}]
+			});	
+		$('#buttonbar').initToolBar();
+		
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '汇率列表',
+                dataSource : "finance/Rate/0/searchRate",
+                singleSelect : false,
+                colModel : [
+                             {header : '时间', name : 'opDate', width : 60, align : 'left'},								 
+							 {header : '币种', name : 'currency', width : 40, align : 'center',
+							      renderer : function(colValue, rowData, rowIndex) {
+                                      return Dictionary.getDictName(Dictionary.Currency,colValue);
+								}
+							 }, 
+							 {header : '现汇买入价', name : 'spotBuyPrice', width : 60, align : 'right'},
+							 {header : '现汇卖出价', name : 'spotSellPrice', width : 60, align : 'right'},
+							 {header : '现钞买入价', name : 'cashBuyPrice', width : 60, align : 'right'},
+							 {header : '现钞卖出价', name : 'cashSellPrice', width : 60, align : 'right'},
+							 {header : '外管局中间价', name : 'customsPrice', width : 60, align : 'right'},
+							 {header : '中行折算价', name : 'covertPrice', width : 60, align : 'right'},
+ 							 {header : '银行', name : 'bank', width : 120, align : 'left'}
+ 							],
+				rowDetailsProvider:function(rowData,rowIndex){
+                		return '';								
+	            }
+            });
+	});
+	function searchData(){
+	    var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#grid').omGrid('setData',"finance/Rate/0/searchRate?"+params);
+	}
+	function saveRate(){	 
+		var url = $("#id").val()=="" ? "finance/Rate/0/add" : "finance/Rate/0/edit";
+		var vo=$("#rate").getVo();
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   $('#grid').omGrid('reload');
+			}
+		 });
+		 dialog.omDialog("close");         	            
+	}
+	function addRate(){
+		dialog.initializeInput(); //初始化
+		dialog.omDialog("option", "title", '新增');
+		dialog.omDialog("open");//显示dialog	
+	}	
+	function editRate(){
+		  var rowDatas = $('#grid').omGrid('getSelections',true);
+		  if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+		  }		
+		  dialog.initializeInput({"vo":rowDatas});	
+		  dialog.omDialog('open');	       	     
+	}	
+	
+	function updateCurrRateOnline(){
+	   var url = "finance/Rate/0/updateCurrRateOnline";
+	   var vo=	$("#rate").getVo(); 
+	   $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   	   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+				   $('#grid').omGrid('reload');
+			 }
+		});
+	}
+	function viewRate(){
+	   
+	}
+	//删除汇率
+	function deletRate(){
+		 var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+		 }
+		 var dId=[];
+		 for(var i=0;i<rowDatas.length;i++){
+		 	dId.push(rowDatas[i].id);
+		 }
+		 var url="finance/Rate/0/delRate";
+		 var vo={id:dId.join(",")};
+		  $.omMessageBox.confirm({
+                title:'确认删除',
+                content:'删除后数据将不存在，需要重新添加!',
+                onClose:function(v){
+                   if(v==true){
+                   	 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		 				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		 				$('#grid').omGrid('reload');
+		 			}
+					});	
+                   }else{
+                   }
+                }
+          });
+		     
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">
+	<tr>
+	    <td>时间：</td>
+	    <td><input id="dateYyMm" name="dateYyMm" pattern='date' editable='false'/></td>
+		<td>关键字：</td>
+		<td><input id="searchValue" name="searchValue" onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"
+		 tip="输入关键字" /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>
+  </table> 	
+</div> 
+	<div id="nav_rate" title="新增汇率" style="display:none;">
+        <form id="rate">	
+		<input id="id" name="r.id" type="hidden" />
+		<table class="edit-table">		
+			<tr>
+			    <td class="label">币种：</td>
+				<td class="field"><input id="currency" name="r.currency"  pattern='combo' editable='false' remote='Currency'/></td>							
+				<td class="label">银行：</td>
+				<td class="field"><input id="bank" name="r.bank" /></td>
+			</tr>
+			<tr>
+   			    <td class="label">现汇买入价：</td>
+				<td class="field"><input id="spotBuyPrice" name="r.spotBuyPrice" pattern='float'/></td>
+				<td class="label">现汇卖出价：</td>
+				<td class="field" ><input id="spotSellPrice" name="r.spotSellPrice" pattern='float' /></td>				
+			</tr>
+			<tr>   			    
+				<td class="label">现钞买入价：</td>
+				<td class="field" ><input id="cashBuyPrice" name="r.cashBuyPrice" pattern='float' /></td>				
+				<td class="label">现钞卖出价：</td>
+				<td class="field"><input id="cashSellPrice" name="r.cashSellPrice" pattern='float'/></td>
+			</tr>
+			<tr>
+   			    <td class="label">海关价：</td>
+				<td class="field"><input id="customsPrice" name="r.customsPrice" pattern='float'/></td>
+   			    <td class="label">中行折算价：</td>
+				<td class="field"><input id="covertPrice" name="r.covertPrice" pattern='float'/></td>
+			</tr>
+			<tr>
+   			    <td class="label">时间：</td>
+				<td class="field"><input id="opDate" name="r.opDate" pattern='datetime' editable='false'/></td>
+   			    <td class="label"></td>
+				<td class="field"></td>
+			</tr>						
+			
+		</table>
+		</form>	
+	</div>
+	<div id="buttonbar"></div>	
+	<div id="grid"></div>
+</body>
+</html>

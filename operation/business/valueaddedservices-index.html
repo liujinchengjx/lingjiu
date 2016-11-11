@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统-增值服务配置</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {
+	    $("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});			
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '增值服务配置列表',
+                dataSource :"business/ValueAddedServices/0/searchValueAddedServices",
+                colModel : [
+					         {header : '业务类型', name : 'chargesVariables.businessType', width : 80, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {                                    
+									 return "增值服务";
+								}
+							 }, 
+				             {header : '增值服务名', name : 'serviceName', width : 80, align : 'left'},
+							 {header : '收费单位', name : 'feeUnit', width : 80, align : 'left'}, 
+							 {header : '参数名', name : 'chargesVariables.variableName', width : 100, align : 'left'},
+							 {header : '参数值', name : 'chargesVariables.variableValue', width : 60, align : 'left'}, 
+							 {header : '代码', name : 'chargesVariables.scode', width : 60, align : 'left'}, 
+							 {header : '分类', name : 'type', width : 80, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+								    return Dictionary.getDictName(Dictionary.ValueAddedType,colValue);
+							    }
+							 }, 
+							 {header : '是否显示', name : 'ifShow', width : 60, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+								    return Dictionary.getDictName(Dictionary.YesNot,colValue);
+							    }
+							 }, 
+ 							 {header : '使用说明', name : 'chargesVariables.description', width : 'autoExpand', align : 'left'}
+                            ],
+        });	
+			
+	});
+	function searchData(){
+	    var vo=$("#search-panel").getVo();
+		var params=convertParamToUrl(vo);
+		$('#grid').omGrid('setData', "business/ValueAddedServices/0/searchValueAddedServices?"+params);
+	}
+	function addServicesConfig(){				
+	   var paras={tabId:"addServicesConfig001"}; //tabId用方法名加001命名而成，这样就不会重复
+	   addNewTab("新加增值服务配置","/business/valueaddedservices-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid			
+	   });  
+	}	
+	
+	function editServicesConfig(){		 
+		 var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+		  }		
+		 var paras={valueAddedServicesId:rowDatas[0].id,tabId:"editServicesConfig001"}; //tabId用方法名加001命名而成，这样就不会重复
+	   	 addNewTab("增值服务配置","/business/valueaddedservices-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');			
+	   });       	       	     
+	}
+	
+	function viewServicesConfig(){
+	
+	}
+	</script>	
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">
+	<tr>
+		<td>关键字：</td>
+		<td><input id="ccode" name="searchValue" onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" tip="输入关键字" /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>
+  </table> 	 
+</div>	
+<div id="buttonbar"></div>	
+<div id="grid"></div>
+</body>
+</html>

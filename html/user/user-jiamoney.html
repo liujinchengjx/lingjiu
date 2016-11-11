@@ -1,0 +1,254 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>百加V6--史上最牛视频手机！</title>
+<meta content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
+<meta content="手机版百加商城客户端可以随时随地参与预约抢购百加手机，轻松下单购买，实时查询订单信息掌握物流状态，百加商城app手机客户端还有新品信息通知推送功能，所有商品信息随身掌握。" name="description">
+<meta content="百加商城,百加V6手机,百加V6,百加手机,百加商城app,百加商城app下载" name="keywords">
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+<script type="text/javascript" src="/js/jquery.min.js"></script>
+<script type="text/javascript" src="/js/common.js"></script>
+<link href="/css/style.css" rel="stylesheet">
+<style type="text/css">
+body{background-color:#f2f4f4}
+.cred{color:#f74e5f}
+/*列表*/
+.confirm_list{border-bottom:1px solid #e6e6e6}
+.p01{padding:0 1em}
+.list_nav{border-radius:0.4em;box-sizing:border-box;overflow:hidden}
+.list_nav>li{background:#fff;border-bottom:1px dashed #ccc}
+.list_nav>li:last-child{border-bottom:0}
+.list_nav .items{position:relative;height: 8.8em;box-sizing:border-box}
+.list_nav .abox{color:#51545a;height:100%;width:100%;display:-moz-box;display:-webkit-box;display:box;-moz-box-align: center;-webkit-box-align: center;box-align: center}
+.list_nav .img{width:6.8em;height:6.8em;margin:0 0.5em;overflow:hidden;background-size:cover;}
+.list_nav .img img{width:100%}
+.list_nav .info{-moz-box-flex:1;-webkit-box-flex:1;box-flex:1}
+.list_nav .name{font-size:1.6em;color:#000;padding-right:2.4em;margin-bottom:0.3125em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list_nav .info p{max-height:2.8em;padding-right:2.4em;line-height:1.4em;font-size:1.35em;color:#848484;overflow:hidden}
+.icon_arrow:after{content:"\0020";display:block;width:1em;height:1em;border-top:2px solid #c9c9c9;border-right:2px solid #c9c9c9;position:absolute;top:4em;right:1.8em;-webkit-transition:0.2s ease;-moz-transition:0.2s ease;-o-transition:0.2s ease;transition:0.2s ease;-webkit-transform:rotate(45deg);-moz-transform:rotate(45deg);-ms-transform:rotate(45deg);-o-transform:rotate(45deg);transform:rotate(45deg)}
+
+
+.order_confirm{padding:1em 1em 4em;}
+.confirm_main{border-left:1px solid #e0e2e2;border-right:1px solid #e0e2e2;background-color:#fff;position:relative}
+.confirm_main:before{content:"\0020";display:block;height:7px;position:absolute;left:-2px;right:-2px;top:0; background:url(/images/icon_box.png) no-repeat; background-size:100% 100%}
+.confirm_main:after{content:"\0020";display:block;height:13px;width:100%;position:absolute;left:0;bottom:-13px;background:url(/images/confirm_foot.jpg) repeat-x 0 bottom}
+.confirm_coupon{padding:0 0.25em;background:-moz-linear-gradient(top,#f4f3f3,#fff 30%);background:-webkit-gradient(linear, 0 0, 0 30%, from(#f4f3f3), to(#fff));}
+.confirm_coupon .abox{display:block;padding: 2em 0 2em 7.3em;background:url(/images/icon_coupon.png) no-repeat 2.075em 50% / 2.65em 2.4em;position:relative;border-bottom:1px solid #e6e6e6}
+.confirm_coupon .abox .name{font-size: 1.5em;color:#515459}
+.confirm_coupon .icon_arrow:after{top:2.5em}
+.confirm_total{padding-bottom:1em}
+.confirm_total dl{padding:0.75em 0;width:100%;font-size: 1.25em;color:#000000; border-bottom:1px dashed #c9c9c9}
+.confirm_total dl:last-child{border-bottom:0;}
+.confirm_total dt{width:7.2em;}
+.confirm_total dd{}
+#jiabidl{padding:0.75em 0;width:100%;display:-moz-box;display:-webkit-box;display:box;-moz-box-align: center;-webkit-box-align: center;box-align: center;font-size: 1.25em;color:#000; border-bottom:1px dashed #c9c9c9}
+#JiaBlanceNo{ color:#F74E5F; }
+#nohis1,#nohis2{text-align:center;}
+.confirm_total dd span{padding-right:2.5em; color:#000;}
+li{ clear:both; position:relative; list-style:none; }
+</style>
+<script>
+	$(document).ready(function(e) {
+   getJiaMoney();
+   getJiaMoneyPayDetail();
+   getCartNum();
+});
+function getJiaMoney(){
+	$.ajax({
+		url:"/service/jsonrest/buyer/JiaMoney/0/searchJiaMoney",//必须,不能为空
+		data:'searchJiaMoneyVO.accBookType=0',
+		type:'post',//非必须.默认get
+		dataType:'json',//非必须.默认text
+		async:true,//非必须.默认true
+		cache:false,//非必须.默认false
+		timeout:30000,//非必须.默认30秒
+		error:getJiaMoneyError, //非必须
+		success:getJiaMoneySuccess//非必须
+	});
+}
+function getJiaMoneyError(){alertBox("提示","获取数据失败","alert");};
+//获取数据成功
+function getJiaMoneySuccess(data){
+	if(parseInt(data.msgCode)==3){
+		window.location="/user/login.html?id=1";
+		return;
+	}
+	if(parseInt(data.msgCode)!=1)
+	{
+		return;
+	}
+	var stateText='';
+	var jiaNo='';
+	if(null!=data.entity&&""!=data.entity){
+		var result=data.entity;
+		var blance=result.balance;
+		
+		if(result.state==0){
+			stateText="可用加币为：";
+			jiaNo=toPenny(blance)+" 个";
+		}else{
+			stateText="剩余加币为：";	
+			jiaNo=toPenny(blance)+" 个（已冻结）";
+		}
+	}else{
+		stateText="您的加币暂无记录";
+	}
+	$("#JiaBlance").html(stateText);
+	$("#JiaBlanceNo").html(jiaNo);
+}
+
+function getJiaMoneyPayDetail(){
+	var param=[];
+	param.push('searchAccountBookDetailVO.pageSize=100');
+	param.push('searchAccountBookDetailVO.currentPage=1');
+	param.push('searchAccountBookDetailVO.inOrPay=');
+	//param.push('searchPayInfoVO.payType=1');
+	$.ajax({
+		url:"/service/jsonrest/buyer/JiaMoney/0/searchJiaMoneyDetail",//必须,不能为空
+		data:param.join('&'),
+		type:'post',//非必须.默认get
+		dataType:'json',//非必须.默认text
+		async:true,//非必须.默认true
+		cache:false,//非必须.默认false
+		timeout:30000,//非必须.默认30秒
+		error:getJiaMoneyPayDetailError, //非必须
+		success:getJiaMoneyPayDetailSuccess//非必须
+	});
+}
+function getJiaMoneyPayDetailError(){
+	alertBox("提示",'获取加币详情失败,请与管理员联系或稍后再试！',"alert");	
+}
+function getJiaMoneyPayDetailSuccess(data){
+	if(parseInt(data.msgCode)==3){
+		window.location="/user/login.html?id=1";
+		return;
+	}
+	if(parseInt(data.msgCode)!=1)return;
+	var htmlincome="<dt>收入加币:</dt>";
+	var htmlpay='<dt>支出加币:</dt>';
+	var code=data.entity.resultList;
+	var incomeflag=0;
+	var payflag=0;
+	if(code.length>0){
+		for(var i=0,j=code.length;i<j;i++)
+		{
+			var html='';
+			var blance=toPenny(code[i].tradeAmount);
+			if (code[i].incomeOrPay == 2) {
+				payflag++;
+				if(payflag>5){
+					html+="<dd class='hide Mypayclass'>";
+				}else{
+					html+="<dd>";
+				}
+				if(null!=code[i].tradeTime&&''!=code[i].tradeTime){
+					html+='<span>'+code[i].tradeTime.split(" ")[0]+'</span>';
+				}else{
+					html+='<span>-</span>';	
+				}
+				html+='<span>'+blance+' 个</span>';
+				html+='<span>'+code[i].remark+'</span></dd>';
+				htmlpay+=html;
+			} else {
+				incomeflag++;
+				if(incomeflag>5){
+					html+="<dd class='hide myincomeclass'>";
+				}else{
+					html+="<dd>";
+				}
+				if(null!=code[i].tradeTime&&''!=code[i].tradeTime){
+					html+='<span>'+code[i].tradeTime.split(" ")[0]+'</span>';
+				}else{
+					html+='<span>-</span>';	
+				}
+				html+='<span>'+blance+' 个</span>';
+				html+='<span>'+code[i].remark+'</span></dd>';
+				htmlincome+=html;
+			}
+			
+		}
+		if(payflag>5){
+				htmlpay+='<dd style="text-align:center"><div class="links">	<a href="javascript:void(0);" onclick="showmore(\'Mypayclass\')"><span class="Mypayclass">更多</span><span class="Mypayclass hide">隐藏</span></a></div></dd>';
+			}
+			if(incomeflag>5){
+				htmlincome+='<dd style="text-align:center"><div class="links">	<a href="javascript:void(0);" onclick="showmore(\'myincomeclass\')"><span class="myincomeclass">更多</span><span class="myincomeclass hide">隐藏</span></a></div></dd>';
+			}
+			if(payflag==0){
+				htmlpay+='<dd id="nohis1">暂无记录</dd>';
+			}
+			if(incomeflag==0){
+				htmlincome+='<dd id="nohis2">暂无记录</dd>';
+			}
+			$("#incomejiabi").html(htmlincome);
+			$("#payjiabi").html(htmlpay);
+	}
+}
+function toPenny(num,len){
+	len=len||2;
+	if(isNaN(parseFloat(num)))return num;
+	else return (num/100).toFixed(len);
+}
+
+function showmore(clas){
+	$("."+clas).toggle();
+}
+</script>
+</head>
+
+<body>
+<div class="header">
+	<div class="back"><a href="/"><span class="icon-23"></span></a></div>
+	<div class="tit">
+		<h3>我的加币</h3>
+	</div>
+	<div class="right">
+		<ul>
+			<li class="cart"><a title="购物车" href="/order/cart-index.html"><span class="icon-2"></span><span class="tip hide" id="ShoppingCartNum"></span></a></li>
+		</ul>
+	</div>
+</div>
+<div class="viewport">        
+        <div class="confirm_total">
+        	<dl id="jiabidl">
+            	<dt id="JiaBlance">可用加币为:</dt>
+                <dd><span id="JiaBlanceNo">188845</span></dd>
+            </dl>
+            <dl id="incomejiabi">
+				<!--<dt>收入加币:</dt>
+				<dd>
+					<span>2014-9-8</span>
+					<span>2342</span>
+					<span>阿斯顿发斯蒂芬</span>
+				</dd>
+				<dd style="text-align:center">
+					<div class="links">
+						<a href="javascript:void(0);"><span>更多</span></a>
+					</div>
+				</dd>
+       -->
+            </dl>
+            <dl id="payjiabi">
+            	
+            </dl>
+        </div>           
+</div>
+
+<div class="footer">
+	<div class="links">
+		<p><a href="tel:4008-868-687"><span>百加商城客服热线：4008-868-687</span></a></p>
+		<p><a href="/user/login.html" id="footer_login"><span>登录</span></a><a href="javascript:window.scrollTo(0,0);"><span>返回顶部</span></a></p>
+	</div>
+</div>
+<p class="hide">
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F27a6edda23c8cced290e66d76fc16a71' type='text/javascript'%3E%3C/script%3E"));
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-55764976-1', 'auto');ga('send', 'pageview');
+</script>
+</p>
+</body>
+</html>

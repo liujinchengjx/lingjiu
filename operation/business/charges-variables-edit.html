@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	 <script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-ajaxsubmit.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {
+	    $("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("chargesvariables");		
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveChargesVariables
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }	
+		 ]
+        });
+		
+		var chargesVariablesId=getIframeParm("chargesVariablesId");        
+		if (chargesVariablesId !=""){	
+			 var url="business/ChargesVariables/0/get?chargesVariablesId="+chargesVariablesId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				 $("#chargesvariables").initializeInput({"vo":json.entity}); //初始化
+				 $('#businessType').omCombo("value",json.entity.businessType);// 初始化值
+				}			
+			 });
+		}else{
+			 $("#chargesvariables").initializeInput(); //初始化
+		} 
+	});
+	function saveChargesVariables(){	
+		if(validateForm("chargesvariables")==false)return false;	
+		 var url = $("#id").val()=="" ? "business/ChargesVariables/0/add" : "business/ChargesVariables/0/edit";
+		 var vo=$("#chargesvariables").getVo();
+		 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $("#id").val(json.entity);
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		 }});	
+	}
+	</script>	
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>
+<div id="nav_chargesvariables" title="新增参数项">
+     	<form id="chargesvariables">
+		<input type="hidden" id="id" name="cv.id"  />
+		<input type="hidden" id="lastModifyTime" name="cv.lastModifyTime" />
+	 	<input type="hidden" id="createTime" name="cv.createTime" />
+		<input type="hidden" id="lastModifyBy" name="cv.lastModifyBy" />
+	 	<input type="hidden" id="createTime" name="cv.createBy" />
+		<input  type="hidden" id="flag" name="cv.flag"  />
+		<table class="edit-table">
+			<tr>
+				<td class="label">编码：</td>
+				<td class="field"><input id="scode" name="cv.scode" validate="rules:['required']" /></td>
+				<td class="label">业务类型：</td>
+				<td class="field">
+				<input id="businessType" name="cv.businessType" validate="rules:['required']" pattern="combo" editable='false' remote="BusinessType" /></td>							
+			</tr>
+			<tr>
+				<td class="label">计算类型：</td>
+				<td class="field">
+				<input id="feeType" name="cv.feeType" validate="rules:['required']" pattern="combo" remote="FeeType"   width="150"/></td>							
+				<td class="label">操作模式：</td>
+				<td class="field">
+				<input id="opType" name="cv.opType" validate="rules:['required']" pattern="combo" editable='false' remote="OpType" />
+				</td>	
+			</tr>
+			<tr>
+				<td class="label">参数名：</td>
+				<td class="field" >
+				  <input id="variableName" name="cv.variableName" validate="rules:['required']" />
+				</td>							
+				<td class="label">参数值：</td>
+				<td class="field">
+				   <input id="variableValue" name="cv.variableValue" validate="rules:['required']" pattern="float" />
+				</td>						
+			</tr>
+			<tr>
+			<td class="label">排序：</td>
+				<td class="field" >
+				  <input id="sequence" name="cv.sequence" />
+				</td>							
+				<td class="label"></td>
+				<td class="field">
+				</td>						
+			</tr>
+			<tr>				
+				<td class="label">公式使用说明：</td>
+				<td class="field" colspan="3"><textarea id="description" name="cv.description" validate="rules:['required']"
+				 style="height:50px;"></textarea></td>
+			</tr>		
+		</table>
+		</form>		
+</div>
+<div id="buttonbar"></div>		
+</body>
+</html>

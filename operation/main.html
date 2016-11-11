@@ -1,0 +1,307 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>元和津领酒管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/df-common.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+   	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-menu.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tabs.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+   	<script type="text/javascript" src="/js/common.js"></script>   
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <!-- view_source_begin -->
+    <style>
+    	#center-tab .om-panel-body{padding: 1px 5px; margin: 0; }	
+    	a:link,a:visited{color:#fff;}
+    </style>
+    <script type="text/javascript">
+		 var dialog=null;	
+   	     var tabElement=null,ifh=0,popwindowDiv=null,currTabId="";		
+		 var arrFun=[]; //函数数组 保存 用来保存回调函数
+         $(document).ready(function() {
+            $('body').omBorderLayout({
+           	   panels:[{
+           	        id:"north-panel",
+           	       <!-- title:"This is north panel",-->
+           	        region:"north",
+					height:60,
+           	        header:false
+           	    },{
+           	        id:"center-panel",
+           	     	header:false,
+           	        region:"center"
+           	    },{
+           	        id:"west-panel",
+           	        resizable:true,
+           	        collapsible:true,
+           	        title:"菜单导航",
+           	        region:"west",width:140
+           	    }]
+            });
+            tabElement = $('#center-tab').omTabs({
+                height : 'fit',
+                tabMenu : true,
+				tabHeight:20,
+				onBeforeClose : function(n,event) {
+      				currTabId = tabElement.omTabs('getAlter', n);
+			    },
+				onActivate : function(n,event) {
+				//var tabId =tabElement.omTabs('getAlter', n);
+				//if ((tabId.indexOf("tab_")==0) && (tabId.indexOf("001")<0) ){
+				//	tabId=tabId.replace("tab_","");
+				//	var url=$("#"+tabId).attr("src");
+			//		 $("#"+tabId).attr("src",url);
+			//		}
+				}
+            });
+            
+            ifh = tabElement.height() - tabElement.find(".om-tabs-headers").outerHeight() - 4; //为了照顾apusic皮肤，apusic没有2px的padding，只有边框，所以多减去2px
+            $('#3Dbox').height(ifh);			
+            getUserinfo();
+            getMenuList();
+			//$("#west-panel").omScrollbar({ thick:10});
+			dialog=$( "#nav_password").omDialog({autoOpen:false,draggable:false,resizable:false,height:180,width:500,modal:true,
+				buttons: [{
+					text : "确定", 
+					click : savePassword
+					},{            	
+						text : "取消", 
+						click : function () {                   
+							dialog.omDialog("close");
+					  }
+					}
+				]
+		    });	
+			
+        });
+		function getMenuList(){
+			var url="systemmanager/Menu/0/loadMenuList";
+			$.ajaxPost({url:url,msg:true,success:function(json,textStatus){				
+				if (json.msgCode==1){
+                   $("#navTree").omTree({
+						dataSource : json.rows,
+						simpleDataModel: true,
+						onClick : function(nodeData , event){
+							if(nodeData.url){
+								var paras={tabId:nodeData.id};
+								addNewTab(nodeData.text,nodeData.url,paras,null);
+							}
+						}
+					});     
+                    $("#tab1").html("<iframe id='3Dbox' border=0 frameBorder='no' src='welcome.html?1=2' width='100%'></iframe>");
+				}else{$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'error'});}				
+			 }
+	   		});
+		}
+		function showGerentPopWindow(title, url, width, height, buttons,rowdatas) {
+			var bw = getBodyWidth(), bh = getBodyHeight();
+			var w = width; var h = height;
+			if (w > 1020) w = 1020; if (h > (bh-20)) h = bh-20;
+			if (w < 520) w = 520; if (h < 220) h = 220;			
+			var div = document.createElement("div");
+			popwindowDiv = $(div).addClass("show-box");				
+			popwindowDiv.css({	
+				  "width":"100%",
+				  "height":"100%",
+				  "margin":"0px",
+				  "padding":"0px 2px 0px 5px"				  
+			  });					
+			$(document.body).append(div);
+			$(popwindowDiv).omDialog({
+				autoOpen: false,
+				draggable : true,
+				resizable : true,
+				height: h,
+				width:w,			
+				modal: true,
+				title:title,
+				buttons: buttons,
+				onClose : function(event) {$(popwindowDiv).remove();}//删除刚刚添加的div
+			});				
+			$("<div style='margin:0;padding:0;width:100%;height:100%;'>"
+				+ "<iframe frameborder='0' id='fra-show-pop' name='fra-show-pop' src='"+url+"' style='margin:0;padding:0;width:" + (w-10) 			                    + "px;height:" + (h-80) + "px;' scrolling='no' allowTransparency='true'></iframe>" +					
+			 "</div>"
+			).prependTo(popwindowDiv);		
+			$(popwindowDiv).omDialog('open');	  
+			
+		}
+		//关掉弹出窗口
+		function closeGerentWindow() {
+			if (popwindowDiv != null) {
+				popwindowDiv.hide();
+				($(popwindowDiv).remove());
+				popwindowDiv=null;
+			}
+		}
+		
+		//在center-panel取添加一个新的Tabs
+		function addNewTab(title,url,paras,callback){			
+			 var tabId = tabElement.omTabs('getAlter', 'tab_'+paras.tabId);
+             if(tabId){
+			 	var index=tabElement.omTabs('getAlter', tabId);
+				if ((index==('tab_'+paras.tabId)) && (paras.tabId.indexOf("00")>=0)){
+					$("#"+paras.tabId).attr("src",url);
+				}				
+             	tabElement.omTabs('activate', tabId);
+			 }else{
+					var fn={
+					  tabId:'tab_'+paras.tabId, //arrFun
+					  fun:callback
+					};			
+					arrFun.push(fn);
+					tabElement.omTabs('add',{
+							tabMenu : true,
+							title : title, 
+							tabId : fn.tabId,
+							content : "<iframe id='"+paras.tabId+"' border=0 frameBorder='no' name='inner-frame' src='"+url+"' height='"+		                                           ifh+"' width='100%'></iframe>",
+							closable : true	,
+							onRefresh: function(e){
+							   for (var i=0;i<arrFun.length;i++){  						      
+								  if (currTabId==arrFun[i].tabId){								  
+									   if (arrFun[i].fun){
+										  arrFun[i].fun.call(this);
+										  arrFun.remove(i);
+									   }
+								  }
+							   }					     					     
+							},
+							onLoadComplete : function(tabId,event) {
+								 alert(tabId + 'has just been loaded!' );
+							}
+							
+					});
+			}
+		}
+		function createTab(id){
+		   
+		}
+		 //关闭当前活动业	
+		function closeCurrActivateTabs(len){	
+			setTimeout(function () { 
+		        tabElement.omTabs('close',tabElement.omTabs('getActivated'));			
+			}, len);
+		}
+		function changeTheme(newValue) {
+			    var option={expires:15};
+				cookieTool("omtheme", newValue,option);
+				window.location.reload();
+
+		}
+		function changePass(){
+			 dialog.omDialog("option", "title", '密码修改');
+		     dialog.omDialog("open");//显示dialog	
+		}
+		function savePassword(){
+			$.omMessageBox.confirm({title:'提示',content:'您确定要修改密码吗？', onClose:function(v){
+				if(v){
+					var url = 'systemmanager/User/0/changePassword?';
+					var userId=getLoginUserId();
+					var vo =$("#password").getVo();
+					var param=[];
+					param.push('userId='+userId);
+					param.push('orgPasswod='+vo.orgPasswod);
+					param.push('newPassword='+vo.newPassword);
+					url=url+param.join("&");
+					$.ajaxPost({url:url,msg:true,success:function(json,textStatus){
+					    if (json.msgCode==1){
+						   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+						   dialog.omDialog("close");
+						   window.location.href="login/login.html";
+						}else{$("#tips").html(json.msg)};						
+					}	
+					});
+				}
+			}});   
+		}
+		function exitLogin(){
+			var url = 'userlogin/UserLogin/0/exitLogin';
+			$.omMessageBox.confirm({title:'提示',content:'确认退出系统？', onClose:function(v){
+				if(v){
+					$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					      window.location.href="login/login.html";
+					  }
+					});
+				}
+			}});
+		}
+		
+		function getUserinfo(){	
+			var url = 'userlogin/UserLogin/0/getUserInfo';
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				var html="欢迎您，"+json.entity.companyName;
+				$("#wecome").html(html);
+				$("#userId").val(json.entity.userId);
+				$("#lastTime").val(json.entity.department+":"+json.entity.realName+"你上次登录时间为:"+json.entity.lastLoginDate);
+		      }			
+	 	    });
+		}
+    </script>
+    <!-- view_source_end -->
+</head>
+<body>
+    <!-- view_source_begin -->
+        <div id="nav_password" style="display:none;">
+     	<form id="password">
+		<table class="edit-table">
+			<tr>
+  			    <td class="label">原密码：</td>
+				<td class="field" >
+				<input id="orgPasswod" name="orgPasswod"  type="password" validate="rules:['required']" /></td>							
+				<td class="label">新密码：</td>
+				<td class="field"><input id="newPasswod" name="newPasswod"  type="password" validate="rules:['required']"  /></td>
+			</tr>
+			<tr>
+  			    <td class="label">确认密码：</td>
+				<td class="field" colspan="3">
+				<input id="newPassword" name="newPassword"  type="password" validate="rules:['required']" /></td>
+			</tr>
+			<tr>
+			  <td colspan="4"><span id="tips" class='color_red'></span></td>
+			</tr>
+		</table>
+		</form>		
+	</div> 
+    	<div id="north-panel" class="header"  style="float:left;">
+    		<div id="logo"  ><label style="font-size:22px;color:#fff;padding:5px;">元和津领酒管理系统</label></div>
+    		<div id="top-welcome" style="width:60%;line-height:40px;float:right;  
+    		 display:inline;text-align: right;margin-right:20px;color:#fff;">
+    			<label style="font-size:12px;" id="wecome"> </label><input type="hidden" id="userId" value=""/>
+				<input type="hidden" id="lastTime" value=""/>
+    			 | <a href="javascript:void(0);" onClick="changePass('default');">修改密码</a>
+           		 | <a  href="javascript:void(0);" onClick="exitLogin();">退出</a>
+    		</div>
+        	
+        </div>
+    	<div id="center-panel">
+    	    <div id="center-tab" >
+		        <ul>
+		           <li><a href="#tab1">首页</a></li>
+		        </ul>
+		        <div id="tab1">
+		           
+		        </div>
+    	    </div>
+    	</div>
+    	<div id="west-panel">
+    	    <ul id="navTree"></ul>
+    	</div>
+        <div id="south-panel"><span style="font-weight:bold;color:#1e5494">版权所有：亲子益童行团队 @2015</span></div>
+    <!-- view_source_end -->
+    <div id="view-desc">
+    </div>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null;	
+	$(function() {
+		initValidateForm("origincountry");
+	    $("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+					 searchData();
+			   }
+		});			
+		dialog=$( "#nav_origincountry").omDialog({autoOpen: false,draggable:false,resizable:false,height: 200,width:800,
+			modal: true,
+			buttons: [{
+                text : "确定", 
+                click : saveOrgin
+            	},{            	
+					text : "取消", 
+					click : function () {                   
+						dialog.omDialog("close");
+				  }
+				}
+			]
+		});	
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '原产地列表',
+                dataSource : "baseinfo/OriginCountry/0/searchOriginCountry",
+                colModel : [
+                             {header : '代码', name : 'ccode', width : 100, align : 'left'},							  
+							 {header : '中文名', name : 'csname', width : 120, align : 'left'},							
+                             {header : '英文名', name : 'esname',  width : 120,align : 'left'},
+							 {header : '英文简写', name : 'alias',  width : 80,align : 'left'},
+							 {header : '是否最惠国', name : 'discountFlag',  width : 80,align : 'left',
+									renderer : function(colValue, rowData, rowIndex) {
+										return (colValue==0)?"是":"否";
+									}	 
+							 },
+							 {header : '是否疫区', name : 'epidemicFlag',  width : 80,align : 'left',
+									renderer : function(colValue, rowData, rowIndex) {
+										return (colValue==0)?"否":"是";
+									}	 
+							 }							 
+							],
+				rowDetailsProvider:function(rowData,rowIndex){
+                		return '';								
+	            }
+        });
+		$('#discountFlagType').omCombo({emptyText:"是否最惠国",dataSource :[{text:'是',value:'0'},{text:'否',value:'1'},{text:'全',value:'2'}],
+		   width:'60',editable:false,width:90});	
+		$('#epidemicFlagType').omCombo({emptyText:"是否疫区",dataSource :[{text:'否',value:'0'},{text:'是',value:'1'},{text:'全',value:'2'}],width:'120',editable:false,width:90});
+	});
+	function searchData(){
+	   var vo=$("#search-panel").getVo();
+	   var params=convertParamToUrl(vo);
+	   $('#grid').omGrid('setData',"baseinfo/OriginCountry/0/searchOriginCountry?"+encodeURI(params));
+	}
+	function saveOrgin(){
+		 if(validateForm("origincountry")==false)return false;
+		 var url =  $("#ocId").val()=="" ? "baseinfo/OriginCountry/0/add" : "baseinfo/OriginCountry/0/edit";		  
+		 var vo=$("#origincountry").getVo();
+		 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   $('#grid').omGrid('reload');
+			}
+		 });
+		 dialog.omDialog("close");  
+	}
+	function addOrgin(){
+	    dialog.initializeInput(); //初始化
+		dialog.omDialog("option", "title", '新增');
+		dialog.omDialog("open");//显示dialog	
+	}
+	function editOrgin(){		 
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+		  $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+		  return;
+	   }		
+	   dialog.initializeInput({"vo":rowDatas});		 
+	   dialog.omDialog('open');       	     
+	}
+	function updateDiscountFlag(){ //开/关(最惠国)
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+       if(rowDatas.length <= 0 ){
+           $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+           return false;
+       }
+	   var params=[];
+	   params.push("originCountryId="+rowDatas[0].id);
+	   params.push("discountFlag="+(rowDatas[0].discountFlag==0 ? 1:0));
+	   var url = "baseinfo/OriginCountry/0/updateDiscountOrEpidemicFlag?"+params.join("&");
+	   $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			$('#grid').omGrid('reload');//刷新grid
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+	   	  }
+	   });
+	}
+
+	function updateEpidemicFlag(){ //开/关(疫区)
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+       if(rowDatas.length <= 0 ){
+           $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+           return false;
+       }
+	   var params=[];
+	   params.push("originCountryId="+rowDatas[0].id);
+	   params.push("epidemicFlag="+(rowDatas[0].epidemicFlag==0 ? 1:0));
+	   var url = "baseinfo/OriginCountry/0/updateDiscountOrEpidemicFlag?"+params.join("&");
+	   $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			$('#grid').omGrid('reload');//刷新grid
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+	   	 }
+	   });
+	}
+	function viewOrgin(){
+	   
+	}
+	</script>	
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+  <table class="edit-panel">		
+	<tr>	    
+		<td><input id="discountFlagType" name="discountFlag"  /></td>
+        <td><input id="epidemicFlagType" name="epidemicFlag"  /></td>
+		<td ><input id="searchValue" name="searchValue"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" /></td>
+		<td ><span id="button-search">搜索</span></td>						
+	</tr>	
+  </table> 	 
+</div>		
+	<div id="nav_origincountry" title="原产国" style="display:none;">
+     	<form id="origincountry">
+		<input  type="hidden" id="ocId" name="oc.id"  />
+		<input  type="hidden" id="flag" name="oc.flag"  />
+		<input  type="hidden" id="epidemicFlag" name="oc.epidemicFlag"  />
+		<input  type="hidden" id="discountFlag" name="oc.discountFlag"  />
+		<input type="hidden" id="lastModifyTime" name="oc.lastModifyTime" />
+	 	<input type="hidden" id="createTime" name="oc.createTime" />
+		<input type="hidden" id="lastModifyBy" name="oc.lastModifyBy" />
+	 	<input type="hidden" id="createTime" name="oc.createBy" />
+		<table class="edit-table">
+			<tr>
+  			    <td class="label">代码：</td>
+				<td class="field" >
+				<input id="ccode" name="oc.ccode" validate="rules:['required']" /></td>							
+				<td class="label">中文名：</td>
+				<td class="field"><input id="csname" name="oc.csname" validate="rules:['required']"  /></td>
+			</tr>
+			<tr>   			   
+				<td class="label">英文名：</td>
+				<td class="field" >
+				<input id="esname" name="oc.esname" validate="rules:['required']" /></td>					
+				<td class="label">简称</td>
+				<td class="field" ><input id="alias" name="oc.alias"  /></td>					
+			</tr>
+		</table>
+		</form>		
+	</div>
+	<div id="buttonbar"></div>	
+	<div id="grid"></div>
+</body>
+</html>

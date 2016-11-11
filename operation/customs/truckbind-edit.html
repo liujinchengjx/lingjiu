@@ -1,0 +1,142 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var truckParams={
+                title :'货车列表',
+				text:"carnoCh",
+				onRowClick:truckChange,
+                dataSource : "business/Truck/0/searchTruck?carno=",
+                colModel: [
+ 							 {header : '车牌号(香港)', name : 'carnoHk', width : 250, align : 'left'},
+							 {header : '车牌号(大陆)', name : 'carnoCh', width : 200, align : 'left'},
+							 {header : '类型', name : 'type', width : 200, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {									
+									return Dictionary.getDictName(Dictionary.TruckType,colValue);	
+								}
+							 }
+						 ]
+    };
+	$(function() {	
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("truckbind");
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveTruckBind
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				}	
+		 ]
+        });
+		
+		var truckBindId=getIframeParm("truckBindId");
+		if (truckBindId !=""){ //编辑状态
+		     var url="customs/TruckBind/0/get?truckBindId="+truckBindId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					$("#truckbind").initializeInput({"vo":json.entity}); //初始化
+				}			
+			 });
+ 		 }else{
+			$("#truckbind").initializeInput(); //初始化								
+		 }
+		$("#truckId").initGridDropList(truckParams);
+	});
+	
+	function truckChange(rowData){
+		$('#truckId').val(rowData.carnoCh+" / "+rowData.carnoHk).attr('_trueValue',rowData.id);
+	}
+	function saveTruckBind(){	 
+		if(validateForm("truckbind")==false) return false;
+		var url = $("#id").val()=="" ? "customs/TruckBind/0/add" : "customs/TruckBind/0/edit";
+		var vo=	$("#truckbind").getVo(); 
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $("#btnSave").attr("disabled", "disabled");
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			}
+		 });
+	}	
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>
+<div id="nav_truckbind" title="新增车辆绑定">
+	<form id="truckbind">	
+	<input id="id" name="tb.id" type="hidden" />
+	<input id="status" name="tb.status" type="hidden" />
+	<input type="hidden" id="lastModifyTime" name="tb.lastModifyTime" />
+	<input type="hidden" id="createTime" name="tb.createTime" />
+	<input type="hidden" id="lastModifyBy" name="tb.lastModifyBy" />
+ 	<input type="hidden" id="createBy" name="tb.createBy" />
+	<table class="edit-table">		
+		<tr>
+			<td class="label">六联单号：</td>
+			<td class="field" ><input id="blNo" name="tb.blNo" validate="rules:['required']" /></td>
+			<td class="label">车辆：</td>
+			<td class="field"><input id="truckId" name="tb.truckId" showtext="tb.truckNo" validate="rules:['required']"  /></td>
+		</tr>
+		<tr>
+			<td class="label">时间：</td>
+			<td class="field">
+			   <input id="bindDate" name="tb.bindDate" validate="rules:['required']" pattern='datetime' />
+			</td>
+			<td class="label">类型：</td>
+			<td class="field">
+			   <input id="type" name="tb.type" validate="rules:['required']" pattern='combo' editable='false' remote='TruckBindType' />
+			</td>
+		</tr>
+		<tr>
+		    <td class="label">车辆性质：</td>
+			<td class="field">
+			   <input id="purpose" name="tb.purpose" validate="rules:['required']" pattern='combo' remote='TruckBindPurpose' value="1"  />
+			</td>
+			<td class="label">柜号：</td>
+			<td class="field">
+				 <input id="tankNo" name="tb.tankNo"  />
+			</td>
+		</tr>
+		<tr>
+		    <td class="label">托架号：</td>
+			<td class="field">
+			   <input id="bracketNo" name="tb.bracketNo"  />
+			</td>
+			<td class="label">架重：</td>
+			<td class="field">
+				 <input id="bracketWeight" name="tb.bracketWeight"  />
+			</td>			
+		</tr>
+	</table>
+	</form>	
+</div>
+<div id="buttonbar"></div>	
+</body>
+</html>

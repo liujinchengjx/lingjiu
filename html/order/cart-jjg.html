@@ -1,0 +1,198 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>百加商城</title>
+<meta content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
+<meta content="手机版百加商城客户端可以随时随地参与预约抢购百加手机，轻松下单购买，实时查询订单信息掌握物流状态，百加商城app手机客户端还有新品信息通知推送功能，所有商品信息随身掌握。" name="description">
+<meta content="百加商城,百加V6手机,百加V6,百加手机,百加商城app,百加商城app下载" name="keywords">
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+<script type="text/javascript" src="/js/jquery.min.js"></script>
+<script type="text/javascript" src="/js/common.js"></script>
+<script type="text/javascript" src="/js/swipe.js"></script>
+<link href="/css/style.css" rel="stylesheet">
+<style type="text/css">
+html,body{ height:100%; background-color:#fff}
+.header{border-bottom:1px solid #c9c9c9;}
+.jjg_list{background-color:#fff}
+.jjg_list .swipe{position:relative;overflow:hidden;padding:.7em 0 0}
+.jjg_list .swipe-wrap{position:relative;overflow:hidden}
+.jjg_list .swipe-wrap .item{position:relative;float:left;overflow:hidden;text-align:center}
+.jjg_list .swipe-wrap .item a{display:block}
+.jjg_list .swipe-wrap .item-inner{padding: 0 1.5em}
+.jjg_list .swipe-nav{margin:0 1.5em;height:6.7em; overflow:hidden; position:relative;}
+.jjg_list .swipe-nav .inner{width:100%;height:6.7em; position:absolute; left:0; top:0;-webkit-transition:left .1s;-moz-transition:left .1s ease;-o-transition:left .1s ease;-ms-transition-delay:left .1s ease;transition:left .1s ease}
+.jjg_list .swipe-nav .item{float:left;padding:0 .5em 0 0}
+.jjg_list .swipe-nav .item .i{overflow:hidden;margin-top:1px;width:6.5em;height:6.5em;border:1px solid #eee;box-shadow:1px -1px 1px #f9f9f9}
+.jjg_list .swipe-nav .item img{width: 100%; height:100%;}
+.jjg_list .swipe-nav .active .i{border-color:#fd9b5a}
+.jjg_list .btns{position:relative}
+.jjg_list .btns .btn_prev,.jjg_list .btns .btn_next{position:absolute;top:4.5em;left:0;z-index:1;width:4.5em;height:28em}
+.jjg_list .btns .btn_prev:after,.jjg_list .btns .btn_next:after {position:absolute;top:50%;left:50%;display:block;margin:-.5em 0 0 -.5em;width:1em;height:1em;	border-top:.2em solid #9b9b9b;border-right:.2em solid #9b9b9b;content:'\0020';-webkit-transform:rotate(225deg);-moz-transform:rotate(225deg);-o-transform:rotate(225deg);	-ms-transform:rotate(225deg);transform:rotate(225deg)}
+.jjg_list .btns .btn_next{right:0;left:auto}
+.jjg_list .btns .btn_next:after{-webkit-transform:rotate(45deg);-moz-transform:rotate(45deg);-o-transform:rotate(45deg);-ms-transform:rotate(45deg);transform:rotate(45deg)}
+.jjg_list .product-info{position:relative;overflow:hidden;padding:0 4em 0 0;height:3.5em;border-bottom:1px solid #eee;text-align:left;line-height:3.5em}
+.jjg_list .product-info .name{overflow:hidden;width:27.5em;text-overflow:ellipsis;white-space:nowrap}
+.jjg_list .product-info .name span{color:#666;font-size:1.6em}
+.jjg_list .product-info .price{position:absolute;top:0;right:0}
+.jjg_list .product-info .price span{color:#fc6500;font-size:1.6em}
+.product-addcart{padding:1.4em 1.5em 2em}
+.product-addcart .baijia_button{display:block;margin-bottom:.7em;height:4.4em;line-height:4.4em}
+.product-addcart .baijia_button span{color:#fff;font-size:1.6em}
+.product-addcart .baijia_button_disable{background-color:#eee}
+.product-addcart .baijia_button_disable span{color:#666}
+.product-addcart .hide{ display:none;}
+</style>
+</head>
+
+<body>
+<div class="header">
+	<div class="back"><a href="/"><span class="icon-23"></span></a></div>
+	<div class="tit">
+		<h1>加价购商品</h1>
+	</div>
+	<div class="right">
+		<ul>
+			<li class="cart"><a title="购物车" href="/order/cart-index.html"><span class="icon-2"></span><span class="tip hide" id="ShoppingCartNum"></span></a></li>
+		</ul>
+	</div>
+</div>
+<div class="jjg_list">
+	<div class="btns"><div class="btn_prev"></div><div class="btn_next"></div></div>
+	<div class="swipe" id="slider">
+		<div class="swipe-wrap" id="slider_html"></div>
+		<div class="swipe-nav">
+			<div class="inner" id="slider_nav_box"></div>
+		</div>
+	</div>
+</div>
+<div class="product-addcart">
+	<a class="baijia_button baijia_button_active" href="javascript:;" onClick="addCart(productId);" id="addcart_btn"><span>加入购物车</span></a>
+	<a class="baijia_button baijia_button_disable hide" href="javascript:;" id="soldout_btn"><span>已售罄</span></a>
+	<a class="baijia_button baijia_button_disable" href="/order/cart-index.html"><span>返回购物车</span></a>
+</div>
+<script type="text/javascript">
+var productId = 0;
+var index = getUrlParam('index');
+var allData = JSON.parse(window.localStorage.getItem('jjgList'));
+if(allData==null || allData.length ==0){
+	window.location.href = '/order/cart-index.html';
+}
+if(index>=allData.length){
+	window.location.href = '/order/cart-index.html';
+	document.getElementById('slider_nav_box').className
+}
+function setColorList(){
+	var html = '';
+	var sHtml = '';
+	var data = allData[index];
+	for(var i=0;i<data.length;i++){
+		html += '<div class="item" id="pro_'+data[i].productId+'_'+data[i].isShowSoldOut+'_'+data[i].isAllowedSelect+'"><div class="item-inner"><div class="product-info"><div class="name"><span>';
+		html += data[i].proName+' '+data[i].proColor;
+		if(data[i].isShowSoldOut == '1'){
+			html += '(已售罄)';
+		}
+		html += '</span></div><div class="price"><span>';
+		html += toPenny(data[i].proPrice);
+		html += '元</span></div></div><span class="imgurl"><img src="';
+		if(data[i].mainPicturesVO != null){
+			html += PHOTO_URL+data[i].mainPicturesVO.url2;
+		}else{
+			html += '/images/nopic/index.gif';
+		}
+		html += '" onerror="this.src=\'/images/nopic/index.gif\'"></span></div></div>';
+		sHtml += '<div class="item';
+		if(i==0){
+			sHtml += ' active';
+			productId = data[i].productId;
+		}
+		sHtml += '"><div class="i"><img src="';
+		if(data[i].mainPicturesVO != null){
+			sHtml += PHOTO_URL+data[i].mainPicturesVO.url4;
+		}else{
+			sHtml += '/images/nopic/index.gif';
+		}
+		sHtml += '"></div></div>';
+	}
+	$("#slider_html").html(html);
+	$("#slider_nav_box").html(sHtml);
+	slide();
+}
+function addCart(productId){
+	$.ajax({
+		url:TERMINAL_URL+'/jsonrest/mobile/order/ShoppingCart/0/add?productId='+productId+'&num=1&increasePurchaseFlag=Y'+'&resource='+getResource(),
+		type:'post',
+		async:false,
+		cache:false,
+		data:'',
+		dataType:"json",
+		error: function(){},
+		success:function(data){
+			if(data.msgCode == 1){
+				window.location.href = '/order/cart-index.html';
+			}else if(data.msgCode == 3){
+				window.location.href = "/user/login.html?tourl="+encodeURIComponent(window.location.href);
+			}else{
+				showTips(data.msg);
+			}
+		}
+	});
+}
+function slide(){
+	var length = $("#slider_nav_box .item").length;
+	$("#slider_nav_box").css('width',length*14+'em');
+	var __slider = Swipe(document.getElementById('slider'),{
+		auto:3000000,
+		continuous: false,
+		callback: function(index,ele) {
+			$("#slider_nav_box .item").eq(index).addClass('active').siblings('.item').removeClass('active');
+			var keyInfo = ele.id.split('_');
+			productId = keyInfo[1];
+			var isShowSoldOut = keyInfo[2];
+			var isAllowedSelect = keyInfo[3];
+			if(isShowSoldOut == '1' || isAllowedSelect == '0'){
+				$("#addcart_btn").addClass('hide');
+				$("#soldout_btn").removeClass('hide');
+			}else{
+				$("#soldout_btn").addClass('hide');
+				$("#addcart_btn").removeClass('hide');
+			}
+			var navWidth = $("#slider_nav_box").css('width').slice(0,-2) / (2*length);
+			var clientWidth = document.body.clientWidth;
+			var sLeft = (clientWidth - navWidth) / 2;
+			var bLeft = navWidth*index;
+			if(bLeft > sLeft){
+				$("#slider_nav_box").css('left',sLeft-bLeft);
+			}else{
+				$("#slider_nav_box").css('left',0);
+			}
+		}
+	});
+	$('.btn_prev').click(function(){
+		__slider.prev();
+	});
+	$('.btn_next').click(function(){
+		__slider.next();
+	});
+	$("#slider_nav_box .item").click(function(){
+		var index = $(this).index();
+		__slider.slide(index)
+	});
+}
+(function(){
+	setColorList();
+	getCartNum();
+})();
+</script>
+<p class="hide">
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F27a6edda23c8cced290e66d76fc16a71' type='text/javascript'%3E%3C/script%3E"));
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-55764976-1', 'auto');ga('send', 'pageview');
+</script>
+</p>
+</body>
+</html>

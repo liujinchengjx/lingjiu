@@ -1,0 +1,163 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>用户密码修改</title>
+<meta content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
+<meta content="" name="description">
+<meta content="" name="keywords">
+<link href="/css/style.css" rel="stylesheet">
+<style type="text/css">
+ .red{ color:#EA3F51; font-size:14px;}
+ .login_view{padding:1em 3em;}
+.login_view .login_container{overflow:hidden; margin:auto;}
+.login_container h2{font-size:18px; margin:1em 0; font-weight:normal;}
+.input_container{margin-bottom:0.6em;}
+.input_container input{border:none; border-bottom:1px solid #6c6c6c; height:40px; line-height:20px; padding:10px 10px 10px 45px; display:block; font-size:14px; width:100%; display:block;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box;}
+.input_box{position:relative; margin:1em 0;}
+.input_container .username{ background:url(/images/module/icon_12.png) -4px center no-repeat;}
+.input_container .password{ background:url(/images/module/icon_10.png) -4px center no-repeat;}
+.tips_login {color:#999999;font-size:1em;line-height: 1.5;margin: 20px 0;}
+.tips_login a{ color:#2695fd;}
+.login_btn{border:none; width:100%; font-size:14px;display:block;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box;}
+.error_ico{position:absolute; width:19px; height:19px; background:url(/images/module/icon_14.png) -16px -16px no-repeat; right:0; top:12px;}
+.error_tips{ position:absolute;right:10px;bottom:35px;color:#fff;font-size:1em;}
+.et_con{ position:relative;}
+.et_con p{padding:6px 10px;min-height:16px;line-height:1.5;background:#fb6f7d;border-radius:3px;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box;}
+.et_con em{position:absolute;bottom:-6px;right:3px;width:9px;height:7px;background:url(/images/module/icon_15.png) no-repeat;}
+.login_reg{ padding:1em 0;line-height:1; font-size:1em;}
+.login_reg a{ color:#2695FD;}
+</style>
+<script src="/js/zepto.min.js"></script>
+<script type="text/javascript" src="/js/common.js"></script>
+</head>
+
+<body>
+<div class="header">
+	<div class="back"><a href="/user/user-center.html""><span class="icon-23"></span></a></div>
+	<div class="tit">
+		<h3>修改密码</h3>
+	</div>
+	<div class="right">
+		<ul>
+			<!-- <li class="cart"><a title="购物车" href="/order/cart-index.html"><span class="icon-2"></span><span class="tip hide" id="ShoppingCartNum"></span></a></li> -->
+		</ul>
+	</div>
+</div>
+<div class="login_view">
+	<form id="dataForm" method="POST" name="loginForm" action="">
+		<div class="login_container">
+			<!--<h2>欢迎登录百加账户</h2>-->
+		</div>
+		<div class="input_container">
+			<div class="input_box">
+				<input type="password" class="password" id="oldpwd" placeholder="原密码" name="orgPasswod">
+			</div>
+			<div class="input_box">
+				<input type="password" class="password" id="newpwd" placeholder="新密码" name="newPassword">
+				
+			</div>
+			<div class="input_box">
+				<input type="password" class="password" id="surepwd" placeholder="新密码确定" name="surepwd">
+			</div>
+		</div>
+		
+		<input type="button" value="确认修改" class="button active_button login_btn" onClick="btnSubmit()">
+	</form>
+</div>
+<script>
+	$("#oldpwd").val("");
+
+btnSubmit=function(){
+	if(equal()){
+		submitData();
+	}else{
+		return;		
+	}
+		
+};
+function submitData(){
+	var oldpwd=$("#oldpwd").val();
+	var newpwd=$("#newpwd").val();
+	var surepwd=$("#surepwd").val();
+	var param=[];
+	if(!checkpassword("oldpwd")){
+		return false;	
+	}
+	if(!checkpassword("newpwd")){
+		return false;	
+	}
+	if(!checkpassword("surepwd")){
+		return false;	
+	}
+	param.push("orgPasswod="+trim(oldpwd));
+	param.push("newPassword="+trim(newpwd));
+	$.ajax({
+    type: "POST",
+	dataType:"json",
+   url: "/jsonrest/userlogin/UserLogin/0/changePassword",
+   data: $("#dataForm").serialize(),
+   success: submitModalFinish
+});
+}
+
+submitModalFinish=function(data){
+	//var data=eval("("+data+")");
+	if(data!=""){
+		if(data.msgCode=="3"){
+		window.location.href = ("/user/login.html?id=1&tourl="+encodeURIComponent('/user/user-center.html'));
+		}else if(data.msgCode=="1"){
+			var str="密码修改成功";
+			showTips(str);
+		}else if(data.msgCode=="2"||data.msgCode=="4"){
+			var str=data.msg;
+			showTips(str);
+		}else if(data.msgCode=="3"){
+			var str="密码修改失败";
+			showTips(str);
+		}
+		$("#oldpwd").val("");
+		$("#newpwd").val("");
+		$("#surepwd").val("");
+	}	
+};
+
+equal=function (){
+	var newpwd=$("#newpwd").val();
+	var surepwd=$("#surepwd").val();
+	if(surepwd!=newpwd){
+		var str="两次密码输入不一致";
+		showTips(str);
+		return false;
+	}
+	$("#errorfild").hide();
+	return true;
+}
+checkpassword=function(filed){
+	var str="";
+	var empty="";
+	switch(filed){
+		case 'oldpwd':	str="原密码";break;
+		case 'newpwd':	str="新密码";break;
+		case 'surepwd':	str="确认密码";break;
+	}
+	empty=str+"不能为空";
+	if(''==trim($("#"+filed).val())){
+		showTips(empty);
+		 return false;
+	}
+	var regx =	/^\S{6,16}$/;
+	var flag=regx.test($("#"+filed).val());
+	if(!flag){
+		var st=str+"请输入6-16位字符，不包括空格";
+		showTips(st);
+		return false;
+	}
+	return true;
+}
+</script>
+</body>
+</html>

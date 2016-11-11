@@ -1,0 +1,227 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var combodata=[{id : "payCurrency", onValueChange :payCurrChangge,data:null}];
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+                dataSource : "business/Customer/0/searchCusCompany?searchValue=",
+				onRowClick:customerValueChange,
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	var supParams={
+                title :'供应商列表',
+				text:"cname",
+                dataSource :"",
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {	
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("foreignexchangepay");
+		var fpId=getIframeParm("fpId");
+		if (fpId !=""){ 
+		     var url="finance/ForeignExchangePay/0/get?fpId="+fpId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					$("#foreignexchangepay").initializeInput({"vo":json.entity}); //初始化
+					$("#customerId").attr("disabled", "disabled"); 
+					$("#receiveCompanyId").attr("disabled", "disabled"); 											
+					$("#payAmt").attr("disabled", "disabled"); 
+					$("#rate").attr("disabled", "disabled"); 
+					$('#grid').omGrid('setData',
+					  "customs/CustomForm/0/searchCustomForm?useType=1&currency="+
+					  json.entity.payCurrency+"&customerId="+json.entity.customerId);
+				}			
+			 });
+ 		}else{
+			$("#foreignexchangepay").initializeInput({"comb":combodata}); //初始化								
+			$("#customerId").initGridDropList(cusParams);
+			$("#receiveCompanyId").initGridDropList(supParams);
+		}
+		 $('#grid').omGrid({
+			limit:20,
+			autoFit:true,
+			singleSelect:false,
+			title : '报关单列表',
+			dataSource :"",
+			colModel : [
+						 {header : '合同协议号', name : 'cfOrderNo', width : 50, align : 'left'},
+						 {header : '原协议号', name : 'coOrderNo', width : 50, align : 'left'},
+						 {header : '经营公司', name : 'opCompanyName', width : 120, align : 'left'}, 
+						 {header : '收货公司', name : 'receiveCompanyName', width : 100, align : 'left'},
+						 {header : '已付汇金额', name : 'canAmt', width : 100, align : 'right'},
+						 {header : '本次汇金额', name : 'amt', width : 100, align : 'left',
+							 renderer : function(colValue, rowData, rowIndex) {
+								var html="<input name='amt"+rowData.id+"' value=''  />";
+								return html;
+							 } 
+						 },
+						 {header : '状态', name : 'status', width : 60, align : 'left',
+							 renderer : function(colValue, rowData, rowIndex) {
+								return Dictionary.getDictName(Dictionary.CusomFormStatus,colValue);
+							 }
+						 },
+						 {header : '交易币种', name : 'currency', width : 50, align : 'left',
+								renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.Currency,colValue);
+								}
+						  },
+						 {header : '操作模式', name : 'opType', width : 50, align : 'left',
+								renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.OpType,colValue);
+								}
+						  },
+						 {header : '报关日期', name : 'customDate', width : 100, align : 'left'} 	
+						],
+			onRefresh:function(nowPage,pageRecords,event){
+                $('#grid').find("input").omNumberField({allowDecimals:true,decimalPrecision:10});       
+     		},
+			onRowClick:function(rowIndex,rowData,event){
+			}
+		});
+					
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveForeignExchangePay
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });
+	
+	});
+	
+	function saveForeignExchangePay(){	 
+		if(validateForm("foreignexchangepay")==false)return false; 
+		var cfRecords = $('#grid').omGrid('getSelections',true);
+		if(cfRecords.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选报关单！'});
+			 return false;
+		}
+		var url = $("#id").val()=="" ? "finance/ForeignExchangePay/0/add" :"finance/ForeignExchangePay/0/edit";
+		var vo=$("#foreignexchangepay").getVo();
+		var payRows=[];
+		for(var i=0;i<cfRecords.length;i++){
+		   detail={};
+		   detail["customFormId"]=cfRecords[i].id; 
+		   detail["currency"]=cfRecords[i].currency; 
+		   var amt=$("#grid input[name=amt"+cfRecords[i].id+"]").val();
+		   detail["actualAmt"]=amt; 
+		   payRows.push(detail);
+		}
+		var payList = JSON.stringify(payRows); 
+		vo["payDetails"]=payList;
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $("#id").val(json.entity);
+			   $('#btnSave').omButton('disable');
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   $('#grid').omGrid('reload');
+			 }
+		 });  	            
+	}
+
+	function customerValueChange(rowData){
+	    var currency=$("#payCurrency").omCombo('value');
+        if (currency!=""){
+			$('#grid').omGrid('setData',"customs/CustomForm/0/searchCustomForm?useType=1&currency="+
+			currency+"&customerId="+rowData.id);
+		}
+		$('#receiveCompanyId').setData("business/Supplier/0/searchCusSuppler?customerCompanyId="+rowData.id+"&searchValue="); 
+		$('#receiveCompanyId').clearValue(); //清空值
+	}
+	function payCurrChangge(target, newValue, oldValue){
+		var customerId=$("#customerId").getValue();
+        if (customerId!=""){
+			$('#grid').omGrid("setData","customs/CustomForm/0/searchCustomForm?useType=1&currency="+
+			newValue+"&customerId="+customerId);
+		}
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>			
+<div id="nav_foreignexchangepay" title="付汇">
+	<form id="foreignexchangepay">	
+	<input id="id" name="fp.id" type="hidden" />
+	<input id="status" name="fp.status" type="hidden" />
+	<input id="payAmt" name="fp.payAmt" type="hidden" />
+	<input id="createBy" name="fp.createBy" type="hidden" />
+	<input id="lastModifyBy" name="fp.lastModifyBy" type="hidden" />
+	<input id="lastModifyTime" name="fp.lastModifyTime" type="hidden" />
+	<input id="createTime" name="fp.createTime" type="hidden" />
+		<table class="edit-table">	
+		    <tr>
+				<td class="label">客户：</td>
+				<td class="field">
+					<input id="customerId" name="fp.customerId" validate="rules:['required']" showtext="fp.customerName" />
+				</td>
+				<td class="label">收汇公司</td>
+				<td class="field">
+					<input id="receiveCompanyId" name="fp.receiveCompanyId" validate="rules:['required']" 
+					showtext="fp.receiveCompanyName" />
+				</td>
+		    </tr>	
+			<tr>
+				<td class="label">实际付汇时间：</td>
+				<td class="field" >
+				<input id="payTime" name="fp.payTime" validate="rules:['required']" pattern="datetime" editable="true"/>
+				</td>
+				<td class="label">实际汇率：</td>
+				<td class="field">
+				    <input id="rate" name="fp.rate" validate="rules:['required']" pattern='float' />
+				</td>							
+			</tr>
+			<tr>
+				<td class="label">实际付汇金额：</td>
+				<td class="field" >
+				    <input id="payAmt" name="fp.actualPayAmt" validate="rules:['required']"  pattern='float'  />
+				</td>
+				<td class="label">支付币种：</td>
+				<td class="field">
+					<input id="payCurrency" name="fp.payCurrency"  pattern='combo' validate="rules:['required']" editable='false' remote='Currency' />
+				</td>							
+			</tr>
+		</table>
+	</form>	
+</div>
+<div id="buttonbar"></div>
+<div id="grid"></div>	
+</body>
+</html>

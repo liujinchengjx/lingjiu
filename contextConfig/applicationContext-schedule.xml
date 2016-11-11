@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd"
+	default-lazy-init="true">
+	<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean"
+		lazy-init="false">
+		<property name="triggers">
+			<list>
+				<ref bean="onlineUpdateRateJobTrigger" /><!-- 在线更新汇率JOB -->
+				<ref bean="loadCheckPirce2CacheJobTrigger" /><!-- 定时加载CheckPirce2Cache -->
+				<ref bean="transCoustomFormPrice2CheckPriceJobTrigger" /><!-- 定时把最近的报关数据转换到checkprice表 -->
+				
+			</list>
+		</property>
+		<property name="quartzProperties">
+			<props>
+				<prop key="org.quartz.threadPool.threadCount">10</prop>
+			</props>
+		</property>
+	</bean>
+
+	
+	<!-- 在线更新汇率JOB -->
+	<bean id="onlineUpdateRateJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="onlineUpdateRateJobDetail" />
+		<!-- <property name="cronExpression" value="0 0/10 * * * ?" /> --><!-- 测试使用这个 每十分钟一次 -->
+		<property name="cronExpression" value="0 0 10 * * ?" /><!-- 生产使用这个每天10点执行一次 -->
+	</bean>
+	<bean id="onlineUpdateRateJobDetail"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="onlineUpdateRateJob" />
+		<property name="targetMethod" value="update" />
+	</bean>
+	<bean id="onlineUpdateRateJob" class="com.gosonic.scm.schedule.OnlineUpdateRateJob"></bean>
+	
+	<!-- 定时加载CheckPirce2Cache -->
+	<bean id="loadCheckPirce2CacheJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="loadCheckPirce2CacheJobDetail" />
+		<!-- <property name="cronExpression" value="0 0/10 * * * ?" /> --><!-- 测试使用这个 每十分钟一次 -->
+		<property name="cronExpression" value="0 30 10 * * ?" /><!-- 生产使用这个每天10:30点执行一次 -->
+	</bean>
+	<bean id="loadCheckPirce2CacheJobDetail"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="loadCheckPirce2CacheJob" />
+		<property name="targetMethod" value="load" />
+	</bean>
+	<bean id="loadCheckPirce2CacheJob" class="com.gosonic.scm.schedule.LoadCheckPrice2CacheJob"></bean>
+
+	<!-- 把最近的报关数据转换到checkprice表中 -->
+	<bean id="transCoustomFormPrice2CheckPriceJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="transCoustomFormPrice2CheckPriceJobDetail" />
+		<!-- <property name="cronExpression" value="0 0/10 * * * ?" /> --><!-- 测试使用这个 每十分钟一次 -->
+		<property name="cronExpression" value="0 30 00 * * ?" /><!-- 生产使用这个每天凌晨00:30点执行一次 -->
+	</bean>
+	<bean id="transCoustomFormPrice2CheckPriceJobDetail"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="transCoustomFormPrice2CheckPriceJob" />
+		<property name="targetMethod" value="trans" />
+	</bean>
+	<bean id="transCoustomFormPrice2CheckPriceJob" class="com.gosonic.scm.schedule.TransCoustomFormPrice2CheckPriceJob"></bean>
+</beans>

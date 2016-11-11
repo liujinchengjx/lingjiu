@@ -1,0 +1,233 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>后台管理系统---预览报关单</title>
+ 	<script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+<script type="text/javascript">
+	$(function() {
+	    var customFormId=getQueryString("customFormId");
+		if (customFormId !=""){
+		     var url="qp/QpPostData/0/previewCustomForm?orderId="+customFormId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   json.entity.dealType=Dictionary.getDictName(Dictionary.DealType,json.entity.dealType);
+				   json.entity.regulatoryType=Dictionary.getDictName(Dictionary.RegulatoryType,json.entity.regulatoryType);
+				   json.entity.packingType=Dictionary.getDictName(Dictionary.PackingType,json.entity.packingType);
+				   json.entity.levyNature=Dictionary.getDictName(Dictionary.LevyNature,json.entity.levyNature);
+				   $("#customorder").initializeInput({"vo":json.entity}); //初始化					  
+				   var val=json.entity.items;
+				   var trHtml="";
+				   for(var i=0;i<val.length;i++){
+					  trHtml=trHtml+"<tr height='16'>";
+					  trHtml=trHtml+"<td colspan='1' valign='top' align='center' style='border:solid black 1.0pt;'>";
+					  trHtml=trHtml+"<span style='font-size:12pt;font-family:宋体;'>"+val[i].productNo+"</span></td>";
+					  
+					  trHtml=trHtml+"<td colspan='1' valign='top' align='center' style='border:solid windowtext 1.0pt;'>";
+					  trHtml=trHtml+"<span style='font-size:12pt;font-family:宋体;'>"+val[i].productCode+"</span></td>";
+					  
+					  trHtml=trHtml+"<td colspan='1' valign='top' align='center'"; 
+					  trHtml=trHtml+" style='border:solid windowtext 1.0pt;word-wrap: break-word;word-break:break-all; width: 280;'>";
+					  trHtml=trHtml+" <span style='font-size:12pt;font-family:宋体;'>"+val[i].productName+"<br /> "+val[i].pn+" <br />";
+					  trHtml=trHtml+" "+val[i].declareElements+"</span></td>";
+					  
+					  trHtml=trHtml+"<td colspan='1' valign='top' align='center' style='border:solid windowtext 1.0pt;'>"; 
+					  trHtml=trHtml+"<span style='font-size:12pt;font-family:宋体;'>"+val[i].brand+"牌</span></td>";
+					  
+					  trHtml=trHtml+"<td colspan='1' valign='top' align='left' style='border:solid windowtext 1.0pt;'>";
+					  trHtml=trHtml+" <span style='font-size:12pt;font-family:宋体;'>"+toThousands(val[i].qty)+"&nbsp;"+val[i].unit+"<br />";
+					  trHtml=trHtml+" "+(val[i].nw<=0?0.001:val[i].nw)+"&nbsp;千克";
+					  trHtml=trHtml+" </span></td>";
+					  
+					  trHtml=trHtml+"<td colspan='1' valign='top' align='center' style='border:solid windowtext 1.0pt;'>"; 
+					  trHtml=trHtml+"<span style='font-size:12pt;font-family:宋体;'>"+val[i].origin+"</span></td>";
+					  
+					  trHtml=trHtml+"<td colspan='2' valign='top' align='center' style='border:solid windowtext 1.0pt;white-space:nowrap;'>"; 
+					  trHtml=trHtml+"<span style='font-size:12pt;font-family:宋体;'>"+val[i].dealPrice+"</span></td>";
+					  
+					  trHtml=trHtml+"<td colspan='2' valign='top' align='center' style='border:solid windowtext 1.0pt;white-space:nowrap;'>"; 
+					  trHtml=trHtml+"<span style='font-size:12pt;font-family:宋体;'>"+toThousands(val[i].dealTotalPrice)+"</span></td>";
+					  
+					  trHtml=trHtml+"<td valign='top' align='center' style='border:solid windowtext 1.0pt;'>"; 
+					  trHtml=trHtml+"<span style='font-size:12pt;font-family:宋体;'>"+val[i].currency+"<br>&nbsp;</span></td>";
+					  
+					  trHtml=trHtml+"<td colspan='1' nowrap='' valign='top' align='center' align='center' style='border:solid windowtext 1.0pt;'>"; 
+					  trHtml=trHtml+"<span style='font-size:12pt;font-family:宋体;'>"+val[i].taxFee+"</span></td>";	
+					  trHtml=trHtml+"</tr>";
+					}
+					$("#tbItems").append(trHtml);
+				}			
+			 });
+ 		 }
+	});	
+</script>
+</head>
+<body style="tab-interval:21.0pt;text-justify-trim:punctuation" >
+<form id="customorder" ><center>
+    <table align="center" border="1" cellspacing="0" cellpadding="0" width="98%" style="border-collapse:collapse;border:none;mso-border-alt:solid black .75pt;mso-yfti-tbllook:31;mso-padding-alt:0cm 5.4pt 0cm 5.4pt;mso-border-insideh:.75pt solid black;mso-border-insidev:.75pt solid black;"> 
+      <tbody>
+        <tr style="mso-yfti-irow:0;mso-yfti-firstrow:yes;height:18pt">
+          <td colspan="14" valign="top" style="border:solid black 0pt;">
+		  	<p align="center"><span style="font-size:16.5pt;mso-bidi-font-size:13.0pt;font-family:黑体;mso-ascii-font-family:&quot;Times New Roman&quot;;mso-hansi-font-family:宋体;mso-bidi-font-family:宋体;mso-font-kerning:0pt;mso-bidi-font-weight:bold">中华人民共和国海关进口货物报关单</span>
+			</p>			
+			<span style="font-size:11pt;font-family:楷体_GB2312;">报关单类型:</span>
+			<span name="customType" style="font-size:11pt;font-family:楷体_GB2312;"></span>
+			<span style="font-size:11pt;font-family:楷体_GB2312;">海关编号</span>:<span name="customOrderNo" style="font-size:11pt;font-family:宋体;"></span>
+			
+		   </td>
+        </tr>
+        <tr style="mso-yfti-irow:0;mso-yfti-firstrow:yes;height:18pt; text-align:left;">
+          <td colspan="4" valign="top" style="width:197.15pt;border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">进口口岸</span>&nbsp;<span name="destPortPort" style="font-size:12pt;font-family:宋体;"></span>
+		  </td>
+          <td colspan="2" valign="top" style="width:102.2pt;border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">备案号</span>&nbsp;<span name="backupNo" style="font-size:12pt;font-family:宋体;" ></span>
+		  </td>
+          <td colspan="3" valign="top" style="border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">进口日期</span>&nbsp;<span name="entryDate" style="font-size:12pt;font-family:宋体;" ></span>
+		  </td>
+          <td colspan="5" valign="top" style="border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">申报日期</span>&nbsp;<span name="customDate" style="font-size:12pt;font-family:宋体;" ></span>
+		  </td>
+        </tr>
+        <tr style="mso-yfti-irow:1;height:18pt;text-align:left;">
+          <td nowrap="" colspan="3" valign="top" style="border:solid black 1.0pt;">
+		      <span style="font-size:11pt;font-family:楷体_GB2312;">经营单位 </span> <span name="opCompany" style="font-size:12pt;font-family:宋体;"></span>(<span name='opCompanyCode'></span>)
+		  </td>
+          <td colspan="3" valign="top" style="border:solid black 1.0pt;">
+		      <span style="font-size:11pt;font-family:楷体_GB2312;">运输方式</span> <span name="transport" style="font-size:12pt;font-family:宋体;"></span>
+		  </td>
+          <td colspan="3" valign="top" style="border:solid black 1.0pt;">
+		    <span style="font-size:11pt;font-family:楷体_GB2312;">运输工具名称<br /><span name="conveyance"></span></span>
+		  </td>
+          <td colspan="5" valign="top" style="border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">提运单号<br><span name="blNo"></span></span>
+          </td>
+        </tr>
+        <tr nowrap="" style="mso-yfti-irow:2;height:18pt;text-align:left;">
+          <td colspan="3" valign="top" style="border:solid black 1.0pt;">
+		    <span style="font-size:11pt;font-family:楷体_GB2312;">收货单位</span> <span name="recCompany" style="font-size:12pt;font-family:宋体;"></span>(<span name='recCompanyCode'></span>)
+		  </td>
+          <td nowrap="" colspan="3" valign="top" style="border:solid black 1.0pt;">
+		    <span style="font-size:11pt;font-family:楷体_GB2312;">监管方式</span>
+			<span style="font-size:12pt;font-family:宋体;" >(<span name="regulatoryTypeCode" style="font-size:11pt;"></span>)
+			<span style="font-size:11pt;" name="regulatoryType"></span></span> 
+		  </td>
+          <td nowrap="" colspan="3" valign="top" style="border:solid black 1.0pt;">
+		    <span style="font-size:11pt;font-family:楷体_GB2312;">征免性质</span> 
+			<span style="font-size:12pt;font-family:宋体;" >(<span name="levyNatureCode" style="font-size:11pt;"></span>)
+			<span name="levyNature" style="font-size:11pt;"></span></span>
+		   </td>
+          <td colspan="5" valign="top" style="border:solid black 1.0pt;">
+		    <span style="font-size:11pt;font-family:楷体_GB2312;">征税比例 </span> <span name="taxProportion"></span>
+		  </td>
+        </tr>
+        <tr style="mso-yfti-irow:3;height:18pt;text-align:left;">
+          <td colspan="2" width="202" valign="top" style="border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">许可证号</span><span name="licenseNo"></span>
+		  </td>
+          <td nowrap="" colspan="3" valign="top" style="border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">起运国(地区)</span> 
+			 <span style="font-size:12pt;font-family:宋体;"><span name="frCountry"></span>     (<span name="frCountryCode"></span>)</span>
+		  </td>
+          <td colspan="3" valign="top" style="border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">装货港</span> 
+			 <span style="font-size:12pt;font-family:宋体;"><span name="toPort"></span>      (<span name="toPortCode" ></span>)</span>
+		  </td>
+          <td colspan="6" valign="top" style="border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">境内目的地  <span name="territory"></span> (<span name="territoryCode"></span>)</span>
+		  </td>
+        </tr>
+        <tr style="mso-yfti-irow:4;height:18pt">
+          <td colspan="2" valign="top" style="border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">批准文号</span> <span name="approveNo"></span>
+		  </td>
+          <td width="228" valign="top" style="border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">成交方式&nbsp;<span name="dealType"></span></span>
+		  </td>
+          <td colspan="4" valign="top" style="border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">运费 <span name="fareStr"></span></span>
+		  </td>
+          <td colspan="2" valign="top" style="border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">保费 <span name="premiumsStr"></span></span> </span>
+		  </td>
+          <td colspan="5" valign="top" style="border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">杂费 <span name="mixStr"> </span> </span>
+		  </td>
+        </tr>
+        <tr style="mso-yfti-irow:5;height:18pt;text-align:left;">
+          <td colspan="2" valign="top" style="border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">合同协议号&nbsp;<span name="orderNo"></span></span>
+		  </td>
+          <td colspan="1" valign="top" style="border:solid black 1.0pt;">
+		    <span style="font-size:11pt;font-family:楷体_GB2312;">件数</span> <span name="itemCount" style="font-size:12pt;font-family:宋体;"></span>
+		  </td>
+          <td colspan="2" valign="top" style="border:solid black 1.0pt;">
+		    <span style="font-size:11pt;font-family:楷体_GB2312;">包装种类</span><span name="packingType" style="font-size:12pt;font-family:宋体;"></span>
+		  </td>
+          <td colspan="3" valign="top" style="border:solid black 1.0pt;">
+		    <span style="font-size:11pt;font-family:楷体_GB2312;">毛重(公斤)</span><span name="gw" style="font-size:12pt;font-family:宋体;"></span>
+		  </td>
+          <td colspan="6" width="170" valign="top" style="border:solid black 1.0pt;">
+		    <span style="font-size:11pt;font-family:楷体_GB2312;">净重(公斤)</span> <span name="nw" style="font-size:12pt;font-family:宋体;"></span>
+		  </td>
+        </tr>
+        <tr style="mso-yfti-irow:6;height:18pt;text-align:left;">
+          <td colspan="2" valign="top" style="border:solid black 1.0pt;">
+		    <span style="font-size:11pt;font-family:楷体_GB2312;">集装箱号</span><span></span>
+		  </td>
+          <td colspan="2" valign="top" style="border:solid black 1.0pt;">
+		    <span style="font-size:11pt;font-family:楷体_GB2312;">随附单据</span><span></span>
+		  </td>
+		  <td colspan="4" valign="top" style="border:solid black 1.0pt;">
+		   
+		  </td>
+          <td colspan="6" valign="top" style="border:solid black 1.0pt;">
+		     <span style="font-size:11pt;font-family:楷体_GB2312;">用途</span> <span name="use" style="font-size:12pt;font-family:宋体;"></span>
+		  </td>
+        </tr>
+        <tr style="mso-yfti-irow:7;mso-yfti-lastrow:yes;height:38.2pt;text-align:left;">
+          <td colspan="14" valign="top" style="border:solid black 1.0pt;">
+		    <span style="font-size:11pt;font-family:楷体_GB2312;">标记唛码及备注</span> 
+		    <span name="remark" style="font-size:12pt;font-family:宋体;"></span>
+		  </td>
+        </tr>
+        <tr style="height:16pt">
+          <td align="center" colspan="1" style="border:solid black 1.0pt;"><span style="font-size:12pt;font-family:楷体_GB2312;">项号</span></td>
+          <td align="center" colspan="1" style="border:solid black 1.0pt;"><span style="font-size:12pt;font-family:楷体_GB2312;" >商品编码</span></td>
+          <td align="center" colspan="1" style="border:solid black 1.0pt;"><span style="font-size:12pt;font-family:楷体_GB2312;">商品名称、规格型号</span></td>
+          <td nowrap="" colspan="1" align="center" style="border:solid black 1.0pt;"><span style="font-size:12pt;font-family:楷体_GB2312;">品牌</span></td>
+          <td nowrap="" colspan="1" align="center" style="border:solid black 1.0pt;"><span style="font-size:12pt;font-family:楷体_GB2312;">数量及单位</span></td>
+          <td colspan="1" align="center" style="border:solid black 1.0pt;"><span style="font-size:12pt;font-family:楷体_GB2312;">原产国(地区)</span></td>
+          <td colspan="2" align="center" style="border:solid black 1.0pt;"><span style="font-size:12pt;font-family:楷体_GB2312;">单价</span></td>
+          <td colspan="2" align="center" style="border:solid black 1.0pt;"><span style="font-size:12pt;font-family:楷体_GB2312;">总价</span></td>
+          <td nowrap="" colspan="1" align="center" style="border:solid black 1.0pt;"><span style="font-size:12pt;font-family:楷体_GB2312;">币制</span></td>
+          <td align="center" colspan="1" style="border:solid black 1.0pt;"><span style="font-size:12pt;font-family:楷体_GB2312;">征免</span></td>
+        </tr>
+      </tbody>
+      <tbody id="tbItems" style="text-align:center">        
+      </tbody>
+      <tbody>
+        <tr style="mso-yfti-irow:14;height:116.7pt">
+          <td colspan="14" valign="top" style="width:569.0pt;border:solid windowtext 1.0pt;
+  border-top:1pt;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:0cm 5.4pt 0cm 5.4pt;height:26.7pt"><center>
+              <span style="font-size:12pt;font-family:宋体;">合计总价 <span name="totalPrice"></span> </span>
+            </center></td>
+        </tr>
+      </tbody>
+    </table>
+</center></form>
+</body>
+</html>

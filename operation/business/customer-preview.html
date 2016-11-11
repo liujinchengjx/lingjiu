@@ -1,0 +1,442 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">		
+	$(function() {
+		 $('#gridFeeDetail').omGrid({
+				autoFit:true,
+				height:530,
+				limit:0,
+				title : '',
+				dataSource : "",
+				colModel : [
+				            {header : '计费类型', name : 'feeType', width : 100, align : 'left',
+								 renderer : function(colValue, rowData, rowIndex) {
+                                     return Dictionary.getDictName(Dictionary.FeeType,colValue);
+                                 }
+							 }, 
+							 {header : '参数名', name : 'variableName', width : 150, align:'left'},
+							 {header : '业务类型', name : 'businessType', width : 80, align:'left',
+							    renderer:function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.BusinessType,colValue);
+								}
+							 },
+							 {header : '参数值', name : 'variableValue', width : 100, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex){
+                                     return "<input id='"+rowData.scode+"' name='variable' value='"+colValue
+									 +"' style='width:98%;margin-right:2px;text-align: center;'/>";
+								} 
+							 }, 
+							 {header : '代码', name : 'scode', width : 60, align : 'center'},
+ 							 {header : '使用说明', name : 'description', width : 350, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex){
+                                     return "<input id='description"+rowData.id
+									 +"' name='description' value='"+colValue
+									 +"' style='width:98%;'  class='text2XL' />";
+								} 
+							 },
+							 {header : '状态', name : 'mode', width : 50, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex){
+								     if (colValue=="add"){
+									    return "<span style='color:blue;'>未添加</span>";    
+									 }else return "";
+								} 
+							 }, 
+						   ],
+				onRefresh : function(nowpage, records){//还原过去选中的记录				    
+					for(var i=0;i<records.length;i++){
+					    if ((records[i].scode=="ST0001-7") || (records[i].scode=="ST0001-8") || (records[i].scode=="ST0001-9") ){
+							$('#gridFeeDetail').find("input[id='"+records[i].scode+"']").omCombo({dataSource :Dictionary.RateTimePoint,
+							width:'90',editable:false,optionField:'dictName',valueField : "dictCode",value:records[i].variableValue});	
+						}
+						if ((records[i].scode=="ST0001-2") || (records[i].scode=="ST0001-3") || (records[i].scode=="ST0001-10") ||
+							(records[i].scode=="ST0001-11") ){
+							$('#gridFeeDetail').find("input[id='"+records[i].scode+"']").omCombo({dataSource :Dictionary.YesNot,
+							width:'90',editable:false,optionField:'dictName',valueField : "dictCode",
+							value:records[i].variableValue.toFixed(0)});	
+						}
+					}
+				}
+		 });	
+		$("#nav_customer").omPanel({title : "",collapsible:true, collapsed: false,collapsible: true, closable: false,height:'100%',
+		width:'100%'});
+	    var customerId=getIframeParm("customerId");     
+        if (customerId !=""){	
+		     var url="business/Customer/0/get?customerId="+customerId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				json.entity.isTaxPayer = Dictionary.getDictName(Dictionary.YesNot,json.entity.isTaxPayer);
+				json.entity.cusType = Dictionary.getDictName(Dictionary.CustomerType,json.entity.cusType);
+				json.entity.opType = Dictionary.getDictName(Dictionary.OpType,json.entity.opType);
+				json.entity.businessType = Dictionary.getDictName(Dictionary.BusinessType,json.entity.businessType);
+				json.entity.grade = Dictionary.getDictName(Dictionary.CustomsGrade,json.entity.grade);
+				json.entity.currency = Dictionary.getDictName(Dictionary.Currency,json.entity.currency);
+				json.entity.useContractNo = Dictionary.getDictName(Dictionary.YesNot,json.entity.useContractNo);
+				json.entity.creditGrade = Dictionary.getDictName(Dictionary.CreditGrade,json.entity.creditGrade);
+				json.entity.belongTo = Dictionary.getDictName(Dictionary.cusBelongTo,json.entity.belongTo);
+				$(".edit-table").initializeInput({"vo":json.entity}); //初始化
+				$(".insuss_tables").initializeInput({"vo":json.entity}); //初始化
+				
+				reLoadFeeParam(json.entity.company.id);
+				var arrLinkMan=json.entity.linkManList;
+				loadLinkMan(arrLinkMan);
+				var allInfo=json.entity;
+				insuss_inv_table(allInfo);
+			  }			
+			 });
+ 		}
+	});	
+	
+	function reLoadFeeParam(companyId){ //重新加载计费参数
+		var params=[];
+		params.push("preCode=ST"); 
+		params.push("customerId="+companyId); 
+		params.push("businessTypes=1"); 
+		var url="business/CustomerChargesVariables/0/searchCharges?limit=10000&"+params.join("&");
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			var mutitable=$("#feeparams");
+			var html="";
+			var lst=json.rows;
+			for(var i=0;i<lst.length;i++){
+				html=html+"<div class='tbody_item'>";
+				html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+				html=html+" <tr> ";
+				html=html+"   <td width='120'>";
+				html=html+"       <span  style='width:90%;margin-right:2px;'>";
+				html=html+             Dictionary.getDictName(Dictionary.FeeType,lst[i].feeType)+"</span></td>";
+				html=html+"   <td width='150'>";
+				html=html+"       <span style='width:90%;margin-right:2px;'>"+lst[i].variableName+"</span>";
+				html=html+"   </td>";
+				html=html+"   <td width='120'>";
+				html=html+"       <span style='width:90%;margin-right:2px;'>";
+				if ((lst[i].scode=="ST0001-7") || (lst[i].scode=="ST0001-8") || (lst[i].scode=="ST0001-9") ){
+				    html=html+ Dictionary.getDictName(Dictionary.RateTimePoint,lst[i].variableValue)+"</span>";
+				}else if ((lst[i].scode=="ST0001-2") || (lst[i].scode=="ST0001-3") || (lst[i].scode=="ST0001-10") ||
+							(lst[i].scode=="ST0001-11") ){
+					html=html+ Dictionary.getDictName(Dictionary.YesNot,lst[i].variableValue)+"</span>";		
+				}else{
+				    html=html+ lst[i].variableValue+"</span>";   
+				}
+				html=html+"   </td>";
+				html=html+"   <td width='120'>";
+				html=html+"       <span style='width:90%;margin-right:2px;'>"+lst[i].scode+"</span>";
+				html=html+"   </td>";
+				html=html+"   <td width='60'>";
+				if (lst[i].mode=="add"){
+				    html=html+"<span style='color:blue;'><b>未添加</b></span>";    
+				}					 
+				html=html+"   </td>";
+				html=html+"   <td style='text-align:left;'>";
+				html=html+"       <span style='width:90%;'>"+lst[i].description+"</span>";
+				html=html+"   </td>";
+				html=html+" </tr>";
+				html=html+"</table></div>";
+			}
+			mutitable.append(html); 
+		 }			
+		});
+	}	
+	function loadLinkMan(lst){
+   		var mutitable=$("#linkman");
+		var html="";
+	    for(var i=0;i<lst.length;i++){
+			html=html+"<div class='tbody_item'>";
+			html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+			html=html+" <tr> ";
+			html=html+"   <td width='120'>";
+			html=html+"       <span name='type' style='width:90%;margin-right:2px;'>"+Dictionary.getDictName(Dictionary.LinkManType,lst[i].type)+"</span>";
+			html=html+"   <td width='150'>";
+			html=html+"       <span name='name' style='width:90%;margin-right:2px;'>"+lst[i].name+"</span>";
+			html=html+"   </td>";
+			html=html+"   <td width='120'>";
+			html=html+"       <span name='tel' style='width:90%;margin-right:2px;'>"+lst[i].tel+"</span>";
+			html=html+"   </td>";
+			html=html+"   <td width='120'>";
+			html=html+"       <span name='phone' style='width:90%;margin-right:2px;'>"+lst[i].phone+"</span>";
+			html=html+"   </td>";
+			html=html+"   <td width='150'>";
+			html=html+"       <span name='email' style='width:90%;margin-right:2px;'>"+lst[i].email+"</span>";
+			html=html+"   </td>";
+			html=html+"   <td></td>";	 
+			html=html+" </tr>";
+			html=html+"</table></div>";
+		}
+		mutitable.append(html); 
+	}
+	
+	//绘制发票信息
+	function insuss_inv_table(allInfo){
+		//判断仓储类型
+		var htmltabl=$("#insuss_inv_div");
+		var html="";
+		html=html+"<span>发票信息</span>";
+		html=html+"<div id='insuss_inv_table'>";
+		html=html+"<table class='insuss_tables' cellpadding='0' cellspacing='0' width='100%' class='thead' border='1px' bordercolor='#ADB6BD'>";
+		html=html+"<thead>";
+		html=html+"<tr>";
+		html=html+"<td class='label' width='20%'>开发票公司：</td>";
+		html=html+"<td class='field' width='30%'><span id='cname'>"+allInfo.invoiceCompany+"</span></td>";
+		html=html+"<td class='label' width='20%'>税务登记号：</td>";
+		html=html+"<td class='field' width='30%'><span id='taxNo'>"+allInfo.company.taxNo+"</span></td>";
+		html=html+"</tr>";
+		
+		html=html+" <tr> ";
+		html=html+"<td class='label' width='20%'>开户银行：</td>";
+		html=html+"<td  class='field'width='30%'><span id='bank'>"+allInfo.company.bank+"</span></td>";
+		html=html+"<td class='label' width='20%'>银行账户：</td>";
+		html=html+"<td  class='field'width='30%'><span id='bankAccount'>"+allInfo.company.bankAccount+"</span></td>";
+		html=html+" </tr>";
+		
+		html=html+"<td class='label'>联系人：</td>";
+		html=html+"<td  class='field'><span id='linkname'>"+allInfo.contacter+"</span></td>";
+		html=html+"<td class='label'>联系电话：</td>";
+		html=html+"<td  class='field'><span id='linkphone'>"+allInfo.contactPhone+"</span></td>";
+		html=html+" </tr>";
+		
+		html=html+" <tr> ";
+		html=html+"<td class='label'>传真：</td>";
+		html=html+"<td  class='field'><span id='fax'>"+allInfo.company.fax+"</span></td>";
+		html=html+"<td class='label'>注册地址：</td>";
+		html=html+"<td  class='field'><span id='address'>"+allInfo.officeSpace+"</span></td>";
+		html=html+" </tr>";
+		
+		html=html+" </thead> ";
+		html=html+"</table></div>";
+		
+		var invocationalType=allInfo.businessType;
+		if(invocationalType!="仓储"){
+			htmltabl.append(html);
+		}
+	}
+</script>
+	
+</head>
+<body class="dfbody">		
+<div id="nav_customer" title="查看客户" style="width:100%; height:95%;">	  
+       <div> 
+		<table class="edit-table" style="width:100%;" >
+			<tr>
+				<td class="label">档案编号(只读)：</td>
+				<td class="field"><span  id="ccode" name="cus.company.ccode" ></span></td>				
+				<td class="label">中文名称拼音：</td>
+				<td class="field" >
+				<span id="pinyin" name="cus.company.pinyin" ></span></td>	
+			</tr>
+			<tr>
+				<td class="label">中文名称：</td>
+				<td class="field" >
+				<span id="cname" name="cus.company.cname" ></span></td>
+				<td class="label">中文简称：</td>
+				<td class="field" >
+				<span id="csname" name="cus.company.csname"></span></td>					
+			</tr>
+			<tr>
+				<td class="label">英文名称：</td>
+				<td class="field" >
+				<span id="ename" name="cus.company.ename"></span></td>
+				<td class="label">英文简称：</td>
+				<td class="field" >
+				<span id="esname" name="cus.company.esname"></span></td>				
+			</tr>
+			<tr>
+				<td class="label">法人代表：</td>
+				<td class="field">
+				   <span id="legalName" name="cus.company.legalName"></span>
+				</td>
+				<td class="label">是否一般纳税人：</td>
+				<td class="field">
+					<span id="isTaxPayer" name="cus.isTaxPayer"></span>
+				</td>	
+			</tr>
+			<tr>
+				<td class="label">注册资金：</td>
+				<td class="field" ><span id="regCapital" name="cus.regCapital"></span></td>
+				<td class="label">注册日期：</td>
+				<td class="field" ><span id="regDate" name="cus.regDate"></span></td>				
+			</tr>
+			<tr>
+				<td class="label">注册地址：</td>
+				<td class="field" ><span id="officeSpace" name="cus.officeSpace"></span></td>
+				<td class="label">办公面积：</td>
+				<td class="field" ><span id="officeArea" name="cus.officeArea"></span></td>				
+			</tr>
+			<tr>
+				<td class="label">税务登记号：</td>
+				<td class="field" >
+					<span id="taxNo" name="cus.company.taxNo"></span>
+				 </td>
+				<td class="label">营业执照：</td>
+				<td class="field" ><span id="license" name="cus.company.license"></span></td>				
+			</tr>
+			<tr>						
+				<td class="label">海关代码：</td>
+				<td class="field" >
+				<span id="hsCode" name="cus.company.hsCode"></span></td>
+				<td class="label">机构代码：</td>
+				<td class="field" >
+				<span id="orgCode" name="cus.company.orgCode"></span></td>				
+			</tr>
+			<tr>
+				<td class="label">开户银行：</td>
+				<td class="field" >
+				<span id="bank" name="cus.company.bank"></span></td>
+				<td class="label">银行账户：</td>
+				<td class="field" >
+				<span id="bankAccount" name="cus.company.bankAccount"></span></td>
+			</tr>
+			<tr>
+				<td class="label">Swift code：</td>
+				<td class="field" >
+				<span id="bankName" name="cus.company.bankName"></span></td>				
+				<td class="label">银行地址：</td>
+				<td class="field" >
+				<span id="bankAddress" name="cus.company.bankAddress"></span></td>			    
+			</tr>
+			<tr>
+				 <td class="label">客户来源：</td>
+				 <td class="field">
+					 <span id="customerSource" name="cus.customerSource" ></span>
+				 </td>
+				 <td class="label">客户类型：</td>
+				 <td class="field">
+					 <span id="cusType" name="cus.cusType"></span>
+				 </td>
+			</tr>
+			<tr>
+				 <td class="label">合作模式：</td>
+				 <td class="field">
+					 <span id="opType" name="cus.opType"></span>
+				 </td>
+				 <td class="label">业务类型：</td>
+				 <td class="field">
+				   <span id="businessType" name="cus.businessType"></span>
+				  </td>						 
+			</tr>
+			<tr>
+				 <td class="label">申报级别：</td>
+				 <td class="field">
+					 <span  id="grade" name="cus.grade"></span>
+				 </td>				 
+				 <td class="label">交易币种：</td>
+				 <td class="field">
+					 <span id="currency" name="cus.currency"></span>
+				 </td>
+			</tr>
+			<tr>
+				 <td class="label">费用支付方式：</td>
+				 <td class="field">
+					 <span id="serviceFee" name="cus.serviceFee" ></span>
+				 </td>
+				 <td class="label">贷款支付方式：</td>
+				 <td class="field">
+					 <span id="payMent" name="cus.payMent" ></span>
+				 </td>
+			</tr>
+			<tr>
+				 <td class="label">使用客户号报关：</td>
+				 <td class="field">
+					 <span id="useContractNo" name="cus.useContractNo"></span>
+				 </td>
+				 <td class="label">费用折扣率：</td>
+				 <td class="field"><span id="discountRate" name="cus.discountRate"></span>
+				 </td>						 					  
+			</tr>
+			<tr>						
+				<td class="label">客户信用等级：</td>
+				<td class="field" >
+				<span id="creditGrade" name="cus.creditGrade"></span></td>	
+				<td class="label">客户归属</td>
+				<td class="field"><span id="belongTo" name="cus.belongTo"></span></td>
+
+			</tr>
+			<tr>
+				 <td class="label">客服负责人：</td>
+				 <td class="field">
+					 <span id="serviceMan" name="cus.serviceMan" ></span>
+				 </td>
+				 <td class="label">客服部门负责人：</td>
+				 <td class="field">
+					 <span id="servicePartMan" name="cus.servicePartMan"></span>
+				 </td>
+			</tr>
+			<tr>
+				 <td class="label">业务负责人：</td>
+				 <td class="field">
+					 <span id="businessMan" name="cus.businessMan"></span>
+				 </td>
+				 <td class="label">业务部门负责人：</td>
+				 <td class="field">
+					 <span id="businessPartMan" name="cus.businessPartMan"></span>
+				 </td>
+			</tr>
+			<tr>	
+				 <td class="label">办公地址：</td>
+				 <td class="field" colspan="3" ><span id="address" name="cus.company.address"></span></td>	
+			</tr>
+			<tr>	
+				 <td class="label">寄票地址：</td>
+				 <td class="field" colspan="3" >
+				 <span id="invoiceAddress" name="cus.invoiceAddress"></span></td>	
+			</tr>
+			<tr>
+				 <td class="label">备注：</td>
+				 <td class="field" colspan="3">
+					 <span id="remark" name="cus.company.remark" ></span>
+				 </td>
+			</tr>			
+		</table>	
+		</div>
+		<div id="insuss_inv_div"  style="margin-top: 5px;" >
+		</div>
+		<div id="linkman" class="mutitable" style="margin-top: 5px;">
+			<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+				 <thead>
+					   <tr>
+						  <td width="120">联系人类型</td>
+						  <td width="150" >姓名</td>
+						  <td width="120" >电话</td>
+						  <td width="120" >手机</td>
+						  <td width="150" style="text-align:center;">邮件</td>
+						  <td ></td>
+					   </tr>
+				</thead>
+		   </table>
+	   </div>
+	   <div id="feeparams" class="mutitable">
+			<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+				 <thead>
+					   <tr>
+						  <td width="120">计费类型</td>
+						  <td width="150" >参数名</td>
+						  <td width="120" >参数值</td>
+						  <td width="120" >参数代码</td>
+						  <td width="60" >状态</td>
+						  <td style="text-align:center;">使用说明</td>
+					   </tr>
+				</thead>
+		   </table>
+	   </div>
+</div>	
+</body>
+</html>

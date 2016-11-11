@@ -1,0 +1,228 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---导出Invoice</title>	
+	<script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<style type="text/css">
+	  html, body{width: 100%; height: 100%; 
+	      padding: 0; margin: 0;font-family:"宋体", "";
+	  }
+	  td{font-size: 14px;color: #000000;text-decoration: none;line-height: 18px;td-layout:fixed;word-break:break-all;}
+	  .listContent{
+		       background-color: #FFFFFF;
+		       border-collapse:collapse;
+			   font-family: verdana, helvetica, arial, sans-serif;
+			   font-size: 10px;
+			   border: #000000 1px solid;
+		}
+	 .listContent td{background-color: #ffffff;border:1px solid #000000;;height:23px;padding:1px 0px 0px 5px}
+    </style>
+    <script type="text/javascript">
+	$(function() {
+		 var customerId=getQueryString("customerId");
+		 var startTime=getQueryString("startTime");
+		 var endTime=getQueryString("endTime");
+ 		 var payeeId=getQueryString("payeeId");
+		 var params={};
+		 params["customerId"]=customerId;
+		 params["startTime"]=startTime;
+		 params["endTime"]=endTime;
+		 params["payeeId"]=payeeId;
+		 var url="finance/Settlement/0/outMonStatementInvoice";
+		 $.ajaxPost({data:params,url:url,msg:false,success:function(json,textStatus){
+		 	   var totalPayAmt=0.0;
+			   var vcTb=$("#payment");
+			   //json.entity.currency=Dictionary.getDictName(Dictionary.Currency,json.entity.currency);
+			   //json.entity.payCurrency=Dictionary.getDictName(Dictionary.Currency,json.entity.payCurrency);
+			   vcTb.initializeInput({"vo":json.entity}); //初始化
+			   var entity=json.entity;
+			   var htmlRow="";
+			   //本币币种
+			   var totalLStock=parseFloat(entity.totalStockLAmt).toFixed(2);
+			   var totalLMat=parseFloat(entity.totalMatLFeeAmt).toFixed(2);
+			   var totalLAdd=parseFloat(entity.totalAddLSerAmt).toFixed(2);
+			   var totalLWh=parseFloat(entity.totalLWhAmt).toFixed(2);
+			   var totalLCA=parseFloat(entity.totalCuLClearAmt).toFixed(2);
+			   
+			   //结算币种
+			   var totalStock=parseFloat(entity.totalStockAmt).toFixed(2);
+			   var totalMat=parseFloat(entity.totalMatFeeAmt).toFixed(2);
+			   var totalAdd=parseFloat(entity.totalAddSerAmt).toFixed(2);
+			   var totalWh=parseFloat(entity.totalWhAmt).toFixed(2);
+			   var totalCA=parseFloat(entity.totalCuClearAmt).toFixed(2);
+			   
+			   htmlRow=htmlRow+"<tr height='16'>";
+			   htmlRow=htmlRow+"<td align='right'>"+totalLStock+"</td>";
+			   htmlRow=htmlRow+"<td align='right'>"+totalLMat+"</td>";
+			   htmlRow=htmlRow+"<td align='right'>"+totalLAdd+"</td>";
+			   htmlRow=htmlRow+"<td align='right'>"+totalLWh+"</td>";
+			   htmlRow=htmlRow+"<td align='right'>"+totalLCA+"</td>";
+			   htmlRow=htmlRow+"</tr>"
+			   //所有服务费总价
+			   totalLPayAmt=parseFloat(totalLStock)+parseFloat(totalLMat)
+			   +parseFloat(totalLAdd)+parseFloat(totalLWh)+parseFloat(totalLCA);
+			   addTableRow("items",0,htmlRow);
+			   
+			   totalPayAmt=parseFloat(totalStock)+parseFloat(totalMat)
+			   +parseFloat(totalAdd)+parseFloat(totalWh)+parseFloat(totalCA);
+			   //结算日期
+			   $("#dDate").append(json.entity.bDate+"/"+json.entity.eDate);
+			   $("#totalLAmt").append(totalLPayAmt.toFixed(2)+"("+entity.payCurrency+")");
+			   if(entity.currency=="人民币"){
+			    totalPayAmt=totalPayAmt+(totalPayAmt*0.06);
+			    $("#totalAmt").append(totalPayAmt.toFixed(2)+"("+entity.currency+")");
+			   	$("#attitude").show();
+			   }else{
+			    $("#totalAmt").append(totalPayAmt.toFixed(2)+"("+entity.currency+")");
+			   }
+			}			
+		 });
+	});	
+	
+	//注意input的id和tr的id要一样  
+    function addTableRow(tableId,currentRowID,htmlRow){  
+		var $table=$("#"+tableId);
+		var $trs=$table.find("tr");
+        $.each($trs, function(i, tr){  
+            if(i==currentRowID){  
+               var currentRow=$trs.eq(i);
+               currentRow.after(htmlRow);  
+            }  
+        });  
+    } 
+    //获取对应的节点
+	</script>
+</head>
+<body bgcolor="#FFFFFF" marginwidth="0"  style=" width:766;font-size: 14px;margin-top: 0px;margin-left: 15px;margin-right: 15px;line-height: 18px;margin: 0px;">
+<div id="payment">
+	<table  width="98%" border="0" cellspacing="0" cellpadding="2" align="center" >
+		<tbody>
+			<tr valign="middle" width="98%">
+				<td width="98%" height="60" align="center">
+					 <div style="width:100%;">
+						<div style="float:left; width:8%; height:60; text-align:right;">
+						  <img src="/images/icon/gosonic.png" style="width:60;height:60;"/>
+						</div>
+						<div style="height:60;width:90%; text-align:center;">
+							<b><font size="5"><span name="opCompanyName"></span></font></b><br /><br />
+							<font size="3" style="font-family:'Times New Roman', Times, serif">
+							<span name="opCompanyEnName"></span></font>
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr valign="middle" width="98%">
+				<td width="98%" height="30" align="center">
+					<u><b><font size="2">
+						地址：<span name="opCompanyAddress"></span> 
+						电话：<span name="opCompanyTel"></span> 
+						传真：<span name="opCompanyFax"></span> 
+					</font></b></u>
+				</td>
+			</tr>
+			<tr valign="middle" width="98%">
+				<td width="98%" height="30" align="center">
+					<b><font size="4">Invoice</font></b><br /><br/>
+				</td>
+			</tr>
+			<tr valign="middle">
+				<td width="98%" height="19">
+					<table cellpadding="0" cellspacing="0" border="0" width="100%" >
+						<tbody>
+							<tr>
+								<td nowrap="">
+								客户:<span name="customerName"></span>
+								</td>
+								<td nowrap="">
+								月份:<span id="dDate"></span>
+								</td>
+							</tr>
+							<tr>
+								<td  nowrap="">
+								本币金额:<span name="payCurrency"></span>
+								</td>
+								<td nowrap="">
+								结算币种:<span name="currency"></span>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</td>
+			</tr>
+			<tr valign="middle">
+				<td width="100%" height="19" align="center">
+					<table id="items" class="listContent" width="100%">
+						<tbody>
+							<tr>
+								<td  height="15" align="center" width="40px;">
+									<b>出&入仓费</b>
+								</td>
+								<td  height="15" align="center" width="40px;">
+									<b>代垫费</b>
+								</td>
+								<td  height="15" align="center" width="50px;">
+									<b>增值服务费</b>
+								</td>
+								<td  height="15" align="center" style="font-weight: bold;" width="50px;">
+									<b>仓储费</b>
+								</td>
+								<td  height="15" align="center" style="font-weight: bold;" width="50px;">
+									<b>清关费</b>
+								</td>
+							</tr>
+							<tr height="16" >
+								<td  height="15" align="left"  colspan="4">
+									总计&nbsp;
+								</td>
+								<td  height="15" align="right">
+									&nbsp;<span id="totalLAmt"></span>
+								</td>
+							</tr>
+							<tr>
+							<td height="15" align="left" colspan="4">
+							</td>
+							<td height="15" align="right">
+								&nbsp;<span id="totalAmt"></span>
+							</td>
+							</tr>
+							<tr height="16" >
+								<td  height="15" align="left"  colspan="6">
+									收款方：&nbsp;<span name="payeeName"></span> &nbsp;<br />
+									开户银行：<span name="payeeBankName"></span> &nbsp;<br />
+									银行账号：<span name="payeeBankAccount"></span> 
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<div id="attitude" style="color: red;float:left;display: none;">(备注：若支付币种为人民币，则应收款总额将加收6%的税费。)</div>
+					<div style="text-align:left;float: left;width: 100%;">
+						<br/>
+						<br/>
+						<div style="text-align: right;float:right; width: 200px;margin-top: 0px;margin-bottom: 10px;">
+							<span style="width: 50px;margin-top: 20px;">Gosonic Logitic Ltd<br> Authoried ignuture</span>
+						</div>
+					</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+<div style="z-index:-1;position: relative;margin-top: -100px;float: right;">
+<img src="/images/icon/guangtong.png"/>
+</div>
+</body>
+</html>

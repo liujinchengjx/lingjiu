@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>收货</title>
+<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<script type="text/javascript">	
+	    $(function(){		
+		      $("#search-panel").omPanel({title : "客户："+getIframeParm("customerName")+"  GSIN号："+getIframeParm("stockInNo")
+			  +"   仓库："+Dictionary.getDictName(Dictionary.Currency,getIframeParm("wh")),collapsed:true}); 
+		      var stockInId=getIframeParm("stockInId");        
+			  if (stockInId !=""){	
+				 var url="warehouse/StockIn/0/getStockInCartonList?limit=1000000&stockInId="+stockInId;
+				 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					 var mutitable=$(".mutitable");
+					 var html="";
+					 for(var i=0;i<json.rows.length;i++){
+						 var carton=json.rows[i];
+						 html=html+"<div class='tbody_item'>";
+						 html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+						 html=html+" <tr> ";
+						 html=html+"   <td width='50'><strong>"+carton.cartonNo+"</strong></td>";
+						 html=html+"   <td width='50'><strong>"+carton.orgCartonNo+"</strong></td>";
+						 html=html+"   <td width='160'><input type='text' class='length' style='width:35px'>*";
+						 html=html+"     <input type='text' class='width' style='width:35px'>*<input type='text' class='height' ";
+						 html=html+"     style='width:35px'>";		 
+						 html=html+"   </td>";
+						 html=html+"   <td width='80' style='text-align:right'><strong>"+carton.nw+"</strong></td>";
+						 html=html+"   <td width='80' style='text-align:right'><strong>"+carton.gw+"</strong></td>";
+						 html=html+"<td class='tbody_product' width='580'>";
+						 var packings=carton.stockInPackings;
+						 for(var j=0;j<packings.length;j++){
+							var packing=packings[j];
+							html=html+"  <dl id='"+packing.id+"'>";
+							html=html+"   <dd style='float:left;text-align:center;width:130px;'>"+
+										 packing.product.productName+"</dd>";
+							html=html+"   <dd style='float:left;text-align:center;width:120px;'>"+packing.product.pn+"</dd>";
+							html=html+"   <dd style='float:left;text-align:center;width:60px;'>"+packing.product.brand+"</dd>";
+							html=html+"   <dd style='float:left;text-align:center;width:60px;'>"+packing.product.origin+"</dd>";
+							html=html+"   <dd style='float:left;text-align:right;width:90px;' class='qty'>"+packing.qty+"</dd>";
+							html=html+"   <dd style='float:left;text-align:right;width:120px;'>";
+							html=html+"	  <input type='text' value='"+packing.inQty+"'  class='inqty'";
+							html=html+"   style='width:60px;margin-right:2px;text-align: right;' >";
+							html=html+"   </dd>";
+							html=html+"	 </dl>";
+						 }	
+						 html=html+"</td>";
+						 html=html+"<td></td>";	 
+						 html=html+"</tr>";
+						 html=html+"</table></div>";
+					 } 
+					 mutitable.append(html);
+					 $('.inqty').omNumberField();
+					 $('.length').omNumberField();
+					 $('.width').omNumberField();
+					 $('.height').omNumberField();
+				  }			
+				 });
+			  }
+			 $('#buttonbar').omButtonbar({
+				 width : "100%",
+				 btns : [{label:"保存",
+						 id:"btnSave" ,
+						 icons : {left : '/images/icon/add.png'},
+						 onClick: saveReceipt
+						},
+						{separtor:true},
+						{label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);
+						  }
+						 }					
+					 ]
+             });	 
+		});
+		
+		function saveReceipt(){
+            var stockInPackings=[];	
+			stockInPackings=getStockInPackings();
+			var str= JSON.stringify(stockInPackings); 
+			var url="warehouse/StockIn/0/receiptStockIn";
+			$.ajaxPost({data:{stockInId:getIframeParm("stockInId"),"stockInPackings":str},url:url,msg:false,
+			     success:function(json,textStatus){
+				    $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});	 
+			 }  			
+			});
+		}
+		function getStockInPackings(){
+		    var stockInPackings=[];		   
+			$(".mutitable dl").each(function(i){
+			     $this=$(this);
+				 var sip={id:$this.attr("id"),qty:$this.find(".qty").html(),inQty:$this.find(".inqty").val()};
+				 stockInPackings.push(sip);				
+            });
+			return stockInPackings;
+		}
+	</script>
+</head>
+
+<body>
+<div id="search-panel"></div>
+<div id="buttonbar"></div>
+<div class="mutitable">
+    <table cellpadding="0" cellspacing="0" width="100%" class="thead">
+        <thead>
+           <tr>
+			  <td width="50">箱号</td>
+			  <td width="50">客户箱号</td>
+              <td width="160">箱子规格<br>(长*宽*高 单位为CM)</td>
+			  <td width="80" style="text-align:right">净重</td>
+			  <td width="80" style="text-align:right">毛重</td>
+              <td width="130">品名</td>
+			  <td width="120">型号</td>
+			  <td width="60">品牌</td>
+			  <td width="60">原产地</td>
+              <td width="90" style="text-align:right">预计<br>入库数量</td>
+              <td width="120" style="text-align:right">实际<br>入库数量</td>
+              <td ></td>
+           </tr>
+        </thead>
+    </table>
+</div>
+</body>
+</html>

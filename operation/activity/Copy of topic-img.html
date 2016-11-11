@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>益童行管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">		
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/kindeditor/kindeditor-min.js"></script>
+	<script type="text/javascript" src="/kindeditor/lang/zh_CN.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<script type="text/javascript">
+	$(document).ready(function(){
+		
+		$("#coverImg").omPanel({title : "上传主题图片",collapsed:true});
+		$("#img").omPanel({title : "上传活动图片",collapsed:true});
+		
+		
+	});
+	
+	
+	//保存
+	function saveActity(){
+		alert("bbbb");	 
+	    if(validateForm("topic")==false)return false;
+		var vo=	$("#topic").getVo();
+			var url = $("#id").val()=="" ? "qinziyou/ActivityTopic/0/add" : "qinziyou/ActivityTopic/0/edit";
+			
+			$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){ 
+				   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+				 }
+			});
+		
+	}
+	
+KindEditor.ready(function(K) {
+	var topicId = getUrlParam("topicId");
+	alert(topicId);
+	var editor = K.editor({
+		
+		uploadJson : baseUrl+'/qinziyou/ActivityImgUpload/0/uploadCoverImg?topicId='+topicId,
+		allowFileManager : true
+    });
+	$('#uploadCoverImg').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         editor.loadPlugin('image', function() {
+						editor.plugin.imageDialog({
+							showRemote : false,
+							imageUrl : K('#mainImgUrl').val(),
+							clickFn : function(url, title, width, height, border, align) {
+								K('#mainImgUrl').val(url);
+								editor.hideDialog();
+							}
+						});
+					});
+			   }
+	});		
+});
+	</script>
+</head>
+<body class="dfbody">	
+<div>
+<input id="uploadCoverImg" type="button" value="上传"/>
+</div>	
+
+
+</body>
+</html>
+

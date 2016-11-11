@@ -1,0 +1,416 @@
+<html>
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---付款通知书</title>		
+	<script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<style type="text/css">
+	  html, body{width: 100%; height: 100%; 
+	      padding: 0; margin: 0;font-family:"宋体", "";
+	  }
+	  td{font-size: 12px;color: #000000;text-decoration: none;line-height: 18px;td-layout:fixed;word-break:break-all;}
+	  .listContent{
+		       background-color: #FFFFFF;
+		       border-collapse:collapse;
+			   font-family: verdana, helvetica, arial, sans-serif;
+			   font-size: 12px;
+			   border: #000000 1px solid;
+		}
+	 .listContent td{background-color: #ffffff;border:1px solid #000000;;height:23px;padding:1px 0px 0px 5px}
+    </style>
+    <script type="text/javascript">
+	$(function() {
+		var settlementType=getQueryString("type");
+		var customerId=getQueryString("customerId");
+		var opCompanyId=getQueryString("opCompanyId");
+		var referOrderId=getQueryString("referOrderId");
+		var settlementId=getQueryString("settlementId");
+		if ((settlementType !="") && (customerId!="") && (referOrderId!="") && (settlementId!="")){
+		     var params={};
+			 params["fp.opCompanyId"]=opCompanyId;
+			 params["fp.settlementType"]=settlementType;
+			 params["fp.customerId"]=customerId;
+			 params["fp.referOrderId"]=referOrderId;
+			 params["fp.settlementId"]=settlementId;
+		     var url="finance/SettlementFeeTrade/0/paymentTrading";
+			 $.ajaxPost({data:params,url:url,msg:false,success:function(json,textStatus){
+				   var vcTb=$("#paymenttrading");
+				   var productItemList=json.entity.productItemList;
+				   var htmlRow="",index=1;
+				   //var invoiceNos=[];
+				   for(var i=0;i<productItemList.length;i++){
+					   var pil=productItemList[i];
+					   //if (pil.invoiceNo.indexOf("*")<0){			
+					//	   if (!invoiceNos.in_array(pil.invoiceNo+"，") && (pil.invoiceNo!="") ){
+					//		  invoiceNos.push(pil.invoiceNo+"，");
+					//		  index++;    
+					//		  if (index==12){
+					//			 invoiceNos.push("<br />");    
+					//			 index=1;
+					//		  }
+					//	   }			   
+					//   }
+					   htmlRow=htmlRow+"<tr height='16'>";
+					   htmlRow=htmlRow+"<td  height='20' align='left' nowrap=''>"+pil.orderNo+"</td>";
+					   htmlRow=htmlRow+"<td  height='20' align='left' nowrap=''>"+pil.productName+"</td>";
+					   htmlRow=htmlRow+"<td  height='20' align='left' nowrap=''>"+pil.pn+"</td>";
+					   htmlRow=htmlRow+"<td  height='20' align='right' nowrap=''>"+toThousands(pil.qty)+"</td>";
+					   htmlRow=htmlRow+"<td  height='20' align='right' nowrap=''>"+pil.price.toFixed(6)+"</td>";
+					   htmlRow=htmlRow+"<td  height='20' align='right' nowrap=''>";
+					   htmlRow=htmlRow+""+toThousands(pil.goodAmt.toFixed(2))+"</td>";
+					   htmlRow=htmlRow+"<td  height='20' align='right' nowrap=''>"+pil.serviceRate+"</td>";
+					   htmlRow=htmlRow+"<td  height='20' align='right' nowrap=''>"+pil.tariffRate+"</td>";
+					   htmlRow=htmlRow+"<td  height='20' align='right' nowrap=''>"+pil.vatRate+"</td>";
+					   htmlRow=htmlRow+"<td  height='20' align='right' nowrap=''>";
+					   htmlRow=htmlRow+""+ toThousands(pil.goodsRmbAmt.toFixed(2))+"</td>";
+					   htmlRow=htmlRow+"<td  height='20' align='right' nowrap=''>"+toThousands(pil.serviceAmt.toFixed(2))+"</td>";
+					   htmlRow=htmlRow+"<td  height='20' align='right' nowrap=''>"+toThousands(pil.ddiAmt)+"</td>";
+					   htmlRow=htmlRow+"<td  height='20' align='right' nowrap=''>";
+					   htmlRow=htmlRow+""+toThousands(pil.tariffAmt.toFixed(2))+"</td>";
+					   htmlRow=htmlRow+"<td  height='20' align='right' nowrap=''>";
+					   htmlRow=htmlRow+""+toThousands(pil.vatAmt.toFixed(2))+"</td>";
+					   htmlRow=htmlRow+"</tr>";
+					}
+					addTableRow("items",1,htmlRow);
+					if (json.entity.optype==1) {
+						htmlRow="         <tr height='16'>";
+						htmlRow=htmlRow+"   <td colspan='10'  rowspan='3'>";
+						htmlRow=htmlRow+"			&nbsp;备注：<span name='remark'></span>";
+						htmlRow=htmlRow+"		</td>";
+						htmlRow=htmlRow+"		<td  height='0' colspan='2'>";
+						htmlRow=htmlRow+"			&nbsp;<b>(1)货值：(RMB)</b>";
+						htmlRow=htmlRow+"		</td>";
+						htmlRow=htmlRow+"		<td  height='0' align='right' colspan='2'>";
+						htmlRow=htmlRow+"			<b><span name='totalGoodsRmbAmt'></span></b>";
+						htmlRow=htmlRow+"		</td>";
+						htmlRow=htmlRow+" </tr>";
+						htmlRow=htmlRow+" <tr height='16'>";
+						htmlRow=htmlRow+"		<td  height='20' colspan='2'>";
+						htmlRow=htmlRow+"				&nbsp;<b>(2)服务费：(RMB)</b>";
+						htmlRow=htmlRow+"		</td>";
+						htmlRow=htmlRow+"		<td  height='20' align='right' colspan='2'>";
+						htmlRow=htmlRow+"			<b><span name='totalServiceAmt'></span></b>";
+						htmlRow=htmlRow+"		</td>";
+						htmlRow=htmlRow+" </tr>";
+						htmlRow=htmlRow+" <tr height='16'>";
+						htmlRow=htmlRow+"		<td  height='20' colspan='2'>";
+						htmlRow=htmlRow+"			&nbsp;<b>(3)杂费：(RMB)</b>";
+						htmlRow=htmlRow+"		</td>";
+						htmlRow=htmlRow+"		<td  height='20' align='right' colspan='2' >";
+						htmlRow=htmlRow+"			<b><span name='totalDDIAmt'></span></b>";
+						htmlRow=htmlRow+"		</td>";
+						htmlRow=htmlRow+" </tr>";
+						$("#bpm").hide();
+					} else {
+						htmlRow="         <tr height='16'>";
+						htmlRow=htmlRow+"   <td colspan='10'  rowspan='2'>";
+						htmlRow=htmlRow+"			&nbsp;备注：<span name='remark'></span>";
+						htmlRow=htmlRow+"		</td>";
+						htmlRow=htmlRow+"		<td  height='20' colspan='2'>";
+						htmlRow=htmlRow+"				&nbsp;<b>(1)服务费：(RMB)</b>";
+						htmlRow=htmlRow+"		</td>";
+						htmlRow=htmlRow+"		<td  height='20' align='right' colspan='2'>";
+						htmlRow=htmlRow+"			<b><span name='totalServiceAmt'></span></b>";
+						htmlRow=htmlRow+"		</td>";
+						htmlRow=htmlRow+" </tr>";
+						htmlRow=htmlRow+" <tr height='16'>";
+						htmlRow=htmlRow+"		<td  height='20' colspan='2'>";
+						htmlRow=htmlRow+"			&nbsp;<b>(2)杂费：(RMB)</b>";
+						htmlRow=htmlRow+"		</td>";
+						htmlRow=htmlRow+"		<td  height='20' align='right' colspan='2'>";
+						htmlRow=htmlRow+"			<b><span name='totalDDIAmt'></span></b>";
+						htmlRow=htmlRow+"		</td>";
+						htmlRow=htmlRow+" </tr>";
+					}
+					$("#totalTr").after(htmlRow);
+					$("#index1").html((json.entity.optype==1)?4:3);
+					$("#index2").html((json.entity.optype==1)?5:4);
+					$("#index3").html((json.entity.optype==1)?6:5);
+					$("#index4").html((json.entity.optype==1)?7:6);
+					json.entity["optype"]=Dictionary.getDictName(Dictionary.OpType,json.entity.optype);
+					json.entity.totalQty=toThousands(json.entity.totalQty);
+					json.entity.totalGoodsAmt=toThousands(json.entity.totalGoodsAmt.toFixed(2));
+					json.entity.totalGoodsRmbAmt=toThousands(json.entity.totalGoodsRmbAmt.toFixed(2));
+					json.entity.totalDDIAmt=toThousands(json.entity.totalDDIAmt.toFixed(2));
+					json.entity.totalTariffAmt=toThousands(json.entity.totalTariffAmt.toFixed(2));
+					json.entity.totalVatAmt=toThousands(json.entity.totalVatAmt.toFixed(2));
+					json.entity.totalAmt=toThousands(json.entity.totalAmt);
+					
+					vcTb.initializeInput({"vo":json.entity}); //初始化
+					vcTb.find("span[name='dealType']").html(Dictionary.getDictName(Dictionary.DealType,json.entity.dealType));
+					vcTb.find("span[name='currency']").html(Dictionary.getDictName(Dictionary.Currency,json.entity.currency));
+					//if (invoiceNos.length>0){
+					 if (json.entity.cusRefNo!=''){
+					    $("#invoiceNos").html("INV NO:"+json.entity.cusRefNo);
+					 }
+					//}
+				}			
+			 });
+ 		 }
+	});	
+	
+	//注意input的id和tr的id要一样  
+    function addTableRow(tableId,currentRowID,htmlRow){  
+		var $table=$("#"+tableId);
+		var $trs=$table.find("tr");
+        $.each($trs, function(i, tr){  
+            if(i==currentRowID){  
+               var currentRow=$trs.eq(i);
+               currentRow.after(htmlRow);  
+            }  
+        });  
+    }  
+	</script>
+</head>
+<body bgcolor="#FFFFFF" marginwidth="0"  style=" width:100%;font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px;">
+<div id="paymenttrading" >
+	<table  width="98%" border="0" cellspacing="0" cellpadding="2" align="center">
+		<tbody>
+			<tr valign="middle" width="98%">
+				<td width="98%" height="60" align="center">
+					 <div style="width:100%;">
+			<div style="float:left; width:8%; height:60; text-align:right;">
+			  <img src="/images/icon/gosonic.png" style="width:60;height:60;"/>
+			</div>
+			<div style="height:60;width:90%; text-align:center;"><b>
+				<font size="5"><span name="opCompanyName"></span></font><br /><br />
+				<font size="3" style="font-family:'Times New Roman', Times, serif"><span name="opCompanyEnName"></span></font>
+				<br />
+			</b></div>
+	    </div>
+				</td>
+			</tr>
+			<tr valign="middle" width="98%">
+				<td width="98%" height="30" align="center">
+					<u><b><font size="2">
+						地址：<span name="opCompanyAddress"></span> 
+						电话：<span name="opCompanyTel"></span> 
+						传真：<span name="opCompanyFax"></span> 
+					</font></b></u>
+				</td>
+			</tr>
+			<tr valign="middle" width="98%">
+				<td width="98%" height="30" align="center">
+					<b><font size="4">收款通知书（请付款）</font></b>
+				</td>
+			</tr>
+			<tr valign="middle">
+				<td width="98%" height="19">
+					<table cellpadding="0" cellspacing="0" border="0" width="100%">
+						<tbody>
+							<tr>
+								<td nowrap="" width="50%" colspan="2">
+									客&nbsp;&nbsp;&nbsp;&nbsp;户:&nbsp;<span name="customerName"></span>
+								</td>
+								<td nowrap="" width="50%">
+									结算&nbsp;日&nbsp;期:&nbsp;<span name="settlementDate"></span>
+								</td>
+							</tr>
+							<tr>
+								<td nowrap="" colspan="2" style="width: 550px; word-wrap: break-word;">
+									<div>单&nbsp;&nbsp;&nbsp;&nbsp;号:&nbsp;<span name="orderNo"></span></div>
+								</td>
+								<td nowrap="">
+									
+								</td>
+							</tr>
+							<tr>
+								<td nowrap="" colspan="2">
+									操作模式:&nbsp;<span name="optype"></span>
+								</td>
+								<td nowrap="">
+									结算&nbsp;汇&nbsp;率:&nbsp;1:<span name="rate"></span>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</td>
+			</tr>
+			<tr valign="middle">
+				<td width="98%" height="19" align="center">
+					<table id="items" class="listContent" cellpadding="0" cellspacing="0" border="0" width="100%">
+						<tbody>
+						   <tr id="bpm">
+								<td   colspan="3" height="15" align="left" nowrap="" >
+									成交方式：<span name="dealType">
+								</td>
+								<td   colspan="3" height="15" align="left" nowrap="" >
+									运费(RMB): <span name="fare"></span>
+								</td>
+								<td  colspan="3" height="15" align="left" nowrap="">
+									保费(RMB)：<span name="premiums"></span>
+								</td>
+								<td  colspan="2" height="15" align="left" nowrap="">
+									杂费(RMB)：<span name="mixFee"></span>
+								</td>
+								<td  colspan="3" height="15" align="left" nowrap="">
+									运保杂总额(RMB)：<span name="fpmFare"></span>
+								</td>
+							</tr>
+							<tr>
+								<td  height="15" align="center" nowrap="" width="30">
+									<b>序</b>
+								</td>
+								<td  height="15" align="center" nowrap="">
+									<b>品名</b>
+								</td>
+								<td  height="15" align="center" nowrap="">
+									<b>料号</b>
+								</td>
+								<td  height="15" align="center" nowrap="" style="font-weight: bold;">
+									<b>数量</b>
+								</td>
+								<td  height="15" align="center" nowrap="">
+									<b>单价(<span name="currency"></span>)<br>
+									</b>
+								</td>
+								<td  height="15" align="center" nowrap="">
+									<b>总价金额<br>
+										(<span name="currency"></span>)</b>
+								</td>
+								<td  height="15" align="center" nowrap="">
+									<b>服务<br>
+									费率</b>
+								</td>
+								<td  height="15" align="center" nowrap="">
+									<b>关税<br>
+										税率</b>
+								</td>
+								<td  height="15" align="center" nowrap="">
+									<b>增值<br>
+									 税率</b>
+								</td>
+								<td  height="15" align="center" nowrap="">
+									<b>货值<br>
+										(RMB)</b>
+								</td>
+								<td  height="15" align="center" nowrap="">
+									<b>服务费<br>
+										(RMB)</b>
+								</td>
+								<td  height="15" align="center" nowrap="">
+									<b>杂费<br>
+									 (RMB)</b>
+								</td>
+								<td  height="15" align="center" nowrap="">
+									<b>关税<br>
+										(RMB)</b>
+								</td>
+								<td  height="15" align="center" nowrap="">
+									<b>增值税<br>
+										(RMB)</b>
+								</td>
+							</tr>
+							<tr height="16">
+								<td  style="padding:0px;" height="15" align="left" nowrap="" colspan="14">
+								     <p id="invoiceNos" style="width:800px; padding-left:2px;"></p>
+								</td>
+							</tr>
+							<tr height="16" id="totalTr">
+								<td  height="15" align="left" nowrap="" colspan="3">
+									总计&nbsp;
+								</td>
+								<td  height="15" align="right" nowrap="">
+									&nbsp;<span name="totalQty"></span>
+								</td>
+								<td  height="15" align="right" nowrap="">&nbsp;
+									
+								</td>
+								<td  height="15" align="right" nowrap="">
+									&nbsp;<span name="totalGoodsAmt"></span>
+								</td>
+								<td  height="15" align="right" nowrap="">&nbsp;
+									
+								</td>
+								<td  height="15" align="right">&nbsp;
+									
+								</td>
+								<td  height="15" align="right">&nbsp;
+									
+								</td>
+								<td  height="15" align="right">
+									&nbsp;<span name="totalGoodsRmbAmt"></span>
+								</td>
+								<td  height="15" align="right">
+									&nbsp;<span name="totalServiceAmt"></span>
+								</td>
+								<td  height="15" align="right">&nbsp;
+									<span name="totalDDIAmt"></span>
+								</td>
+								<td  height="15" align="right">
+									&nbsp;<span name="totalTariffAmt"></span>
+								</td>
+								<td  height="15" align="right">
+									&nbsp;<span name="totalVatAmt"></span>
+								</td>
+							</tr>
+							
+							<tr height="16">
+								<td colspan="10" >
+									&nbsp;尊敬的客户，请您审核本账单，无误后，根据协议安排付款。多谢合作！
+                                   
+								</td>
+								<td  height="15" colspan="2">
+									&nbsp;<b>(<span id="index1"></span>)关税：(RMB)</b>
+								</td>
+								<td  height="15" align="right" colspan="2">
+									<b><span name="totalTariffAmt"></span></b>
+								</td>
+							</tr>
+							<tr height="16">
+								<td colspan="10" >
+									&nbsp;公司名称：<span name="payeeName"></span>
+								</td>
+								<td  height="15" colspan="2">
+									&nbsp;<b>(<span id="index2"></span>)增值税：(RMB)</b>
+								</td>
+								<td  height="15" align="right" colspan="2">
+									<b><span name="totalVatAmt"></span></b>
+								</td>
+							</tr>
+							<tr height="16">
+								<td colspan="10" >
+									&nbsp;开户银行：<span name="payeeBankName"></span>
+								</td>
+								<td  height="15" colspan="2">
+									&nbsp;<b>(<span id="index3"></span>)总计：(RMB)</b>
+								</td>
+								<td  height="15" align="right" colspan="2">
+									<b><span name="totalAmt"></span></b>
+								</td>
+							</tr>
+							<tr height="16">
+								<td colspan="10" >
+									&nbsp;银行账号：<span name="payeeBankAccount"></span>
+								</td>
+								<td  height="15" colspan="2">
+									&nbsp;<b>(<span id="index4"></span>)应来款：(RMB)</b>
+								</td>
+								<td  height="15" align="right" colspan="2">
+									<b><span name="totalAmt"></span></b>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<div style="text-align:left;">
+					&nbsp;制单人：<span name="oper"></span>                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;复核：<span name='auditMan'></span>
+					</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+<img src="/images/icon/ht.png" style="z-index:1000;position:relative;top:-180;left:500;float:left;width:180px;height:180px;">
+</body>
+</html>

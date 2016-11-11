@@ -1,0 +1,402 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {	
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("valueaddedservices");	
+		var valueAddedServicesId=getIframeParm("valueAddedServicesId");	
+		initCoinDate(valueAddedServicesId);
+		//$("#nocheck").attr("check",true);
+		if (valueAddedServicesId !=""){
+		     var url="business/ValueAddedServices/0/get?valueAddedServicesId="+valueAddedServicesId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				$("#valueaddedservices").initializeInput({"vo":json.entity}); //初始化
+			 }});
+ 		 }else{
+			$("#valueaddedservices").initializeInput(); //初始化			
+		 }
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveValueAddedServices
+				},
+				{separtor:true},
+				{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+					  closeCurrActivateTabs(1000);
+				  }
+				 },
+				 {separtor:true},
+				 {label:"新增",id:"button3", 
+				  icons : {left : '/images/icon/add.png'},
+				  onClick:function(){
+					  addCoinValue();
+				  }
+				 }		 
+		     ]
+          });  
+          
+          $('#tabCoin').omPanel({
+                width:'100%',
+                height:'260px',
+                header: true,
+                title:'货币信息',
+                collapsed: false,
+                collapsible: true,
+                closable: false
+            });
+	});
+	//获取表格信息
+	function initCoinDate(id){
+		var mutitable=$("#table2");
+		var html="";
+		if(id!=""){
+			url="business/ValueAddedServices/0/searchCoinValue?valueAddedServicesId="+id;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					//初始化
+					var rows=json.rows;
+					for(var i=0;i<rows.length;i++){
+						var currency=Dictionary.getDictName(Dictionary.Currency,rows[i].currency);
+						var amt=rows[i].amt;
+						var ids=rows[i].id;
+						var serviceID=rows[i].serviceId;
+						var rowNums = $("#table2 tr").length;
+						html=html+" <tr> ";
+						html=html+"   <td width='20' style='text-align:center;padding-left: 20px'>";
+						html=html+"      <input type='checkbox' value='checkbox1' name='subBox' checked='true'/>";
+						html=html+"      <span  style='display:none'></span>";
+						html=html+"      <span  style='display:none'></span>";
+						html=html+"   </td>";
+						html=html+"   <td class='field' style='text-align:center;padding-left: 20px'>";
+						html=html+"      <input type='hidden' name='id' value='"+ids+"'/>";
+						html=html+"   </td>";
+						html=html+"   <td class='field' style='text-align:center;padding-left: 20px'>";
+						html=html+"       <input type='currency' name='currency' pattern='combo' value='"+currency+"'/>";
+						html=html+"   </td>"; 
+						html=html+"   <td class='field' style='text-align:center;padding-left: 20px'>";
+						html=html+"       <input type='text' name='amt' value='"+amt+"'/>";
+						html=html+"   </td>";
+						html=html+"   <td padding-left: 10px>";
+						html=html+"       <button id='delCoin' onclick=delData("+ids+","+serviceID+","+i+") style='width:60px;height: 25px'>删除</button>";
+						html=html+"   </td>";
+						html=html+" </tr>";
+					}
+					mutitable.append(html);
+					mutitable.find("input[name='currency']").omCombo({dataSource :Dictionary.Currency,
+					width:'90',editable:false,optionField:'dictName',valueField : "dictCode",value:0});
+			 }});
+		}
+	}
+	//添加数据信息
+	function addCoinValue(){
+		var mutitable=$("#table2");
+		var rowNum = $("#table2 tr").length;
+		var html="";
+		html=html+" <tr> ";
+		html=html+"   <td width='20' style='text-align:center;padding-left: 20px'>";
+		html=html+"      <input type='checkbox' value='checkbox1' name='subBox' checked='true'/>";
+		html=html+"      <span  style='display:none'></span>";
+		html=html+"      <span  style='display:none'></span>";
+		html=html+"   </td>";
+		html=html+"   <td class='field' style='text-align:center;padding-left: 20px'>";
+		html=html+"      <input type='hidden' name='id'/>";
+		html=html+"   </td>";
+		html=html+"	  <td class='field' style='text-align:center;padding-left: 20px'>";
+		html=html+"		<input name='currency' id='currency'  validate='rules:['required']' pattern='combo'";
+		html=html+"	   editable='false' remote='Currency'/>";
+		html=html+"	   </td>";
+		html=html+"   <td class='field' style='text-align:center;padding-left: 20px'>";
+		html=html+"       <input type='text' name='amt'/>";
+		html=html+"   </td>";
+		html=html+"   <td padding-left: 10px>";
+		html=html+"       <button id='delCoin'  onclick=delRow("+rowNum+") style='width:60px;height: 25px'>删除</button>";
+		html=html+"   </td>";
+		html=html+" </tr>";
+		mutitable.append(html);
+		mutitable.find("input[name='currency']").omCombo({dataSource :Dictionary.Currency,
+		width:'90',editable:false,optionField:'dictName',valueField : "dictCode",value:0});
+	}
+	//后台删除数据
+	function delData(ids,serviceID,i){
+		//判断如果只有一条数据则不能删除
+		var rowNum = $("#table2 tr").length;
+		if(rowNum>2){
+			mutitable=$("#table2 tr").eq(i+1).remove();
+			//执行后台删除
+			 var url="business/ValueAddedServices/0/delCoinValue?valueAsp.id="+ids+"&valueAsp.serviceId="+serviceID;
+		   	  $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			  $('#supgrid').omGrid('reload');//刷新grid
+			  $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+		   }});
+		}else{
+			 $.omMessageBox.alert({
+                type:'error',
+                title:'注意',
+                content:'请至少保留一个数据信息！',
+                onClose:function(value){
+                }
+            });
+		}
+	}
+	//删除行
+	function delRow(rowNum){
+		if(rowNum<=1){
+			 $.omMessageBox.alert({
+                type:'error',
+                title:'注意',
+                content:'请至少保留一个数据信息！',
+                onClose:function(value){
+                }
+            });
+		}else{
+			mutitable=$("#table2 tr").eq(rowNum).remove();
+		}
+	}
+	//重新刷新数据
+	function getInfo(obj){
+		var mutitable=$("#table2");
+		var html="";
+		mutitable.html('');
+		html=html+"<tr>";
+		html=html+"	<td width='10'>";
+		html=html+"<label for='selectAll'></label>";
+		html=html+"</td>";
+		html=html+"	<td width='15'>";
+		html=html+"<input type='hidden'/>";
+		html=html+"	</td>";
+		html=html+"	<td class='label' width='20' style='text-align: center'>货币</td>";
+		html=html+"	<td class='label' width='20' style='text-align: center'>参数</td>";
+		html=html+"	<td width='20'>";
+		html=html+"	<input type='hidden'/>";
+		html=html+"	</td>";
+		html=html+"	<td width='5'>";
+		html=html+"	<input type='hidden'/>";
+		html=html+"	</td>";
+		html=html+"	</tr>";
+		//初始化
+		for(var i=0;i<obj.length;i++){
+				var cur=obj[i].currency;
+				var currency=Dictionary.getDictName(Dictionary.Currency,cur);
+				var amt=obj[i].amt;
+				var ids=obj[i].id;
+				var serviceID=obj[i].serviceId;
+				html=html+" <tr> ";
+				html=html+"   <td width='20' style='text-align:center;padding-left: 20px'>";
+				html=html+"      <input type='hidden' value='checkbox1' name='subBox' checked='true'/>";
+				html=html+"      <span  style='display:none'></span>";
+				html=html+"      <span  style='display:none'></span>";
+				html=html+"   </td>";
+				html=html+"   <td class='field' style='text-align:center;padding-left: 50px'>";
+				html=html+"      <input type='hidden' name='id' value='"+ids+"'/>";
+				html=html+"   </td>";
+				html=html+"   <td class='field' style='text-align:center;padding-left: 20px'>";
+				html=html+"       <input type='currency' name='currency' pattern='combo' value='"+currency+"'/>";
+				html=html+"   </td>"; 
+				html=html+"   <td class='field' style='text-align:center;padding-left: 100px'>";
+				html=html+"       <input type='text' name='amt' value='"+amt+"'/>";
+				html=html+"   </td>";
+				html=html+"   <td padding-left: 10px>";
+				html=html+"       <input type='hidden' name='id' value=''/>";
+				html=html+"   </td>";
+				html=html+" </tr>";
+			}
+			mutitable.append(html);
+			mutitable.find("input[name='currency']").omCombo({dataSource :Dictionary.Currency,
+			width:'90',editable:false,optionField:'dictName',valueField : "dictCode",value:0});
+	}
+	//封装货值信息
+	function saveCoinValueService(){
+		var arrCoin=[];
+	    $(".mutitables input[name='subBox']:checked").each(function(i){
+		   var $this=$(this);
+		   var $tr=$this.parents("tr");
+		   var vo=$tr.getVo();
+		   if (vo["id"]==0){ //新增数据
+		       vo["id"]="";
+		   }
+		   //转换货值格式
+		   var cur=vo["currency"];
+		   if(!isNaN(cur)){
+		   	arrCoin.push(vo);
+		   }else{
+		   	vo["currency"]=Dictionary.getDicCode(Dictionary.Currency,cur);
+		   	arrCoin.push(vo);
+		   }
+		});
+		$(".mutitables input[name='subBox']").not("input:checked").each(function(i){
+		   var $this=$(this);
+		   var id=$this.siblings("span[name='id']").html();
+		   id=parseInt(id);
+		   if(id>0){ //未被选择，但是又有ID的 
+			   var $tr=$this.parents("tr");
+			   var vo=$tr.getVo();
+			   vo["mode"]="del";//标记为3表示被删掉
+			   arrCoin.push(vo);
+		   }
+		});
+		return arrCoin;
+	}
+	function saveValueAddedServices(){	
+		var vo=$("#valueaddedservices").getVo();   
+		var coin=saveCoinValueService();
+		//获取table长度
+		var rowNum = $("#table2 tr").length;
+		if(rowNum>1){
+		     var coinStr= JSON.stringify(coin); 
+		     var resultCode= validateStr(coinStr);
+		     if(resultCode=="00000"){
+		     	 vo["vas.coinValues"]=coinStr;
+		     	 //重新加载
+			   	 if(validateForm("valueaddedservices")==false)return false;
+				 var url = $("#id").val()=="" ? "business/ValueAddedServices/0/add" : "business/ValueAddedServices/0/edit";
+				 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+					   $("#id").val(json.entity);			     
+					   window.top.$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+					   //重新加载table表
+					   var obj=json.entity;
+					   if(obj!=null){
+					   	$("#button3").hide();
+					   	getInfo(obj);
+					   }else{
+					   	window.location.reload();
+					   }
+			     }
+		     });
+		     }else if(resultCode=="00001"){
+		     	$.omMessageTip.show({content :"货币数据不能重复！",timeout : 2000,type : 'error'});
+		     }else{
+		     	$.omMessageTip.show({content :"数据信息不能为空！",timeout : 2000,type : 'error'});
+		     }
+		}else{
+		     $.omMessageTip.show({content :"请至少添加一个货值信息",timeout : 2000,type : 'error'});
+			 return false;
+		}
+	}	
+	 //校验数据方法
+	 function validateStr(str){
+	    var code="00000";
+	 	var a=eval("("+str+")");
+	 	var b;
+	 	b = new Object();
+		var i;
+		for (i=0; i<a.length; i++)
+		{
+		    var id = a[i]["currency"];
+		    if(b[id] == undefined)
+		        b[id] = 1;
+		    else
+		        b[id] += 1;   
+		}
+		for(e in b)
+		if(b[e]>1&&e.toString()!=""){
+			code="00001";
+		}else if(e.toString()==""){
+			code="00002"
+		}
+		return code;
+	 }
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>		
+	<div id="nav_valueaddedservices" title="新增增值服务配置">
+        <form id="valueaddedservices">	
+		<input id="id" name="vas.id" type="hidden" />
+		<input id="vasId" name="vas.chargesVariables.id" type="hidden" />
+		<input type="hidden" id="lastModifyTime" name="vas.lastModifyTime" />
+	 	<input type="hidden" id="createTime" name="vas.createTime" />		
+		<input type="hidden" id="lastModifyBy" name="vas.lastModifyBy" />
+ 		<input type="hidden" id="createTime" name="vas.createBy" />
+ 		<input type="hidden" id="coinValues" name="vas.coinValues"/>
+		<table class="edit-table">
+		    <tr>
+			    <td class="label">编码：</td>
+				<td class="field"><input id="scode" name="vas.chargesVariables.scode" validate="rules:['required']" /></td>
+				<td class="label">是否显示到界面：</td>
+				<td class="field"><input id="ifShow" name="vas.ifShow" validate="rules:['required']" 
+				pattern="combo" editable='false' remote="YesNot" />
+				</td>
+			</tr>
+			<tr>
+			    <td class="label"></span>增值服务名：</td>
+				<td class="field"><input  id="serviceName" name="vas.serviceName" validate="rules:['required']" /></td>	
+				<td class="label">收费单位：</td>
+				<td class="field" ><input id="feeUnit" name="vas.feeUnit" /></td>
+			</tr>		
+			<tr>
+				<td class="label">参数名：</td>
+				<td class="field" >
+				  <input id="variableName" name="vas.chargesVariables.variableName" validate="rules:['required']" />
+				</td>							
+				<!--<td class="label">参数值：</td>
+				<td class="field">
+				   <input id="variableValue" name="vas.chargesVariables.variableValue" validate="rules:['required']" pattern="float" />
+				</td>						
+				-->
+				<td class="label">分类：</td>
+				<td class="field"><input id="type" name="vas.type" validate="rules:['required']" 
+				pattern="combo" editable='false' remote="ValueAddedType" /></td>
+			</tr>	
+			<tr>				
+				<td class="label">公式使用说明：</td>
+				<td class="field" colspan="3">
+				<textarea id="description" name="vas.chargesVariables.description" validate="rules:['required']"
+				 style="height:50px;"></textarea></td>
+			</tr>
+		</table>
+		</form>	
+	</div>
+	<div id="tabCoin">
+		<div class="mutitables" id="checkstandards">
+				<table cellpadding="0" cellspacing="0" width="30%" class="thead" id="table2">
+					 <thead>
+						   <tr>
+						     <td width="10">
+								<label for="selectAll"></label>
+							  </td>
+							  <td width="15">
+							  <input type="hidden" />
+							  </td>
+							  <td class="label" width="20" style="text-align: center">货币</td>
+							  <td width="70">
+							  <input type="hidden"/>
+							  </td>
+							  <td class="label" width="20" style="text-align: left">参数</td>
+							  <td width="5">
+							  <input type="hidden"/>
+							  </td>
+						   </tr>
+					</thead>
+			   </table>
+			</div>
+	</div>
+	<div id="buttonbar">
+	</div>
+</body>
+</html>

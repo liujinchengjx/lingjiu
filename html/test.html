@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <title>元和原浆免费领</title>
+    <link rel="stylesheet" href="css/reset.css"/>
+    <link rel="stylesheet" href="css/layout.css"/>
+    <link rel="stylesheet" href="css/sm.min.css"/>
+</head>
+<body style="background: #f0f2f5;">
+<div class="page-wrap">
+    <div class="menu">
+        <img  src="images/dragon-boat.jpg">
+    </div>
+    <div class="order-head">订单信息</div>
+    <div class="order-item">
+        <form id="coollarform"   name="form">
+            <dl class="order-list mb">
+                <dt>选择产品</dt>
+                <dd><img class="btn-default" src="images/btn-default.png" alt=""/><input class="goods-name" type="text" value="128元茅台镇元和原浆 免费领！" readonly="readonly"/>
+                <input type="hidden" name="coollarRecord.goodsId" value="1"/>
+                </dd>
+            </dl>
+            <dl class="order-list">
+                <dt>收货姓名</dt>
+                <dd><input type="text" name="coollarRecord.receiverName" id="receiverName"/></dd>
+            </dl>
+            <dl class="order-list">
+                <dt>手机号码</dt>
+                <dd><input type="text" name="coollarRecord.receiverMobile" id="receiverMobile"/></dd>
+            </dl>
+            <dl class="order-list">
+                <dt>所在地区</dt>
+                <dd><input type="text" name="coollarRecord.provinceName" id="city-picker" value="浙江 杭州 拱墅区"/></dd>
+            </dl>
+            <dl class="order-list">
+                <dt>详细地址</dt>
+                <dd><input type="text" placeholder="请填写详细地址，不少于5个字" name="coollarRecord.address"   id="address"/></dd>
+            </dl>
+            <img  class="border-bg mb" src="images/border-bg.png" alt=""/>
+            <dl class="order-list">
+                <dt>领取数量</dt>
+                <dd><input type="text" name="coollarRecord.coollarQty" onchange="caluFee();" id="coollarQty"/></dd>
+            </dl>
+            <dl class="order-list">
+                <dt>快递费用</dt>
+                <dd>
+                    <input class="cost" type="text" value="29.00" readonly="readonly" name="logisticsFee_cost" id="logisticsFee_cost"/>
+                    <input type="hidden" value="2900" name="coollarRecord.logisticsFee" id="logisticsFee"/>
+                </dd>
+            </dl>
+            <dl class="order-list">
+                <dt>领取码</dt>
+                <dd><input type="text" name="coollarRecord.memberCode" id="memberCode"/></dd>
+            </dl>
+            <dl class="order-list mb order-spec">
+                <dt>付款方式</dt>
+                <dd class="payway"><img src="images/btn-default.png" alt=""/><p>货到付运费（注：新疆、内蒙等地区 每瓶需要外加10元运费</p>
+                    <input type="hidden" name="coollarRecord.payway" value="1"/>
+                </dd>
+            </dl>
+            <dl class="order-list mb order-spec">
+                <dt>留言</dt>
+                <dd><input type="text" name="coollarRecord.remark"/><p>温馨提示：领酒是选择货到付款（只需支付快递费） 任何疑问请拨打我们的联系电话：0851-85913199</p></dd>
+            </dl>
+            <div class="order-sub">
+                <input class="btn-sub" type="button" name="submit" value="提交订单" onclick="postcheck()" />
+                <span class="mr20">共计<sapn class="cost" id="total_cost">￥29.00</sapn></span>
+            </div>
+        </form>
+        <div class="order-head mt25">发货通知</div>
+        <div class="fahuo">
+            <dl>
+                <dt>2016-5-5&nbsp;江苏的代先生（138****9290）</dt>
+                <dd>您订购的 128元元和原浆酒免费领！ 已发货 请注意收货</dd>
+            </dl>
+            <dl>
+                <dt>2016-5-5&nbsp;江苏的代先生（138****9290）</dt>
+                <dd>您订购的 128元元和原浆酒免费领！ 已发货 请注意收货</dd>
+            </dl>
+            <dl>
+                <dt>2016-5-5&nbsp;江苏的代先生（138****9290）</dt>
+                <dd>您订购的 128元元和原浆酒免费领！ 已发货 请注意收货</dd>
+            </dl>
+            <dl>
+                <dt>2016-5-5&nbsp;江苏的代先生（138****9290）</dt>
+                <dd>您订购的 128元元和原浆酒免费领！ 已发货 请注意收货</dd>
+            </dl>
+            <dl>
+                <dt>2016-5-5&nbsp;江苏的代先生（138****9290）</dt>
+                <dd>您订购的 128元元和原浆酒免费领！ 已发货 请注意收货</dd>
+            </dl>
+        </div>
+        <div class="order-head mb">订单查询</div>
+        <dl class="order-list phone-query">
+            <dt><img src="images/search.png" alt=""/></dt>
+            <dd><input type="text" id="notchecktel" placeholder="请输入11位手机号进行查询"/></dd>
+        </dl>
+        <div class="btn-query" onclick="return checktel()">查询</div>
+        <p class="query-tip">温馨提示：你可以在收货前随时查询自己的订单，掌握订单物流的 最新动态，方便自己的收货时间安排。</p>
+        <div class="btn-query track">详单追踪</div>
+        <p class="query-tip mb25">复制您的订单号,点击进入详单追踪页面,查询您的订单详情!</p>
+        <div class="order-head">微信公众号</div>
+        <div class="qcode-content">
+            <img src="images/qcode.png" alt=""/>
+            <p class="code-txt-top">识别或扫描二维码</p>
+            <p class="code-txt-bt">关注元和津<span>微信公众号</span>，查看更多优惠信息</p>
+        </div>
+    </div>
+</div>
+<script src="js/zepto.min.js"></script>
+<script src="js/sm.min.js"></script>
+<script src="js/sm-city-picker.min.js"></script>
+<script language="javascript">
+alert("恭喜你，领用成功！</br>我们将马上安排发货，祝您生活愉快！");
+
+    $("#city-picker").cityPicker({
+        toolbarTemplate: '<header class="bar bar-nav">\
+    <button class="button button-link pull-right close-picker">确定</button>\
+    <h1 class="title">选择收货地址</h1>\
+    </header>'
+    });
+    function checktel(){
+        if (document.getElementById("notchecktel").value==""){
+            alert('请输入要查询的手机号码！');
+            document.getElementById("notchecktel").focus();
+            return false;
+        }
+        var form = /^1[3,4,5,7,8]\d{9}$/;
+        if (!form.test(document.getElementById("notchecktel").value)){
+            alert('手机号码格式不正确，请重新填写！');
+            document.getElementById("notchecktel").focus();
+            return false;
+        }
+    }
+
+    function caluFee(){
+
+    }
+
+    function postcheck(){
+    	  alert($('#receiverName').attr("value") );
+        try{
+        	var receiveName = $('#receiverName').attr("value") 
+            var name = /^[\u4e00-\u9fa5]{2,6}$/;
+            if (!name.test(receiveName)){
+                alert('姓名格式不正确，请重新填写！');
+                ('#receiverName').focus();
+                return false;
+            }
+        }
+        catch(ex){
+        }
+        try{
+            if (document.form.mob.value==""){
+                alert('请填写手机号码！');
+                document.form.mob.focus();
+                return false;
+            }
+            var form = /^1[3,4,5,6,7,8]\d{9}$/;
+            if (!form.test(document.form.mob.value)){
+                alert('手机号码格式不正确，请重新填写！');
+                document.form.mob.focus();
+                return false;
+            }
+        }
+        catch(ex){
+        }
+        try{
+            if (document.form.province.value==""){
+                alert('请选择所在地区！');
+                document.form.province.focus();
+                return false;
+            }
+        }
+        catch(ex){
+        }
+        try{
+            if (document.form.address.value==""){
+                alert('请填写详细地址！');
+                document.form.address.focus();
+                return false;
+            }
+        }
+        catch(ex){
+        }
+        try{
+            if (document.form.yaoqing.value==""){
+                alert('请填写领取码！');
+                document.form.yaoqing.focus();
+                return false;
+            }
+        }
+        catch(ex){
+        }
+        try{
+            if (document.form.yaoqings.value==""){
+                alert('请填写领取密码！');
+                document.form.yaoqings.focus();
+                return false;
+            }
+        }
+        catch(ex){
+        }
+         document.form.submit.disabled = true;
+         document.form.submit.value="正在提交，请稍等 >>";
+        $.post('/create', $('#coollarform').serialize(), function(response){
+			
+
+        })
+        return false;
+    }
+
+
+
+</script>
+</body>
+</html>

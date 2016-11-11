@@ -1,0 +1,170 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>编辑委托单数据</title>
+<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<script type="text/javascript">	
+	    $(function(){		
+		      $("#nav_product").omPanel({title : "<label style='font-weight:bolder'>订单号："+
+			  getIframeParm("coOrderNo")+"  客户："+getIframeParm("customerName")+"</label>",collapsed:false,height:'95%'});
+			  loadOrderProducts();
+			 $('#buttonbar').omButtonbar({
+				 width : "100%",
+				 btns : [{separtor:true},
+						{label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);  
+						  }
+						 }					
+					 ]
+             });	 
+		});
+	function loadOrderProducts(){
+	      var customOrderId=getIframeParm("customOrderId");
+		  if (customOrderId !=""){	
+			 var url="customs/ProductEdit/0/loadCoProducts?customOrderId="+customOrderId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					 var mutitable=$(".mutitable");
+					 $("#totalAmt").text(json.entity);
+					 mutitable.find(".tbody_item").remove();
+					 var html="",index=1;
+					 for(var i=0;i<json.rows.length;i++){
+						 var p=json.rows[i];
+						 html=html+"<div class='tbody_item'>";
+						 html=html+" <table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+						 html=html+"  <tr> ";
+						 html=html+"   <td width='50'><strong><span>"+index+"</span></strong>";
+						 html=html+"     <span name='productId' style='display:none' >"+p.id+"</span>";
+						 html=html+"     <span name='tempPrice' style='display:none' >"+p.price+"</span>";
+						 html=html+"     <span name='tempAmt' style='display:none' >"+p.amt+"</span>";
+						 html=html+"     <span name='tempUnit' style='display:none' >"+p.unit+"</span>";
+						 html=html+"   </td>";
+						 html=html+"   <td width='80'>";
+						 html=html+"      <strong><span name='codeTs'>"+p.codeTs+"</span></strong>";
+						 html=html+"   </td>";
+						 html=html+"   <td width='140'>";
+						 html=html+"     <span name='pn' >"+(p.pn)+"</span>";
+						 html=html+"  </td>";
+						 html=html+"   <td width='100'>";
+						 html=html+"     <span name='brand' >"+(p.brand)+"</span>";
+						 html=html+"  </td> ";
+						 html=html+"  <td width='100'>";
+						 html=html+"     <span name='origin' >"+(p.origin)+"</span>";
+						 html=html+"  </td>";
+						 html=html+"  <td width='140'>";
+ 						 html=html+"     <span name='productName' >"+(p.productName)+"</span>";
+						 html=html+"  </td>";
+						 html=html+"  <td width='100' style='text-align:right;'>";
+ 						 html=html+"     <span name='qty' >"+(p.qty)+"</span>";
+						 html=html+"  </td>";
+						 html=html+"  <td width='100' style='text-align:right;"+(p.flag==2?"color:red;":"")+"'>";
+ 						 html=html+"     <span name='price' >"+(p.price)+"</span>";
+						 html=html+"  </td>";
+						 html=html+"  <td width='100' style='text-align:right;'>";
+ 						 html=html+"     <input type='text' value='"+(p.unit)+"' name='unit' ";
+						 html=html+"      style='width:90%;margin-right:2px;text-align:center;' validate="+"rules:['required'] >";
+						 html=html+"  </td>";
+						 html=html+"  <td width='140' style='text-align:right;'>";
+						 html=html+"     <input type='text' value='"+(p.amt)+"' name='amt' ";
+						 html=html+"      style='width:90%;margin-right:2px;text-align:right;' validate="+"rules:['required'] >";
+						 html=html+"  </td>";
+						 html=html+"  <td style='text-align:left;'><span class='btnEdit'>修改</span></td>";	 
+						 html=html+"</tr>";
+						 html=html+"</table></div>";
+						 index++;
+					 } 
+					 mutitable.append(html);
+					 initValidateForm("product");
+					 $("input[name='amt']").omNumberField({allowDecimals:true,decimalPrecision:10});
+					 $(".btnEdit").omButton({
+						onClick : function(event){
+						   var $this=$(this);
+						   var $tr=$this.parents("table");
+						   var vo=$tr.getVo();
+						   saveProducts(vo);
+						   
+						}	  
+					});
+			  }			
+			 });
+		}
+	}
+	function saveProducts(vo){
+		if(validateForm("product")==false)return false;  
+		if (vo==null) return ;
+		var customOrderId=getIframeParm("customOrderId");
+		if ((customOrderId=="") || (customOrderId<=0)) return ;
+		if ( (vo.tempAmt.trim()==vo.amt) && (vo.tempUnit.trim()==vo.unit.trim())) return ;
+		if (vo.amt<=0) {
+		   $.omMessageTip.show({content :"总价不能小于等于0",timeout : 2000,type : 'error'});
+		   return ;
+		}
+		$.omMessageBox.confirm({title:'产品单价修改',
+		content:'产品修改之前请确定修改后的单价是正确的，并将修改后的信息通知相关部门，你确定要这样做吗？',
+				onClose:function(v){
+		if(v){
+				var pvo={};
+				pvo["productId"]=vo.productId;
+				pvo["qty"]=vo.qty;
+				pvo["amt"]=vo.amt;
+				pvo["unit"]=vo.unit;
+				pvo["customOrderId"]=customOrderId;
+				pvo["modifyType"]=getIframeParm("modifyType");
+				var url = "customs/ProductEdit/0/updatePriceAndUnit";
+				$.ajaxPost({data:pvo,url:url,msg:false,success:function(json,textStatus){
+					loadOrderProducts();
+					$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+				}});
+		  }}});		 
+	}
+	</script>
+</head>
+
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px; background-color: #EEEEEE">
+<div id="nav_product" style="height:750px;" >
+	<div id="buttonbar"></div>
+	<form id="product" >	
+		<div class="mutitable">
+			<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+				<thead>
+				   <tr>
+					  <td width="50" >序号</td>
+					  <td width="80"  style="text-align:center;margin-left:2px;"><b>税号</b></td>
+					  <td width="140" style="text-align: center; margin-left:2px;"><b>型号</b></td>
+					  <td width="100" style="text-align:center;margin-left:2px;"><b>品牌</b></td>
+					  <td width="100" style="text-align:center;margin-left:2px;"><b>原产地</b></td>
+					  <td width="140" style="text-align:center;margin-left:2px;"><b>品名</b></td>
+					  <td width="100" style="text-align:right;margin-left:2px;"><b>数量</b></td>
+					  <td width="100" style="text-align:right;margin-left:2px;"><b>单价</b></td>
+					  <td width="100" style="text-align:center;margin-left:2px;"><b>单位</b></td>
+					  <td width="140" style="text-align:right;margin-left:2px;"><b>总金额</b></td>
+					  <td >总金额：<span id="totalAmt"></span></td>
+				   </tr>
+				</thead>
+			</table>
+		</div>
+	</form>	
+</div>
+</body>
+</html>

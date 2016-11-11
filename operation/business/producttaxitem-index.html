@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+   <link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<script type="text/javascript" src="/js/jquery.js"></script>	
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null,dgRecord=null;
+         $(document).ready(function() {
+			initValidateForm("producttaxttem");
+			dgRecord=$("#nav_record").omDialog({autoOpen:false,draggable:false,resizable:false,height:500,width:750,modal:true,
+		                onClose : function(event) {}
+		    });
+			$("#search-panel").omPanel({title : "搜索",collapsible:true});
+			$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+			$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+				   onClick : function(event){
+				         searchData();
+				   }
+			});						
+			dialog=$( "#nav_producttaxttem").omDialog({autoOpen: false,draggable : false,resizable : false,height: 400,width:800,
+				modal: true,
+				buttons: [{
+					text : "确定", 
+					click : saveProductTaxItem
+				}, {
+					text : "取消", 
+					click : function () {                   
+						dialog.omDialog("close");
+					}
+				}]
+			});	
+			dialog.initializeInput();	
+			$('#buttonbar').initToolBar();	
+			
+			$("#grid .optRecord").live("click",function(){
+				    $this=$(this);
+					var params=[];
+					params.push("pn="+$this.text());
+					params.push("brand="+$this.attr("brand"));
+					params.push("productName="+$this.attr("productName"));
+					$('#recordGrid').omGrid('setData',"customs/CustomForm/0/getCustomFormRecord?"+params.join("&"));
+				    dgRecord.omDialog("option", "title",'报关申报记录');
+					dgRecord.omDialog("open");//
+			});		
+			$("#recordGrid .showRecord").live("click",function(){
+				$this=$(this);
+				var url="/customs/customs-preview.html?customFormId="+$this.attr("atid");
+				showFullScreen(url);   
+			});
+			
+			$('#grid').omGrid({
+				autoFit:true,
+				limit:20,
+                title : '产品申报要素列表',
+                dataSource : "business/ProductTaxItem/0/searchProductTaxItem",
+                colModel : [  
+                             {header : '名称', name : 'cname', width : 80, align : 'left'}, 
+							 {header : '品牌', name : 'brand', width : 30, align : 'left'},
+							 {header : '型号', name : 'pn', width : 100, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+								     var html="<a href='#' class='optRecord' brand='"+rowData.brand+"' productName='"+rowData.cname+"'  >"
+									 +colValue+"</a>";
+									 return html;
+								 }
+							 },
+							 {header : '原产地', name : 'org', width : 30, align : 'left'},
+							 {header : '状态', name : 'flag', width : 30, align : 'left',
+							 	 renderer : function(colValue, rowData, rowIndex) {
+								     if (colValue !=null && colValue == 1) {
+										return "无效";
+									 } else {
+									 	return "有效";
+									 }
+								 }
+							 },
+							 {header : '海关编码', name : 'codeTs', width : 50, align : 'left'},
+							 {header : '申报要素', name : 'declareElements', width : 200, align : 'left'},
+							 {header : '申报要素信息', name : 'customsCriterionTips', width : 200, align : 'left'}
+						   ]
+            });
+			
+			 $('#recordGrid').omGrid({				
+				limit:50,
+				height:350,
+				autoFit:true,
+                title : '申报记录',
+                dataSource :"",
+                colModel : [
+							 {header : '子单号', name : 'cfOrderNo', width : 90, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return "<a href='#' class='showRecord' atid='"+rowData.id+"' >"+colValue+"</a>";
+								 }
+							 },
+							 {header : '客户', name : 'receiveCompanyName', width : 150, align : 'left'},
+							 {header : '报关单号', name : 'customOrderNo', width : 100, align : 'left'},
+							 {header : '状态', name : 'status', width : 50, align : 'left',
+								 renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.CusomFormStatus,colValue);
+								 }
+							 },
+							 {header : '金额', name : 'actualAmt', width : 60, align : 'right'},
+							 {header : '币种', name : 'currency', width : 40, align : 'left',
+								 renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.Currency,colValue);
+								 }
+							 },
+							 {header : '操作模式', name : 'opType', width : 40, align : 'left',
+									renderer : function(colValue, rowData, rowIndex) {
+										  return Dictionary.getDictName(Dictionary.OpType,colValue);
+									}
+							 },
+							 {header : '报关日期', name : 'customDate', align : 'left', width :'autoExpand'}
+							 ],
+            });
+			
+			
+		 });
+	 
+	 function searchData(){
+	    var vo=$("#search-panel").getVo();
+		var params=convertParamToUrl(vo);
+		$('#grid').omGrid('setData',"business/ProductTaxItem/0/searchProductTaxItem?"+params);
+	 }
+	 function saveProductTaxItem(){
+	    if(validateForm("producttaxttem")==false)return false;
+	    var vo=dialog.getVo();
+		var url = $("#id").val()=="" ? "business/ProductTaxItem/0/add" : "business/ProductTaxItem/0/edit";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   $('#grid').omGrid('reload');
+			}
+		 });
+		 dialog.omDialog("close");         	            
+	}	
+	function addProductTaxItem(){														
+		dialog.initializeInput(); //初始化
+		dialog.omDialog("option", "title", '新增');
+		dialog.omDialog("open");//显示dialog	
+	}
+	function editProductTaxItem(){
+	  var rowDatas = $('#grid').omGrid('getSelections',true);
+      if(rowDatas.length <= 0 ){
+         $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+         return;
+      }		
+	  dialog.initializeInput({"vo":rowDatas});
+      dialog.omDialog('open');	       	     
+	}	
+	function deleteProductTaxItem(){
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录行！'});
+			return;
+		}	
+		$.omMessageBox.confirm({title:'确认删除',content:'删除申报要素之后将（不可恢复），你确定要这样做吗？',onClose:function(v){
+		if(v){
+		       var vo={};
+			   vo["pti.id"]=rowDatas[0].id;
+			   var url="business/ProductTaxItem/0/del";
+			   $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+				  $('#grid').omGrid('reload');//刷新grid
+				  $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});									
+			   }});
+	    }
+       }});
+	 
+	}
+	function viewProductTaxItem(){
+	}
+	
+	function enabled(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录行！'});
+			return;
+		}	
+		$.omMessageBox.confirm({title:'确认启用',content:'你确定要启用该申报要素吗？',onClose:function(v){
+		if(v){
+		       var vo={};
+			   vo["pti.id"]=rowDatas[0].id;
+			   vo["pti.flag"]=0;
+			   var url="business/ProductTaxItem/0/updateStatus";
+			   $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+				  $('#grid').omGrid('reload');//刷新grid
+				  $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});									
+			   }});
+	    	}
+       }});
+	}
+	function disabled(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录行！'});
+			return;
+		}	
+		$.omMessageBox.confirm({title:'确认禁用',content:'你确定要禁用该申报要素吗？',onClose:function(v){
+		if(v){
+		       var vo={};
+			   vo["pti.id"]=rowDatas[0].id;
+			    vo["pti.flag"]=1;
+			   var url="business/ProductTaxItem/0/updateStatus";
+			   $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+				  $('#grid').omGrid('reload');//刷新grid
+				  $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});									
+			   }});
+	    	}
+       }});
+	}
+    </script>
+</head>
+<body class="dfbody">
+<div id="search-panel">
+   <table class="edit-panel">
+	<tr>
+		<td>关键字：</td>    
+		<td><input id="searchValue" name="searchValue" onFocus="myFocus(this,'#f4eaf1')" onBlur="myblur(this,'white')" tip="输入关键字" /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>
+  </table> 	 
+</div>		
+<div id="nav_producttaxttem" title="产品申报要素" style="display:none;">
+ 	    <form id="producttaxttem">
+		<input  type="hidden" id="id" name="pti.id"  />
+		<input type="hidden" id="lastModifyTime" name="pti.lastModifyTime" />
+		<input type="hidden" id="createTime" name="pti.createTime" />
+		<input type="hidden" id="lastModifyBy" name="pti.lastModifyBy" />
+ 		<input type="hidden" id="createTime" name="pti.createBy" />
+		<table class="edit-table">
+			<tr>
+				<td class="label">中文名称：</td>
+				<td class="field">
+				<input  id="cname" name="pti.cname" validate="rules:['required']" /></td>				
+				<td class="label">英文名称：</td>
+				<td class="field"><input id="ename" name="pti.ename"  /></td>
+			</tr>
+			<tr>
+   			    <td class="label">型号：</td>
+				<td class="field" ><input id="pn" name="pti.pn"  /></td>
+				<td class="label">品牌：</td>
+				<td class="field" >
+				<input id="brand" name="pti.brand" validate="rules:['required']" /></td>				
+			</tr>
+			<tr>  			   
+				<td class="label">产地：</td>
+				<td class="field" >
+				<input id="org" name="pti.org"  /></td>
+				<td class="label">税号：</td>
+				<td class="field" >
+				<input id="codeTs" name="pti.codeTs" validate="rules:['required']" /></td>				
+			</tr>							
+			<tr>
+   			    <td class="label">申报要素次序：</td>
+				<td class="field" colspan="3">
+				<span id="customsCriterionTips" name="pti.customsCriterionTips"></span></td>
+			</tr>
+			<tr>
+   			    <td class="label">用途：</td>
+				<td class="field" colspan="3">
+				<span id="usages" name="pti.usages"></span></td>
+			</tr>			
+			<tr>
+				<td class="label">申报要素：</td>
+				<td class="field" colspan="3">
+				<textarea id="declareElements" name="pti.declareElements" validate="rules:['required']" style="height:50px;"/></textarea></td>   			    
+			</tr>	
+			<tr>
+   			    <td class="label">备注：</td>
+				<td class="field" colspan="3" ><textarea id="remark" name="pti.remark"  style="height:50px;"/></textarea></td>				
+			</tr>
+		</table>
+		</form>		
+	</div>
+	<div id="buttonbar" style="margin-bottom:5px"></div>	
+	<div id="grid"></div>
+	
+	<div id="nav_record" title="申报记录" style="display:none;">
+	   <div id="recordGrid"></div>
+    </div>
+</body>
+</html>

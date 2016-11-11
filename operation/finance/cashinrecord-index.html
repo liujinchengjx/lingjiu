@@ -1,0 +1,205 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---来款记录</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/js/ajaxfileupload.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<style type="text/css">
+		input {vertical-align:middle;margin:0;padding:0; left:0px;}
+		.file-box {position:relative;margin-top:5px;width:620px; }
+		.txt {height:22px;border:1px solid #cdcdcd;width:450px;}
+		.btn {background-color:#FFF;border:1px solid #CDCDCD;margin-right:10px;padding:3px;}
+	</style>
+    <script type="text/javascript">
+    var dgFile=null;
+	$(function() {	
+		dgFile=$("#nav_uploadFiles").omDialog({autoOpen:false,draggable:false,resizable:false,height:250,width:700,modal:true,
+		    onClose : function(event) {$('#grid').omGrid('reload');}
+		});
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+					searchData();
+			   }
+		});		
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '来款记录列表',
+                dataSource :"finance/CashInRecord/0/searchCashInRecord",
+                colModel : [
+                			 {header : '来款日期', name : 'time', width :100, align : 'left'},
+                             {header : '账户名称', name : 'accountName', width : 120, align : 'left'},								 
+							 {header : '收入', name : 'actualAmt', width : 60, align : 'right'},	
+							 {header : '支出', name : 'actualPayAmt', width : 60, align : 'right'},	
+							 {header : '余额', name : 'balance', width : 60, align : 'right'},							  
+							 {header : '币种', name : 'currency', width : 60, align : 'center',
+							    renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.Currency,colValue);	
+								}	 
+							 },
+							 {header : '状态', name : 'status', width : 60, align : 'center',
+							    renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.CashInRecordStatus,colValue);
+								}	 
+							 },
+							 {header : '入账方式', name : 'bookType', width : 60, align : 'center',
+							    renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.BookType,colValue);
+								}	 
+							 },
+							 {header : '来款用途', name : 'cashinUse', width : 60, align : 'left'},
+							 {header : '操作人', name : 'createBy', width : 60, align : 'left'},
+							 {header : '备注', name : 'bookRemark', width : 120, align : 'left'}
+ 							]
+         });
+         $('#abtnfileupload').omButton({width : 60,
+		      onClick : function(event){	
+			    	//var fileurl=$("#textfield").val();
+					//var rowDatas = $('#grid').omGrid('getSelections',true);
+					//if(rowDatas.length <= 0 ){
+						// $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+						// return;
+					//}
+					var fileurl=$("#textfield").val();
+					var url=baseUrl+'attachment/UpLoadFile/0/importCashIn';
+					$.ajaxFileUpload({url:url,secureuri:false,fileElementId:'fileField',dataType:'json',
+						success: function (json, status){
+						    if (json.msgCode==1){
+								loadUpLoadFile(rowDatas[0].id,true);								
+								$("#textfield").val("",true);
+							   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+						    }else $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'error'});			
+						},
+						error: function (data, status, e){
+						}
+					})
+			  }
+		  });
+	});
+    function searchData(){
+	     var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#grid').omGrid('setData',"finance/CashInRecord/0/searchCashInRecord?"+params);
+	}
+	function addCashInRecord(){	 
+	    var paras={tabId:"addCashInRecord001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	    addNewTab("新加来款记录","/finance/cashinrecord-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	    });    
+	}
+	function editCashInRecord(){
+		  var rowDatas = $('#grid').omGrid('getSelections',true);
+		  if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+		  }		
+		  var paras={cashInRecordId:rowDatas[0].id,tabId:"editCashInRecord001"}; //tabId用方法名加001命名而成，这样就不会重复
+		   if(rowDatas[0].status==20){
+		     $.omMessageTip.show({title : '提示',timeout : 4000,content : '对不起，该来款已入账！',type : 'error'});
+			 return;
+		  }
+		  addNewTab("编辑来款记录","/finance/cashinrecord-edit.html",paras,function(){
+				$('#grid').omGrid('reload');//刷新grid
+		  });    
+	}	
+	
+	function importsCashInRecord(){ //导入来款记录
+	    //var paras={tabId:"importsCashInRecord001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	    //addNewTab("新加送货单","/finance/cashinrecord-import.html",paras,function(){
+		  //  $('#grid').omGrid('reload');//刷新grid
+	    //}); 
+		dgFile.omDialog("option", "title",'附件');
+		dgFile.omDialog("open");//显示dialog   
+	}
+	
+	function inCashInRecord(){ //入账
+	     var rowDatas = $('#grid').omGrid('getSelections',true);
+		  if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录行！'});
+			 return;
+		  }		
+		  if(rowDatas[0].status==20){
+		     $.omMessageTip.show({title : '提示',timeout : 4000,content : '对不起，该来款已入账！',type : 'error'});
+			 return;
+		  }
+		  var paras={cashInRecordId:rowDatas[0].id,
+		  accountName:rowDatas[0].accountName,currency:rowDatas[0].currency,tabId:"inCashInRecord001"};
+		  addNewTab("入账","/finance/cashinrecord-in.html",paras,function(){
+				$('#grid').omGrid('reload');//刷新grid
+		  });
+	}
+	function csconfirm(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+		  if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+		  }		
+		  var paras={cashInRecordId:rowDatas[0].id,tabId:"editCashInRecord001"}; //tabId用方法名加001命名而成，这样就不会重复
+		   if(rowDatas[0].status==20){
+		     $.omMessageTip.show({title : '提示',timeout : 4000,content : '对不起，该来款已入账！',type : 'error'});
+			 return;
+		  }
+		  addNewTab("认领来款","/finance/cashinrecord-csconfirm.html",paras,function(){
+				$('#grid').omGrid('reload');//刷新grid
+		  });  
+	}
+	function audit(){
+	   
+	}
+	function back(){
+	   
+	}
+	function viewCashInRecord(){
+	   
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+ <table class="edit-panel">		
+	<tr>   	
+	    <td>关键字：</td>
+        <td><input id="searchValue" name="searchValue" nfocus="myFocus(this,'#f4eaf1')" 
+		   onblur="myblur(this,'white')" /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>	
+ </table> 	 
+</div>			
+<div id="buttonbar"></div>	
+<div id="grid"></div>
+<div id="nav_uploadFiles" title="附件" style="display:none;">
+	<div class="file-box" >
+		<input type='text' name='textfield' id='textfield' class='txt' />
+		<span class='btn'>浏览...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+		<input type="file" name="fileField" 
+		  style="position:absolute;top:0;left:0px;height:22px;filter:alpha(opacity:0);opacity: 0;width:530px;" id="fileField" 
+		  onchange="document.getElementById('textfield').value=this.value" />
+		<span id="abtnfileupload" name="abtnfileupload" />上&nbsp;传</span>
+	</div>
+	<div style="margin-top:10px; margin-bottom:5px;">
+	   <span id="upLoadSpan"></span>
+	</div>
+</div>
+</body>
+</html>

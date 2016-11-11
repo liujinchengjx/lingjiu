@@ -1,0 +1,513 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+    <script type="text/javascript" src="/js/jquery.js"></script>
+	<script type="text/javascript" src="/js/ajaxfileupload.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>  
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tree.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<style type="text/css">
+		input {vertical-align:middle;margin:0;padding:0; left:0px;}
+		.file-box {position:relative;margin-top:5px;width:620px; }
+		.txt {height:22px;border:1px solid #cdcdcd;width:450px;}
+		.btn {background-color:#FFF;border:1px solid #CDCDCD;height:22px;width:70px;}
+    </style>
+    <script type="text/javascript">
+	var combodata=[{id : "businessType",onValueChange:businessTypeVaChange,data:null},{id : "ifGoods", onValueChange :ifGoodsVaChange,data:null},
+	            {id : "manageModel",onValueChange:manageModelVaChange,data:null}
+	 ];
+	var currValueAddArr = [],addValueTree={};
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:customerValChange,
+                dataSource :"business/Customer/0/searchCusCompany?status=20&searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	var supParams={
+                title :'供应商列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource :"",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {	
+		$("#search-panel").omPanel({title : "<label style='font-weight:bolder'>委托单 注：选择没有货物一般是属于纯增值服务的情况，选择有货物，则必须选择供应商和上传INV,PK的情况,导单模版的单价小数位不能超过6位，净重毛重小数位不能超过3位</label>",collapsed:true});
+		$("#panel").omPanel({title : "",collapsible:true, collapsed: false,collapsible: true, closable: false,height:'410'});
+		
+		initValidateForm("entrusterder");
+		$("#workInfo").hide();
+		var entrustOrderid=getIframeParm("etOrderId");
+		var customerId=getIframeParm("customerId");
+		var supplierId=getIframeParm("supplierId");
+		var companyId=getIframeParm("companyId");
+		$("#uploadfile .label").initializeInput(); //初始化				  
+		if (entrustOrderid !=""){ //编辑状态
+		     var url="order/EntrustOrder/0/get?etOrderId="+entrustOrderid;
+		  	 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){	
+				  $("#entrusterder").initializeInput({"vo":json.entity,"comb":combodata}); //初始化				  
+				  if (json.entity.status>=20){
+				      $('#btnSave').omButton('disable');	
+					  $("#customerId").attr("disabled", "disabled");
+					  $("#supplierId").attr("disabled", "disabled");				  
+				  }else{
+					$("#customerId").initGridDropList(cusParams);
+					$("#supplierId").initGridDropList(supParams);
+					customerValChange({id:json.entity.customerId},true);	      
+				  }
+				  loadValueAddService();
+				  showfileInfo(json.entity.fileUrl,json.entity.ifGoods);		
+				  if(json.entity.ifGoods == 1 && json.entity.businessType ==3){//仓储类型并且没有货物 隐藏部分内容
+				  	$(".tb").hide();		
+				  }
+				}			
+			 });
+ 		 }else{
+			$("#entrusterder").initializeInput({"comb":combodata}); //初始化	
+			$("#customerId").initGridDropList(cusParams);
+		 	$("#supplierId").initGridDropList(supParams);	
+			showfileInfo("",0);						
+		 }
+		 $('#abtnfileupload').omButton({width : 60,
+		      onClick : function(event){	
+			     var etOrderId=$("#id").val();
+				 var templateType=$('#attachfileType').omCombo('value');
+				 if ((templateType=="") || (typeof(templateType)=="undefined")){
+					$.omMessageBox.alert({content:'请选择上传模版类型！'});
+					return false;
+				 }
+				 if (($("#manageModel").val()==2) && (templateType !=5) ){
+				    $.omMessageTip.show({content:"按批管理的上传模板的选择有误!",timeout:2000,type:'error'});
+					return ;
+				 }
+				 if ((etOrderId=="") || (typeof(etOrderId)=="undefined")){
+				    $.omMessageBox.alert({content:'请保存委托单之后再上传'});
+					return false;
+				 }else{
+				     var fileurl=$("#textfield").val();
+					 if (checkFile(fileurl)==false){
+					    return false;
+					 }
+			     	 var url=baseUrl+'attachment/UpLoadFile/0/importWT?ulf.fileType=WT&ulf.relationId='+
+					 etOrderId+'&ulf.uploadTemplate='+templateType;
+ 				     $.ajaxFileUpload({url:url,secureuri:false,fileElementId:'fileField',dataType: 'json',
+						success: function (json, status){
+						    if (json.msgCode==1){
+							   $('#response').append('<p>附件上传返回信息：'+json.msg+'</p>');
+							   showfileInfo(json.entity.filePath,0);
+							   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+						    }else $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'error'});							
+						},
+						error: function (data, status, e){
+						}
+					})
+				 }
+			  }
+		  });
+		  		 
+		 $('#companyId').omCombo({dataSource :"business/OperationCompany/0/searchOpCompany?outRows=true&limit=100000&searchValue=",
+		 			width:'300',editable:false,optionField:'cname',valueField : "id",value:companyId});		
+		 $('span#btnAddSupplier').omButton({width : 25,
+		       onClick : function(event){
+					 var paras={tabId:"addSupplier001"}; //tabId用方法名加001命名而成，这样就不会重复
+					 addNewTab("新加供应商","/business/supplier-edit.html",paras,function(){
+							$('#grid').omGrid('reload');//刷新grid
+					 });     	 
+			   }
+		});			
+		 
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveEntrustOrder
+				},
+				{label:"保存增值服务",
+				 id:"btnAddSave" ,
+				 icons : {left : '/images/icon/save.png'},
+				 onClick: saveValueAddService
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });
+				
+	});
+	
+	function customerValChange(data,c){
+		$('#supplierId').setData("business/Supplier/0/searchCusSuppler?customerCompanyId="+data.id+"&searchValue="); 
+		if(!c){
+		   $('#supplierId').clearValue(); //清空值
+		}
+	}
+		 
+	function saveEntrustOrder(){
+		if($("#businessType").val() !=3 && validateForm("entrusterder")==false) return false;  
+		var vo=	$("#entrusterder").getVo();
+		if(vo["eo.customerId"]==""){
+		   $.omMessageTip.show({content : "对不起，请选择客户！",timeout : 2000,type : 'error'});
+		   return false; 
+		}
+		if(((vo["eo.supplierId"]=="") || (vo["eo.supplierId"]<=0)) && (vo["eo.ifGoods"]==0)){
+		   $.omMessageTip.show({content : "对不起，请选择供应商！",timeout : 2000,type : 'error'});
+		   return false; 
+		}
+		if((vo["eo.prevsCustomDate"]=="") && (vo["eo.businessType"]==1)){
+		   $.omMessageTip.show({content : "对不起，请选预申报日期！",timeout : 2000,type : 'error'});
+		   return false; 
+		}
+		if((vo["eo.businessType"]==1 || vo["eo.businessType"]==2 ) && (vo["eo.manageModel"]==2) ){
+		   $.omMessageTip.show({content : "对不起，一般贸易的业务类型不允许按批管理模式！",timeout : 2000,type : 'error'});
+		   return false; 
+		}
+		var url = $("#id").val()=="" ? "order/EntrustOrder/0/add" : "order/EntrustOrder/0/edit";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $("#id").val(json.entity.id);
+			   $('#btnSave').omButton('disable');
+			   $("#eoOrderNo").val(json.entity.eoOrderNo);
+			   loadValueAddService();
+			   showfileInfo(json.entity.fileUrl,vo["eo.ifGoods"]);
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+		}}); 
+	}	
+	function showfileInfo(fileUrl,isGoods){
+	    $("#uploadfile").hide();
+		if (isGoods==1)	 return false;
+	    if (fileUrl!=""){
+		    $('#response').empty();
+			$('#response').append('<p>已上传文件至此：<a target="_blank" href="'+fileUrl+'">附件预览</a></p>');
+			$('#response').show();
+		}else{
+		    if ($("#entrusterder #id").val()>0){
+			   $("#uploadfile").show();
+			}
+		}
+	}
+	function checkFile(filestr) {  
+		var array = new Array('xls', 'XLS');  //可以上传的文件类型  
+		if ((filestr == "") || (typeof(filestr)=="undefined") ) {  
+			$.omMessageTip.show({content : "请选择附件！",timeout : 2000,type : 'error'});
+			return false;  
+		}else {  
+			var fileContentType = filestr.match(/^(.*)(\.)(.{1,8})$/)[3]; // 
+			var isExists = false;  
+			for (var i=0;i<array.length;i++) {  
+				if (fileContentType.toLowerCase() == array[i].toLowerCase()) {  
+					isExists = true;  
+					return true;  
+				}  
+			}  
+			if (isExists == false) {  
+				$.omMessageTip.show({content : "上传附件类型不正确！",timeout : 2000,type : 'error'});
+				return false;  
+			}  
+			return false;  
+		}
+     }  
+	 function loadValueAddService(){
+	    $("#workInfo").show();
+	    var etOrderId=$("#entrusterder").find("input[name='eo.id']").val();
+	    var url="business/ValueAddedServices/0/loadValueAddedServicesTree?type=1&refOrderId="+etOrderId;
+		currValueAddArr=[];
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+		   addValueTree=$("#addValueTree").omTree({
+					dataSource : json.rows,
+					showCheckbox:true,
+					showIcon:false,
+					simpleDataModel: true,
+					onCheck : function(nodeData){
+					  chkSingleNodes(nodeData);
+					  if (nodeData.pid==""){
+						  addValueTree.omTree('expand',nodeData);
+					  }else{
+									  
+					  }
+					}
+			   }); 
+			if (json.entity!=null){
+			   $("#workorder").initializeInput({"vo":json.entity}); //初始化
+			   if(json.entity.status>=20){
+				  $('#btnAddSave').omButton('disable');
+			   }
+			   $.each(json.entity.workOrderDetailList, function(i, obj){
+					currValueAddArr.push(obj.scode);
+					var target = addValueTree.omTree("findNode", "id", obj.scode);
+					addValueTree.omTree('check',target);
+			   });
+		   }
+		 }
+		});
+	 }
+	 function saveValueAddService(){
+		var selectedNodes = addValueTree.omTree('getChecked',true);
+		selectedNodes=getSelectedValueAddService(selectedNodes);
+		var vo=$("#workorder").getVo();
+		var woDetails=[],tempscodeArr=[];
+	    for (var i=0;i<selectedNodes.length;i++){ 
+			var woDetail={};
+			if(selectedNodes[i].workOrderDetailId>0){
+			   woDetail["id"]=selectedNodes[i].workOrderDetailId;
+			   woDetail["flag"]=1; 
+			}else{
+			   woDetail["flag"]=2; 
+			}
+			woDetail["workOrderId"]=vo["wo.id"];
+			woDetail["serviceName"]=selectedNodes[i].pidName;
+			woDetail["feeUnit"]=selectedNodes[i].feeUnit;
+			woDetail["valueAddedServicesId"]=selectedNodes[i].addValueId;
+			woDetail["variableName"]=selectedNodes[i].text;
+			woDetail["scode"]=selectedNodes[i].id;
+			woDetail["count"]= selectedNodes[i].count;
+			woDetail["remark"]= selectedNodes[i].remark;
+			tempscodeArr[i]=selectedNodes[i].id;
+			woDetails.push(woDetail);
+		}
+		for (var i=0;i<currValueAddArr.length;i++){
+		    if(tempscodeArr.in_array(currValueAddArr[i])==false){
+			   var woDetail={};
+			   woDetail["scode"]=currValueAddArr[i]; 
+			   woDetail["flag"]=3; //表示要删掉的意思
+			   woDetails.push(woDetail);
+			}
+		}
+		if(woDetails.length<=0) return false;
+		vo["wo.type"]=1;
+		vo["wo.refOrderNo"]=$("#eoOrderNo").val();
+		vo["wo.customerId"]=$("#customerId").attr("_trueValue");
+		vo["wo.etOrderId"]=$("#entrusterder").find("input[name='eo.id']").val();
+		vo["wo.wh"]=$('#inWh').omCombo('value');
+		var woDetailList= JSON.stringify(woDetails); 
+		vo["workOrderDetails"]=woDetailList;
+	    var url= "order/WorkOrder/0/saveWorkOrder";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			loadValueAddService();
+			$("#workorder").initializeInput({"vo":json.entity}); //初始化
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		 }
+		});
+	 }
+	 function getSelectedValueAddService(selectedNodes){//获取选中的子节点
+	     var tempArr=[];
+		 for (var i=0;i<selectedNodes.length;i++){ 
+			  var addValueId=selectedNodes[i].addValueId;
+			  if (addValueId>0){
+				 tempArr.push(selectedNodes[i]);
+			  }
+		  }
+		  return tempArr;
+	}
+	//选择业务类型时触发
+	function businessTypeVaChange(target,newValue, oldValue){
+		var businessType =newValue;
+		if(businessType == 1){ //一般贸易进口
+			$('#companyId').omCombo('value',1);
+			$('#inWh').omCombo('value',"WH0001");
+			//预申报日期
+			$(".prevsCustomDate").show();
+			$(".tb").show();
+			$(".currency").show();
+			$("#currency").val("502");
+		}else if(businessType == 3){//仓储
+			$('#companyId').omCombo('value',3);
+			$('#inWh').omCombo('value',"WH0001");
+			//预申报日期
+			$(".prevsCustomDate").show();
+			if($("#ifGoods").val() == 1){
+				$(".tb").hide();		
+				$(".currency").show();
+				$("#currency").val("");
+			}
+		}else{
+			$('#companyId').omCombo('value',"");
+			$('#inWh').omCombo('value',"");
+			//预申报日期
+			$(".prevsCustomDate").show();
+			$(".tb").show();
+			$(".currency").show();
+			$("#currency").val("502");
+		}
+	}
+	function ifGoodsVaChange(target,newValue, oldValue){
+		if(newValue == 1){//仓储类型并且没有货物
+			$(".tb").hide();
+			$(".manageModel").hide();
+			$("#uploadfile").hide();
+			$(".currency").show();
+			$("#currency").val("");
+		}else{
+			$(".tb").show();
+			$(".currency").show();
+			$(".manageModel").show();
+			$("#currency").val("502");
+		}
+	}
+	function manageModelVaChange(target,newValue,oldValue){ //按批管理
+	   if (newValue==2){
+	      $('#attachfileType').omCombo('value',5);
+	   }else{
+	      $('#attachfileType').omCombo('value',1);
+	   }
+	}
+	</script>
+</head>
+<body class="dfbody">		
+<div id="search-panel"> </div>	
+	<div id="nav_entrustorder">
+        <form id="entrusterder">	
+		<input id="id" name="eo.id" type="hidden" />
+		<input id="status" name="eo.status" type="hidden" />
+		<input id="goodsStatus" name="eo.goodsStatus" type="hidden" />
+		<input id="amt" name="eo.amt" type="hidden" />
+		<input type="hidden" id="eoOrderNo" name="eo.eoOrderNo" />
+		<input type="hidden" id="lastModifyTime" name="eo.lastModifyTime" />
+	 	<input type="hidden" id="createTime" name="eo.createTime" />
+		<input type="hidden" id="lastModifyBy" name="eo.lastModifyBy" />
+		<input type="hidden" id="createBy" name="eo.createBy" />
+		<input type="hidden" id="serviceMan" name="eo.serviceMan" />
+		<table class="edit-table">		
+			<tr>
+				<td class="label" style="background-color:#CCCC99">业务类型：</td>
+				<td class="field" style="background-color:#CCCC99">
+				<input id="businessType" name="eo.businessType" validate="rules:['required']" 
+				pattern='combo' editable='false' remote='BusinessType'/></td>				
+				<td class="label" style="background-color:#CCCC99">有货物：</td>
+				<td class="field" style="background-color:#CCCC99">
+				<input id="ifGoods" name="eo.ifGoods" validate="rules:['required']" pattern='combo' remote='YesNot' value="0"/>
+				</td>
+			</tr>
+			<tr>
+ 			    <td class="label">经营公司：</td>
+				<td class="field" >
+				   <input id="companyId" name="eo.companyId" pattern='combo' validate="rules:['required']" />
+				</td>
+				<td class="label">仓库：</td>
+				<td class="field" >
+					<input id="inWh" name="eo.inWh"  validate="rules:['required']"
+					pattern='combo' editable='false' remote='Warehouse' />
+				</td>				
+			</tr>
+			<tr>
+				<td class="label">客户：</td>
+				<td class="field">
+				   <input id="customerId" name="eo.customerId" showtext="eo.customerName" validate="rules:['required']" />
+				</td>
+				<td class="label"><span class="manageModel">管理模式：</span></td>
+				<td class="field"><span class="manageModel">
+				    <input id="manageModel" name="eo.manageModel" validate="rules:['required']"
+				    pattern='combo' editable='false' remote='ManageModel' value="1" /></span>
+				</td>				
+			</tr>
+			<tr class="tb">
+                <td class="label">供应商：</td>
+				<td class="field">
+				<input id="supplierId" name="eo.supplierId" showtext="eo.supplierName" /><span id="btnAddSupplier">新</span>
+				</td>	
+				<td class="label"><span class="currency">币种：</span></td>
+				<td class="field" ><span class="currency">
+				    <input id="currency" name="eo.currency" validate="rules:['required']"
+				    pattern='combo' editable='false' remote='Currency' value="502" /></span>
+				</td>					
+			</tr>
+			<tr class="tb">   			    
+				<td class="label">到货方式：</td>
+				<td class="field" >
+				<input id="deliveryWay" name="eo.deliveryWay" validate="rules:['required']" pattern='combo' editable='false' remote='DeliveryWay'/>
+				</td>		
+				<td class="label">到货时间：</td>
+				<td class="field" >
+				<input id="orderTime" name="eo.orderTime" validate="rules:['required']" pattern='datetime' editable='false' 
+				defaultDate='now'  />
+				</td>		
+			</tr>	
+			<tr class="tb">
+                <td class="label" ><span class="prevsCustomDate">预申报日期：</span></td>
+				<td class="field" >
+				  <span class="prevsCustomDate"><input id="prevsCustomDate" name="eo.prevsCustomDate" pattern='date' editable='false' 
+				  defaultDate="now" /></span>
+				</td>
+				<td class="label">RefNo：</td>
+				<td class="field" ><input id="refNo" name="eo.refNo" /></td>
+			</tr>
+		</table>
+		</form>	
+	</div>
+	 <div id="uploadfile" style="margin-top:2px; padding-left:200px;">	
+	   <table >		
+		  <tr>
+			<td class="label">
+			<input id="attachfileType" name="attachfileType" pattern='combo' editable='false' value="1"  emptyText="请选择上传模板" width="100" 
+			 remote='AttachfileType' />
+			</td>
+			<td colspan="3">
+				<div class="file-box"><span >
+					<input type='text' name='textfield' id='textfield' class='txt' />
+					<input type='button' class='btn' value='浏览...' />		
+					<input type="file" name="fileField" style="position:absolute;top:0;left:0px;height:22px;filter:alpha(opacity:0);
+					opacity: 0;width:530px" id="fileField" onchange="document.getElementById('textfield').value=this.value" />
+					<input type="button" name="abtnfileupload" id="abtnfileupload"  value="上传" /></span>
+				</div>
+			</td>
+		</tr>
+	  </table>
+    </div>
+	<div id="response" style="font-weight: bold;color: blue; display:none;"></div>
+	<div id="buttonbar"></div>	
+	<div id="panel" >
+	   <div style="width:400px;height:auto;float:left;margin:0 0 0 5px;display:inline; ">
+	       <ul id="addValueTree"></ul>
+	   </div>
+	   <div id="workorder" style="width:500px;height:auto;float:left;margin:0 0 0 5px;display:inline;"> 
+	      <span style="font-size:12px;"><b>工作事项：</b></span><br />
+	      <textarea id="workInfo" name="wo.workInfo"  style="width:100%;height:350px;"></textarea>
+		  <span name="wo.id" style="display:none;"></span>
+		  <span name="wo.status" style="display:none;"></span>
+		  <span name="wo.deliverId" style="display:none;"></span>
+		  <span name="wo.etOrderId" style="display:none;"></span>
+		  <span name="wo.type" style="display:none;"></span>
+		  <span name="wo.lastModifyTime" style="display:none;" ></span>
+		  <span name="wo.createTime" style="display:none;"></span>
+		  <span name="wo.lastModifyBy" style="display:none;"></span>
+		  <span name="wo.createBy" style="display:none;"></span>
+		  <span name="wo.workOrderNo" style="display:none;"></span>
+		  <span name="wo.customerId" style="display:none;"></span>
+		  <span name="wo.wh" style="display:none;"></span>
+		  <span name="wo.serviceMan" style="display:none;"></span>
+		  <span name="wo.makeDate" style="display:none;"></span>
+	   </div>
+	</div>
+</body>
+</html>
+

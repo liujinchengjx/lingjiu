@@ -1,0 +1,242 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {	
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("customs");
+		var customFormId=getIframeParm("customFormId");
+		if (customFormId !=""){ //编辑状态
+		     var url="customs/CustomForm/0/get?customFormId="+customFormId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					json.entity.opType=Dictionary.getDictName(Dictionary.OpType,json.entity.opType);
+					json.entity.regulatoryType=Dictionary.getDictName(Dictionary.RegulatoryType,json.entity.regulatoryType);
+					json.entity.dealType=Dictionary.getDictName(Dictionary.DealType,json.entity.dealType);
+					//json.entity.packingType=Dictionary.getDictName(Dictionary.PackingType,json.entity.packingType);
+					json.entity.transportMode=Dictionary.getDictName(Dictionary.TransportMode,json.entity.transportMode);
+					json.entity.territory=Dictionary.getDictName(Dictionary.Territory,json.entity.territory);
+					json.entity.customType=Dictionary.getDictName(Dictionary.CustomsType,json.entity.customType);
+					json.entity.levyNature=Dictionary.getDictName(Dictionary.LevyNature,json.entity.levyNature);
+					$("#customs").initializeInput({"vo":json.entity}); //初始化											
+				}			
+			 });
+ 		 }else{
+			$("#customs").initializeInput(); //初始化								
+		 }
+
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveCustoms
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });
+	});
+	
+	function saveCustoms(){	 
+	    if(validateForm("customs")==false)return false; 
+		var tempVo=	$("#customs").getVo(); 
+		var vo={};
+		vo["cf.id"]=tempVo["cf.id"];
+		vo["cf.actualCustomsAmt"]=tempVo["cf.actualCustomsAmt"];
+		vo["cf.actualAddAmt"]=tempVo["cf.actualAddAmt"];
+		vo["cf.actualConsumeAmt"]=tempVo["cf.actualConsumeAmt"];
+		vo["cf.customOrderNo"]=tempVo["cf.customOrderNo"];
+		vo["cf.customDate"]=tempVo["cf.customDate"];
+		vo["cf.makeDate"]=tempVo["cf.makeDate"];
+		vo["cf.remark"]=tempVo["cf.remark"];
+		vo["cf.gw"]=tempVo["cf.gw"];
+		vo["cf.nw"]=tempVo["cf.nw"];
+		vo["cf.pknum"]=tempVo["cf.pknum"];
+		vo["cf.packingType"]=tempVo["cf.packingType"];
+		var url = "customs/CustomForm/0/edit";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		   $("#id").val(json.entity);				   
+		   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+		  }
+		});
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"> 	 
+</div>			
+	<div id="nav_customs" title="编辑报关单">
+        <form id="customs">	
+		<input id="id" name="cf.id" type="hidden" />
+		<input id="customOrderId" name="cf.customOrderId" type="hidden" />
+		<input id="opCompanyId" name="cf.opCompanyId" type="hidden" />	
+		<input id="receiveCompanyId" name="cf.receiveCompanyId" type="hidden" />
+		<input id="status" name="cf.status" type="hidden" />
+		<input id="truckBindId" name="cf.truckBindId" type="hidden" />
+		<input id="currency" name="cf.currency" type="hidden" />
+		<input id="toWh" name="cf.toWh" type="hidden" />
+		<input id="fromWh" name="cf.fromWh" type="hidden" />
+		<input id="amt" name="cf.amt" type="hidden" />
+		<input id="fare" name="cf.fare" type="hidden" />
+		<input id="fareFlag" name="cf.fareFlag" type="hidden" />
+		<input id="fareCurr" name="cf.fareCurr" type="hidden" />
+		<input id="premiums" name="cf.premiums" type="hidden" />
+		<input id="premiumsFlag" name="cf.premiumsFlag" type="hidden" />
+		<input id="premiumsCurr" name="cf.premiumsCurr" type="hidden" />
+		<input id="mixFee" name="cf.mixFee" type="hidden" />
+		<input id="mixFeeFlag" name="cf.mixFeeFlag" type="hidden" />
+		<input id="mixFeeCurr" name="cf.mixFeeCurr" type="hidden" />
+		<input id="specialFlag" name="cf.specialFlag" type="hidden" />		
+		<input id="backupStatus" name="cf.backupStatus" type="hidden" />
+		<input id="customsAmt" name="cf.customsAmt" type="hidden" />
+		<input id="addAmt" name="cf.addAmt" type="hidden" />
+		<input id="consumeAmt" name="cf.consumeAmt" type="hidden" />
+		<input id="tearAndFlag" name="cf.tearAndFlag" type="hidden" />
+		<input id="customOrderIds" name="cf.customOrderIds" type="hidden" />
+		<input type="hidden" id="lastModifyTime" name="cf.lastModifyTime" />
+	 	<input type="hidden" id="createTime" name="cf.createTime" />		
+		<input type="hidden" id="lastModifyBy" name="cf.lastModifyBy" />
+ 		<input type="hidden" id="createTime" name="cf.createBy" />
+		<table class="edit-table">		
+			<tr>
+				<td class="label">合同协议号(只读)：</td>
+				<td class="field"><span id="cfOrderNo" name="cf.cfOrderNo"></span></td>				
+				<td class="label">操作模式：</td>
+				<td class="field" ><span id="opType" name="cf.opType"></span></td>
+			</tr>
+			<tr>
+   			    <td class="label">申报地海关(海关编号)：</td>
+				<td class="field" ><span id="customCodeName" name="cf.customCodeName"></span></td>
+				<td class="label">目的口岸：</td>
+				<td class="field" ><span id="destPortName" name="cf.destPortName" ></span></td>
+			</tr>
+			<tr>
+   			    <td class="label">运营公司：</td>
+				<td class="field" ><span id="opCompanyName" name="cf.opCompanyName" /></td>
+				<td class="label">收货单位：</td>
+				<td class="field" ><span id="receiveCompanyName" name="cf.receiveCompanyName" /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">申报单位：</td>
+				<td class="field" ><span id="reportUnit" name="cf.reportUnit"></span></td>
+				<td class="label">运输方式：</td>
+				<td class="field"><span id="transportMode" name="cf.transportMode" ></span></td>
+			</tr>
+			<tr>
+   			    <td class="label">运输工具：</td>
+				<td class="field" ><span id="truckName" name="cf.truckName"  /></td>
+   			    <td class="label">提运单号：</td>
+				<td class="field" ><span id="blNo" name="cf.truckBind.blNo"></span></td>							
+			</tr>
+			<tr>
+				<td class="label">监管方式：</td>
+				<td class="field" ><span id="regulatoryType" name="cf.regulatoryType"></span></td>
+				<td class="label">免征性质：</td>
+				<td class="field" ><span id="levyNature" name="cf.levyNature"></span></td>
+			</tr>
+			<tr>
+				<td class="label">起运国：</td>
+				<td class="field"><span id="frCountry" name="cf.frCountry" ></span></td>
+   			    <td class="label">指运港(装货港)：</td>
+				<td class="field" ><span id="toPort" name="cf.toPort" ></span></td>
+				
+			</tr>
+			<tr>
+   			    <td class="label">境内货源地：</td>
+				<td class="field" ><span id="territory" name="cf.territory"></span></td>
+				<td class="label">成交方式：</td>
+				<td class="field" ><span id="dealType" name="cf.dealType"></span></td>
+			</tr>
+			<tr>
+   			    <td class="label">批准文号：</td>
+				<td class="field" ><span id="approveNo" name="cf.approveNo" ></span></td>
+				<td class="label"></td>
+				<td class="field" ></td>				
+			</tr>
+			<tr>
+  			    <td class="label">包装种类：</td>
+				<td class="field" ><input id="packingType" name="cf.packingType" validate="rules:['required']"
+				 pattern='combo' editable='false' remote='PackingType'/></td>
+   			    <td class="label">征税比例：</td>
+				<td class="field" ><span id="taxProportion" name="cf.taxProportion" ></span></td>							    
+			</tr>		
+			<tr>
+				<td class="label">许可证号：</td>
+				<td class="field" ><span id="licenseNo" name="cf.licenseNo"></span></td>				   		
+				<td class="label">报关单类型：</td>
+				<td class="field" ><span id="customType" name="cf.customType"></span></td>
+			</tr>
+			<tr>
+			    <td class="label">refNo：</td>
+				<td class="field" ><span id="refNo" name="cf.refNo" ></span></td>
+				<td class="label">件数：</td>
+				<td class="field" ><span id="itemCount" name="cf.itemCount" ></span></td>		
+			</tr>
+			<tr>
+			    <td class="label">毛重：</td>
+				<td class="field" ><input id="gw" name="cf.gw"  /></td>				
+			    <td class="label">净重：</td>
+				<td class="field" ><input id="nw" name="cf.nw"  /></td>				
+			</tr>
+			<tr>
+				<td class="label">报关日期：</td>
+				<td class="field" ><input id="customDate" name="cf.customDate" pattern='datetime' /></td>				   		
+				<td class="label">制单日期：</td>
+				<td class="field" ><input id="makeDate" name="cf.makeDate" pattern='datetime' /></td>	
+			</tr>
+			<tr>
+				<td class="label">装车单数：</td>
+				<td class="field" ><input id="pknum" name="cf.pknum" pattern='int' /></td>	
+				<td class="label">报关单号：</td>
+				<td class="field" ><input id="customOrderNo" name="cf.customOrderNo"  ></td>				
+			</tr>
+			<tr>
+				<td class="label">关税：</td>
+				<td class="field" ><input id="actualCustomsAmt" name="cf.actualCustomsAmt"  /></td>				   		
+				<td class="label">增值税：</td>
+				<td class="field" ><input id="actualAddAmt" name="cf.actualAddAmt"  /></td>	
+			</tr>
+			<tr>
+				<td class="label">消费税：</td>
+				<td class="field" ><input id="actualConsumeAmt" name="cf.actualConsumeAmt"  /></td>				   		
+				<td class="label"></td>
+				<td class="field" ></td>	
+			</tr>
+			<tr>
+   			    <td class="label">备注：</td>
+				<td class="field" colspan="3" ><textarea id="备注" name="cf.remark"  ></textarea></td>				
+			</tr>
+		</table>
+		</form>	
+	</div>
+	<div id="buttonbar"></div>	
+</body>
+</html>

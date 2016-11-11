@@ -1,0 +1,155 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var tranParams={
+                title :'物流公司列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource : "business/TransportCompany/0/searchTranCompany?searchValue=",              
+                colModel: [
+ 							 {header : '编码', name : 'ccode', width : 250, align : 'left'},
+							 {header : '名称', name : 'cname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#transCompanyId").initGridDropList(tranParams);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});			
+		
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '运输费用设置列表',
+                dataSource :"finance/TransFeeSetting/0/searchTransFeeSetting",
+                colModel : [
+							 {header : '货运公司', name : 'transCompanyName', width : 120, align : 'left'},
+							 {header : '起始地区', name : 'fromAreaName', width : 100, align : 'left'},
+							 {header : '截止地区', name : 'toAreaName', width : 100, align : 'left'},
+							 {header : '状态', name : 'status', width : 60, align : 'center',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.TransFeeSettingStatus,colValue);	 
+                                 }
+							 },
+							 {header : '币种', name : 'currency', width : 100, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.Currency,colValue);	 
+                                 }
+							 },
+							 {header : '操作人', name : 'createBy', width : 100, align : 'left'},
+							 {header : '创建时间', name : 'createTime', width : 100, align : 'left'}
+							 ],
+				rowDetailsProvider:function(rowData,rowIndex){
+                		return '';								
+	            },
+				onRowClick:function(rowIndex,rowData,event){
+				}
+            });			
+	});	
+	function searchData(){
+	    var vo=$("#search-panel").getVo();
+		var params=convertParamToUrl(vo);
+		$('#grid').omGrid('setData',"finance/TransFeeSetting/0/searchTransFeeSetting?"+params);
+	}
+	function addTransfeesetting(){
+	   var paras={tabId:"tfeeSettingAdd001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	   addNewTab("编辑运输费用设置","/finance/transfeesetting-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });       	     
+	}
+	function editTransfeesetting(){ //确定入库单
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+		}		
+	   var paras={transFeeSettingId:rowDatas[0].id,transCompanyId:rowDatas[0].transCompanyId,fromAreaId:rowDatas[0].fromAreaId,
+	   toAreaId:rowDatas[0].toAreaId,fee:rowDatas[0].fee,
+	   tabId:"tfeeSettingAdd001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	   addNewTab("编辑运输费用设置","/finance/transfeesetting-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });   
+	}
+	function auditTransfeesetting(){ //审核
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+		}
+		if(rowDatas[0].status == 20){
+			$.omMessageTip.show({title : '提示',content : '该运费已经审核！',timeout : 2000});
+			return ;
+		}
+		
+		var url =  "finance/TransFeeSetting/0/updateTransFeeSetting?transFeeSettingId="+rowDatas[0].id;
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+		   $.omMessageTip.show({content : "审核成功!",timeout : 2000,type : 'success'});		
+		   $('#grid').omGrid('reload');	
+		   }	
+		});	
+	}
+	function deleteTransfeesetting(){ //删除
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+		}
+		$.omMessageBox.confirm({title:'确定',content:'该路线下的运费设置也会删除，你确定吗？',onClose:function(v){
+		 if(v){
+			 var url = "finance/TransFeeSetting/0/deleteTransFeeSetting?transFeeSettingId="+rowDatas[0].id;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   $.omMessageTip.show({content : "删除成功!",timeout : 2000,type : 'success'});		
+				   $('#grid').omGrid('reload');		
+				}
+			});	
+		 }
+		}});
+	}
+	function viewTransfeesetting(){
+	   
+	}
+	</script>
+</head>
+<body class="dfbody">	
+	<div id="search-panel">
+	   <table class="edit-panel">		
+		<tr >
+			<td>物流公司：</td>   
+			<td><input id="transCompanyId" name="transCompanyId"  showtext="" /></td>
+			<td>地址：</td>    
+			<td><input id="searchValue" name="searchValue" /></td>
+			<td><span id="button-search">搜索</span></td>
+		</tr>
+	  </table> 	  
+	</div>
+	<div id="nav_transfeeSetting" title="">
+       <div id="buttonbar"></div>	
+	   <div id="grid"></div>
+	</div>	
+</body>
+</html>

@@ -1,0 +1,377 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>百加商城 购物车</title>
+<meta content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
+<meta content="手机版百加商城客户端可以随时随地参与预约抢购百加手机，轻松下单购买，实时查询订单信息掌握物流状态，百加商城app手机客户端还有新品信息通知推送功能，所有商品信息随身掌握。" name="description">
+<meta content="百加商城,百加V6手机,百加V6,百加手机,百加商城app,百加商城app下载" name="keywords">
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+<script type="text/javascript" src="/js/jquery.min.js"></script>
+<script type="text/javascript" src="/js/common.js"></script>
+<link href="/css/style.css" rel="stylesheet">
+<style type="text/css">
+html,body{ height:100%; background-color:#f4f4f4}
+.header{border-bottom:1px solid #c9c9c9;}
+.cart_view{background-color:#fff;}
+.cart_view li{ border-bottom:1px solid #eee;}
+.pro_list .inner{padding:1.5em 0 1.5em 10.5em; position:relative;}
+.pro_list .imgurl{height:8.5em;left:0.8em;position:absolute;top:1.3em;width:8.5em;}
+.pro_list .imgurl img{ width:100%; height:100%;}
+.pro_list .name{line-height:2.2em;overflow:hidden;padding-right:1em;text-overflow:ellipsis;white-space: nowrap;}
+.pro_list .name .ico{background-color:#f66;border-radius:0.2em;color:#fff;display:inline-block;font-size:1em;line-height:1.4em;margin-right:0.5em;padding:0 0.7em;}
+.pro_list .name span {color:#666;font-size:1.5em;vertical-align:middle;}
+.pro_list .price{ line-height:2.2em;}
+.pro_list .price span{ color:#999; font-size:1.4em;}
+.pro_list .num{ padding:0 0 0.5em;}
+.pro_num_box{ display:inline-block; vertical-align:middle; border:1px solid #eee;}
+.pro_num_box .input_sub, .pro_num_box .input_add {background-color:#fafafa;display:inline-block;height:3em;position:relative;-moz-transition:background-color .3s ease-in;-webkit-transition:background-color .3s ease-in;-o-transition:background-color .3s ease-in;-ms-transition:background-color .3s ease-in;transition:background-color .3s ease-in;vertical-align: middle;width:3em;}
+.pro_num_box .input_sub:after,.pro_num_box .input_add:after{background-color:#ddd;border-radius:0.1em;content:" ";display:block;height:0.2em;left:50%;margin: -0.1em 0 0 -0.6em;position:absolute;top:50%;width:1.2em;}
+.pro_num_box .input_add:before{background-color:#ddd;border-radius:0.1em;content:" ";display:block;height:1.2em;left:50%;margin:-0.6em 0 0 -0.1em;position:absolute;top:50%;width:0.2em;}
+.pro_num_box .input_num {display:inline-block;height:3em;line-height:3em;min-width:1.7em;padding:0 0.6em;text-align:center;vertical-align:middle;}
+.pro_num_box .input_num span{color:#51555a;font-size:1.6em;}
+.pro_num_box .active{background-color:#f4f4f4;}
+.pro_num_box .active:after,.pro_num_box .active:before{background-color:#999;}
+.pro_list .tips{line-height:2.2em;}
+.pro_list .tips span{color:#999;font-size:1.2em;}
+.pro_list .delete{height:2.5em;position:absolute;right:1em;text-align:center;top:6.5em;width:3.5em;}
+.pro_list .delete span{color:#999;display:block;font-size:2.5em;}
+.cart_view .activity .item{border-top:1px solid #eee;height:3.5em;line-height:3.5em;padding:0 1.5em;}
+.cart_view .activity .item span {color: #999;font-size:1.2em;vertical-align:middle;}
+.cart_view .activity .item:first-child{border-top: 0 none;}
+.cart_view .activity .item .ico{background-color:#a9d06b;border-radius:0.25em;color:#fff;display:inline-block;font-size:1em;line-height:1.4em;margin-right:0.58333em;padding:0 0.58333em;}
+.cart_view .sepa{background-color:#f4f4f4;border:1px solid #eee;height:0.9em;border-left:none; border-right:none}
+.jjg_list li{border-bottom:1px solid #eee;position:relative;padding:0 5em 0 1.5em;height:4em;line-height:4em;overflow:hidden;white-space:nowrap;text-overflow: ellipsis}
+.jjg_list li span{font-size:1.4em;vertical-align:middle;color:#666;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.jjg_list li .check{display:inline-block;width:1.4em;height:1.4em;margin-right:0.7em;border:2px solid #ddd;background-color:#f4f4f4;color:#ddd;vertical-align:middle;text-align:center;position:relative}
+.jjg_list li .check .icon-checked{position:absolute;top:0;left:0;color:#ddd}
+.jjg_list li .check-active{background-color:#fff}
+.jjg_list li .check-disabled{background-color:#ccc;}
+.jjg_list li .check-disabled .icon-checked{color:#ddd}
+.jjg_list li .check-active .icon-checked{color:#8fcf46}
+.jjg_list li .label{display:inline-block;vertical-align:middle;margin:0 .5em;padding:0 .5em;background-color:#f66;color:#fff;line-height:1.4em;border-radius:0.1em}
+.jjg_list li .more{border-left:1px solid #eee;position:absolute;top:0;right:0;padding: 0 1em 0 0;width:4em;height:4em}
+.jjg_list li .more:after{content:'';display:block;position:absolute;top:50%;left:50%;margin:-.5em 0 0 -1.3em;width:1em;height:1em;border-top:.2em solid #9b9b9b;	border-right:.2em solid #9b9b9b;-webkit-transition:.2s ease;-webkit-transition-delay:0s;-moz-transition:.2s ease;-o-transition:.2s ease;transition:.2s ease;-webkit-transform:rotate(45deg);-moz-transform:rotate(45deg);-ms-transform:rotate(45deg);-o-transform:rotate(45deg);transform:rotate(45deg)}
+.cart_view .sepa-bottom {background-color:#f4f4f4;height:6em}
+.cart_bar{position:fixed;left:0;bottom:0;width:100%;height:6em;border-top:1px solid #eee;background-color:#fff;z-index:2;-webkit-box-align:center;-moz-box-align:center;-ms-box-align: center;-o-box-align:center;box-align:center;-webkit-box-pack:center;-moz-box-pack:center;-ms-box-pack:center;-o-box-pack:center;box-pack:center}
+.cart_bar .info {margin-left:1em}
+.cart_bar .info .hot{font-size: 1.6em;color: #f60}
+.cart_bar .right{width:26em;height:4em;	margin-right:1em}
+.cart_bar .right a{background:#f60}
+.no_goods_box{ padding:5em 0 1em; background-color:#FFF;}
+.no_goods{ background:url(/images/detail/no_goods.gif) center top no-repeat;-moz-background-size:cover;-webkit-background-size:cover;-o-background-size:cover;background-size:cover; width:11em; height:9em; margin:0 auto 1em;}
+.no_goods_box .tip01{ font-size:1.5em; line-height:2em;}
+.no_goods_box .tip02{ font-size:1.2em; line-height:2em; color:#888;}
+.no_goods_btn{ width:12em; margin:1em auto;}
+</style>
+</head>
+
+<body>
+<div class="header">
+	<div class="back"><a href="/"><span class="icon-23"></span></a></div>
+	<div class="tit">
+		<h1>购物车</h1>
+	</div>
+	<div class="right">
+		<ul>
+			<li class="cart"><a title="购物车" href="/order/cart-index.html"><span class="icon-2"></span><span class="tip hide" id="ShoppingCartNum"></span></a></li>
+		</ul>
+	</div>
+</div>
+<div class="cart_view">
+	<ul class="pro_list" id="list"></ul>
+	<div class="activity hide">
+		<div class="item"><span>购物满100元包邮</span></div>
+		<div class="item" style="display: none;"><span class="ico">包邮</span><span></span></div>
+	</div>
+	<div class="sepa"></div>
+	<div class="jjg_list">
+		<ul id="jjg_list"></ul>
+	</div>
+	<div class="sepa-bottom"></div>
+	<div class="h_box cart_bar" id="cart_bar">
+		<div class="info flex_1">
+			<span class="hot">应付总额：</span><span class="hot" id="total"></span>
+		</div>
+		<div class="right flex_1" id="topay">
+			<a class="baijia_button" href="#"><span>去结算</span></a>
+		</div>
+	</div>
+</div>
+<textarea id="no_goods" class="hide">
+<div class="no_goods_box tc">
+<div class="no_goods"></div>
+<p class="tip01">购物车还是空的</p>
+<p class="tip02">马上去选购</p>
+<div class="no_goods_btn"><a class="baijia_button" href="/index.html"><span>去逛逛</span></a></div>
+</div>
+</textarea>
+<script type="text/javascript">
+function getCartIndexList(){
+	$.ajax({
+		url:TERMINAL_URL+'/jsonrest/mobile/order/ShoppingCart/0/listShoppingCarts?resource='+getResource(),//必须,不能为空
+		type:'get',//非必须.默认get
+		dataType:'json',//非必须.默认text
+		cache:false,//非必须.默认false
+		timeout:30000,//非必须.默认30秒
+		error:function(){}, //非必须
+		success:function(data){
+			if(data.msgCode==3){
+				window.location = '/user/login.html'
+				return;
+			}
+			if(data.msgCode!=1){
+				window.location = "/product/parts.html";
+				return;
+			}
+			var jjg = data.entity.increasePurchaseProductList;
+			window.localStorage.setItem('jjgList',JSON.stringify(jjg));
+			var productCount=parseInt(data.entity.productCount);
+			var totalPrice=parseFloat(data.entity.productPriceAmt);
+			var carts=data.entity.shoppingCartVOList;
+			var html= '';
+			if(productCount<=0){
+				$("#cart_bar").hide();
+				html +=$("#no_goods").val();
+			}else{
+				for(var i=0,length=carts.length;i<length;i++){
+					html += '<li id="pro_';
+					html += carts[i].id;
+					html += '"><div class="inner"><div class="imgurl"><img src="';
+					if(carts[i].mainPicturesVO != null){
+						html += PHOTO_URL;
+						html += carts[i].mainPicturesVO.url3
+					}else{
+						html +='/images/nopic/index.gif';
+					}
+					html += '" onerror="this.src=\'/images/nopic/index.gif\'"></div><p class="name">';
+					if(carts[i].isGift == 1){
+						html += '<span class="ico">赠</span>';
+					}
+					if(carts[i].proPreferentialPrice>0){
+						html += '<span class="ico">惠</span>';
+					}
+					if(carts[i].increasePurchaseFlag=="Y"){
+						html += '<span class="ico">加价购</span>';
+					}
+					html += '<span>';
+					html += carts[i].proName;
+					if(carts[i].isShowSoldOut == '1'){
+						html += '(售罄)';
+					}
+					html += '</span></p><p class="price"><span>';
+					if(carts[i].increasePurchaseFlag=="Y"){
+						html += toPenny(carts[i].increasePurchasePrice);
+					}else{
+						var real_price = carts[i].proPrice-carts[i].proPreferentialPrice;
+						html += toPenny(carts[i].proPrice-carts[i].proPreferentialPrice);
+					}
+					html += '元</span><span>　　</span><span>合计：</span><span>';
+					if(carts[i].increasePurchaseFlag=="Y"){
+						html += toPenny(carts[i].increasePurchasePrice);
+					}else{
+						html += toPenny(real_price*parseInt(carts[i].num));
+					}
+					html += '元</span></p><div class="num"><div class="pro_num_box"><div class="input_sub';
+					if(parseInt(carts[i].num) > 1 && carts[i].increasePurchaseFlag!="Y"){
+						html += ' active" onclick="editQuantity('+carts[i].num+',-1,'+carts[i].id+')';
+					}
+					html += '"></div><div class="input_num"><span>';
+					html += carts[i].num;
+					html += '</span></div><div class="input_add';
+					if(carts[i].increasePurchaseFlag!="Y" && carts[i].isGift != 1){
+						html += ' active" onclick="editQuantity('+carts[i].num+',1,'+carts[i].id+')';
+					}
+					html += '"></div></div></div><p class="tip">';
+					if(carts[i].activityDesc!=''){
+						html += carts[i].activityDesc;
+					}
+					html += '</p>';
+					if(carts[i].isGift != 1){
+						html +='<div class="delete" onclick="btnRemove('+carts[i].id+')"><span class="icon-uniE607"></span></div>';
+					}
+					html += '</div></li>';
+				}
+				$("#total").html(toPenny(totalPrice)+'元');
+				$("#topay").html('<a class="baijia_button" href="javascript:;" onclick="cartConfirm()"><span>去结算</span></a>');
+			}
+			$("#list").html(html);
+			getCartNum();
+			getJJGList(jjg);
+		}//非必须
+	});
+}
+function cartConfirm(){
+	window.location.href = ("/order/cart-settle.html");
+}
+function btnRemove(cartId){
+	var r= confirm("确定删除吗？")
+	if(r){
+		removeCart(cartId);
+	}
+}
+function removeCart(cartId){
+	$.ajax({
+		url:TERMINAL_URL+'/jsonrest/mobile/order/ShoppingCart/0/delete?id='+cartId,
+		type:'post',
+		async:false,
+		cache:false,
+		data:'',
+		dataType:"json",
+		error: function(){},
+		success:function(data){
+			if(data.msgCode == 1){
+				getCartIndexList();
+			}else if(data.msgCode == 3){
+				window.location = '/login.html';
+			}else{
+				showTips(data.msg);
+				return;
+			}
+		}
+	});
+}
+//购买数量加减
+function editQuantity(num,increment,id){				
+	var total = parseInt(num) + parseInt(increment);
+	if(total<1){
+		$("#pro_"+id+' .input_num span').html(1);
+		return;
+	}else{
+		if(editCart(id,total)){
+			getCartIndexList();
+		}
+	}
+}
+function editCart(id, num){
+	var flag = true;
+	$.ajax({
+		url:TERMINAL_URL+'/jsonrest/mobile/order/ShoppingCart/'+id+'/modifyProductNum?num='+num+'&resource='+getResource(),//必须,不能为空
+		type:'get',//非必须.默认get
+		async:false,
+		dataType:'json',//非必须.默认text
+		cache:false,//非必须.默认false
+		timeout:30000,//非必须.默认30秒
+		error:function(){}, //非必须
+		success:function(data){
+			if(data.msgCode != 1){
+				flag = false;
+				showTips(data.msg);
+				return;
+			}
+		}//非必须
+	});
+	return flag;
+}
+function addCart(productId,quantity,increasePurchaseFlag){
+	if(!increasePurchaseFlag){
+		increasePurchaseFlag = '';
+	}
+	$.ajax({
+		url:TERMINAL_URL+'/jsonrest/mobile/order/ShoppingCart/0/add?productId='+productId+'&num='+quantity+'&increasePurchaseFlag='+increasePurchaseFlag+'&resource='+getResource(),
+		type:'post',
+		async:false,
+		cache:false,
+		data:'',
+		dataType:"json",
+		error: function(){},
+		success:function(data){
+			if(data.msgCode == 1){
+				getCartIndexList();
+			}else if(data.msgCode == 3){
+				window.location.href = "/user/login.html?tourl="+encodeURIComponent(window.location.href);
+			}else{
+				showTips(data.msg);
+			}
+		}
+	});
+}
+function getJJGList(data){
+	if(!data){
+		$("#jjg_list").html('');
+		return;
+	}
+	if(data.length==0){
+		$("#jjg_list").html('');
+		return;
+	}
+	var html = '';
+	var length = data.length;
+	for(var i=0;i<length;i++){
+		html +='<li id="jjg_';
+		html += data[i][0].productId;
+		html += '_';
+		html += data[i][0].cartId;
+		if(data[i].length > 1){
+			html +='_y';
+		}else{
+			html +='_n';
+		}
+		html += '"><i class="check'
+		if(data[i][0].isSelectedIncreasePurchase == 1){
+			html += ' check-active';
+		}else if(data[i].length==1 &&(data[i][0].isShowSoldOut == '1' || data[i][0].isAllowedSelect =='0')){
+			html += ' check-disabled';
+		}
+		html += '"><span class="icon-checked"></span></i><span>+'
+		html += toPenny(data[i][0].increasePurchasePrice);
+		html += '元得';
+		html += data[i][0].proName;
+		if(data[i].length > 1){
+			html += '(多色可选)'
+		}else if(data[i][0].isShowSoldOut == '1'){
+			html += '(已售罄)';
+		}
+		html += '</span><i class="more"></i></li>'
+	}
+	$("#jjg_list").html(html);
+	eventBind();
+}
+function eventBind(){
+	$("#jjg_list li").click(function(event){
+		if($(this).find('.check').hasClass("check-disabled")){
+			return;
+		}
+		var index = $(this).index();
+		var id= $(this).attr('id');
+		id = id.split('_');
+		var proId = id[1];
+		var cartId = id[2];
+		var isMulti =  id[3];
+		if(isMulti == 'n'){
+			if($(this).find('.check').hasClass("check-active")){
+				removeCart(cartId);
+			}else{
+				addCart(proId,1,'Y');
+			}
+		}else{
+			if($(this).find('.check').hasClass("check-active")){
+				removeCart(cartId);
+			}else{
+				window.location.href = '/order/cart-jjg.html?index='+index;
+			}
+		}
+		event.stopPropagation();
+	});
+	$("#jjg_list li i.more").click(function(event){
+		var index = $(this).parent('li').index();
+		window.location.href = '/order/cart-jjg.html?index='+index;
+		event.stopPropagation();
+	})
+}
+(function(){
+	getCartIndexList();
+})();
+</script>
+<p class="hide">
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F27a6edda23c8cced290e66d76fc16a71' type='text/javascript'%3E%3C/script%3E"));
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-55764976-1', 'auto');ga('send', 'pageview');
+</script>
+</p>
+</body>
+</html>

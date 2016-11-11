@@ -1,0 +1,261 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>元和津 推广大使注册</title>
+<meta content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
+<meta content="" name="description">
+<meta content="" name="keywords">
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+<link href="/css/style.css" rel="stylesheet">
+<script type="text/javascript" src="/js/common.js"></script>
+<script type="text/javascript" src="/js/zepto.min.js"></script>
+<style type="text/css">
+.login_view{padding:1em 3em;}
+.login_view .login_container{overflow:hidden; margin:auto;}
+.login_container h2{font-size:18px; margin:1em 0; font-weight:normal;}
+.input_container{margin-bottom:0.6em;}
+.input_container input{border:none; border-bottom:1px solid #6c6c6c; height:40px; line-height:20px; padding:10px 10px 10px 0; display:block; font-size:14px; width:100%; display:block;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box;}
+.input_box{position:relative; margin:1em 0;}
+.input_container .phoneCode{ width:50%; display:inline-block;}
+.input_container .parentSpan{ font-size:1.2em;}
+.input_container .parentSpan a{ color:#2695fd;}
+.tips_login {color:#999999;font-size:1.2em;line-height: 1.5;margin: 20px 0;vertical-align:middle}
+.tips_login a{ color:#2695fd;}
+.tips_login input[type="checkbox"]{ }
+.login_btn{border:none; width:100%; font-size:14px;display:block;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box;}
+.error_ico{position:absolute; width:19px; height:19px; background:url(/images/module/icon_14.png) -16px -16px no-repeat; right:0; top:12px;}
+.error_tips{ position:absolute;right:10px;bottom:35px;color:#fff;font-size:1em;}
+.et_con{ position:relative;}
+.et_con p{padding:6px 10px;min-height:16px;line-height:1.5;background:#fb6f7d;border-radius:3px;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box;}
+.et_con em{position:absolute;bottom:-6px;right:3px;width:9px;height:7px;background:url(/images/module/icon_15.png) no-repeat;}
+.login_reg{ padding:1em 0;line-height:1; font-size:1em;}
+.login_reg a{ color:#2695FD;}
+</style>
+</head>
+  
+<body>
+<div class="header">
+	<div class="back"><a href="/"><span class="icon-23"></span></a></div>
+	<div class="tit">
+		<h3>注册</h3>
+	</div>
+</div>
+<div class="login_view">
+	<form method="POST" name="registerForm" id="registerForm">
+		<div class="login_container">
+			<h2>欢迎注册元和津推广大使账户</h2>
+		</div>
+		<div class="input_container">
+			<div class="input_box">
+				<input type="text"  placeholder="输入您的姓名" name="usr.realName" onFocus="claerTips('realname')" onblur="validate('realname',this.value);" id="phone"> 
+			    <div id="realname">
+					<em class="error_ico"></em>
+					<div class="error_tips">
+						<div class="et_con">
+							<p id="realnameerrorMsg"></p>
+							<em></em>
+						</div>
+					</div>
+			   </div>	
+			</div>
+			<div class="input_box">
+				<input type="text"  placeholder="输入您的手机号" name="usr.tel" onFocus="claerTips('mobile')" onblur="validate('username',this.value);" id="phone"> 
+			    <div id="mobile">
+					<em class="error_ico"></em>
+					<div class="error_tips">
+						<div class="et_con">
+							<p id="errorMsg"></p>
+							<em></em>
+						</div>
+					</div>
+			   </div>	
+			</div>
+		   <div class="input_box">
+			   <input type="password"  placeholder="输入密码" name="usr.passWord" onblur="validate('password',this.value)">
+			   <div id="password">
+				<em class="error_ico"></em>
+				<div class="error_tips">
+					<div class="et_con">
+						<p id="passworderrorMsg"></p>
+						<em></em>
+					</div>
+				</div>
+			   </div> 	
+		    </div>
+		    <div class="input_box">
+			   <input type="password"  placeholder="再次输入密码" name="confirmpassword" onblur="equal();">
+			  <div id="confirmpassword">
+			   <em class="error_ico"></em>
+				<div class="error_tips">
+					<div class="et_con">
+						<p id="confirmpassworderrorMsg"></p>
+						<em></em>
+					</div>
+				</div>
+			  </div>	
+			</div>
+			
+		    <input type="hidden" name="usr.userType" value="2"/>
+		    <input type="hidden" name="usr.userGrade" value="0">
+		</div>
+		<a onclick="btnSubmit();" href="javascript:;" id="regnowPhone" class="button active_button login_btn">立即注册</a> 
+		<input type="reset" class="hide" id="reset">
+	</form>
+</div>
+<script type="text/javascript">
+var maxtime;
+function submitRegisterForm(){
+	 var realname = $("input[name='usr.realName']").val(); 
+    var mobile = $("input[name='usr.tel']").val(); 
+    var password = $("input[name='usr.passWord']").val(); 
+    var confirmpassword = $("input[name='confirmpassword']").val();
+    var flag = true;
+    if(realname==null||realname==""){
+       $("#realname").show();
+       $("#realnameerrorMsg").html("姓名不能为空");
+       flag = false;
+    }
+    if(mobile==null||mobile==""){
+       $("#mobile").show();
+       $("#errorMsg").html("手机号码不能为空");
+       flag = false;
+    }else{
+        var regx =	/^1[0-9]{10}$/i;
+		if(!regx.test(mobile)) {
+		  $("#mobile").show();
+          $("#errorMsg").html("手机号码格式不正确");
+		  flag = false;
+		}
+    }
+    if(password==null||password==""){
+       $("#password").show();
+       $("#passworderrorMsg").html("密码不能为空");
+       flag = false;
+    }
+    if(password!=confirmpassword){
+       $("#confirmpassword").show();
+       $("#confirmpassworderrorMsg").html("两次密码不一致");
+       flag = false;
+    }
+    
+	   return flag;
+}
+
+
+//密码校验一致性
+function equal(){
+    var phonepwd=$("input[name='usr.passWord']").val();
+    var phoneconfirmpwd=$("input[name='confirmpassword']").val();
+    if(phonepwd!=phoneconfirmpwd){
+       $("#confirmpassword").show();
+       $("#confirmpassworderrorMsg").html("两次密码不一致");
+       return false;
+    }	
+       $("#confirmpassword").hide();
+       $("#confirmpassworderrorMsg").html("");
+}
+
+function validate(name,value){
+   if(value==null||value==""){
+   	if(name=="realname"){
+       $("#realname").show();
+       $("#realnameerrorMsg").html("姓名不能为空");
+       return;
+     }
+     if(name=="username"){
+       $("#mobile").show();
+       $("#errorMsg").html("手机号码不能为空");
+       return;
+     }
+     if(name=="password"){
+      $("#password").show();
+      $("#passworderrorMsg").html("密码不能为空");
+      return;
+     }
+     if(name=="phoneCode"){
+      $("#phoneCode").show();
+      $("#phoneCodeerrorMsg").html("验证码不能为空");
+      return;
+     }
+   }else{
+      if(name=="username"){
+        var regx =	/^1[0-9]{10}$/i;
+		if(!regx.test(value)) {
+		  $("#mobile").show();
+          $("#errorMsg").html("手机号码格式不正确");
+          return;
+          }
+      }
+	  if(name=="password"){
+		if(value.length <6 || value.length>16){
+				$("#password").show();
+				$("#passworderrorMsg").html("请输入长度为6-16位的密码");
+				return;
+			}
+		
+     }
+   }
+    $("#realname,#mobile,#password,#confirmpassword").hide();
+}
+function claerTips(id){
+	$('#'+id).hide();
+}
+//提交按钮事件置灰和显示
+function agreena(id){
+ 	if($("input[type='checkbox']:checked").length<1){
+		$("#"+id).addClass("button disable_button login_btn");
+		$("#"+id).attr("disabled","disabled")
+	}else{
+		$("#"+id).removeClass("button disable_button login_btn");
+		$("#"+id).addClass("button active_button login_btn");
+		$("#"+id).removeAttr("disabled");
+	}
+}
+
+function btnSubmit(){
+	submitRegisterForm();
+	$.ajax({
+		url:'/jsonrest/userlogin/UserLogin/0/registeUser',
+		type : 'post',
+		dataType : 'json',
+		error : function(){return;},
+		data:$('#registerForm').serialize(),
+		success: function(data) {
+			if(data.msgCode!=1){
+				$("#confirmpassword").show();
+				$('#confirmpassworderrorMsg').html(data.msg);
+			}else{
+				if(window.localStorage.getItem('loginBefore')){
+					var refer = window.localStorage.getItem('loginBefore');
+					window.localStorage.removeItem('loginBefore');
+					window.location.href=refer;
+					return;
+				}
+				//window.location.href='/user/user-center.html';
+				var referrer=$.trim(document.referrer);
+				var url=decodeURIComponent(getUrlParam('tourl')); 
+				if(url==""&&referrer.indexOf('login.html')==-1)url=referrer;
+				if(url=="")url="/";
+				locationHref(url);
+			}
+		}
+	});
+}
+(function(){
+	$("#reset").click();
+	if(window.name!=''){
+		maxtime = window.name;
+	}
+	$("#mobile,#password,#confirmpassword").hide(); 
+
+})();
+</script>
+<p class="hide">
+
+</p>
+</body>
+</html>

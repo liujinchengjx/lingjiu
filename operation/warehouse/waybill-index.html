@@ -1,0 +1,583 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---运单</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+	<script type="text/javascript" src="/js/ajaxfileupload.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>  
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript"><!--
+	var tranParams={
+                title :'物流公司列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource : "business/TransportCompany/0/searchTranCompany?searchValue=",              
+                colModel: [
+ 							 {header : '编码', name : 'ccode', width : 250, align : 'left'},
+							 {header : '名称', name : 'cname', width : 200, align : 'left'}
+						 ]
+    };
+	
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:customerValueChange,
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	var recParams={
+                title :'收货公司列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource :"",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	var dialog=null;
+	var dialog1=null;
+	var dialog2=null;
+	var typeName="";	
+	$(document).ready(function() {
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#tranId").initGridDropList(tranParams);
+		$("#customerId").initGridDropList(cusParams);
+		$("#receiveId").initGridDropList(recParams); 
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+				     searchData();
+			   }
+		});	
+		dialog=$("#nav_waybill").omDialog({autoOpen: false,draggable:false,resizable:false,height:450,width:800,modal:true,
+			buttons: [{
+				id:"btnSave" ,
+                text : "保存", 
+                click : saveWayBill
+            }, {
+                text : "取消", 
+                click : function () {                   
+                    dialog.omDialog("close");
+                }
+            }]
+		});
+		dialog1=$("#nav_waybill1").omDialog({autoOpen: false,draggable:false,resizable:false,height:450,width:800,modal:true,
+			buttons: [{
+				id:"btnSave1" ,
+                text : "保存", 
+                click : saveWayBill1
+            }, {
+                text : "取消", 
+                click : function () {                   
+                    dialog1.omDialog("close");
+                }
+            }]
+		});		
+		dialog2=$("#nav_waybill2").omDialog({autoOpen: false,draggable:false,resizable:false,height:450,width:800,modal:true,
+			buttons: [{
+				id:"btnSave2" ,
+                text : "保存", 
+                click : saveWayBill2
+            }, {
+                text : "取消", 
+                click : function () {                   
+                    dialog2.omDialog("close");
+                }
+            }]
+		});					
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({							
+				width:'100%',			
+				limit:20,
+				autoFit:true,
+                title : '运单列表',
+                dataSource :"warehouse/WayBill/0/searchWayBill",
+                colModel : [
+                			 {header : '合同号', name : 'refOrderNo', width : 80, align : 'left'}, 
+                             {header : '快递单号', name : 'wayBillNo', width : 60, align : 'left'},
+							 {header : '出库单号', name : 'stockOutNo', width : 90, align : 'left'}, 
+ 							 {header : '客户', name : 'deliver.customerName', width : 100, align : 'left'}, 
+							 {header : '货运公司', name : 'deliver.transCompanyName', width : 100, align : 'left'},
+							 {header : '收货公司', name : 'deliver.receiveCompanyName', width : 100, align : 'left'},
+							 {header : '泡货', name : 'bulkyCargo', width : 30, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.YesNot,colValue);
+								}	  
+							 },
+							 {header : '毛重', name : 'gw', width : 60, align : 'right'},
+							 {header : '状态', name : 'status', width : 20,align : 'left',
+						        renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.WayBillStatus,colValue);
+								}	 
+							 },
+							 {header : '时间', name : 'createTime', width : 50, align : 'center'}, 
+							 {header : '返单号码', name : 'backNo', width : 50, align : 'left'},
+							 {header : '付费方式', name : 'deliver.payWay', width : 50, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.PayWay,colValue);
+								}	 
+							 },
+							 {header : '收货地址', name : 'address.address', width : 100, align : 'center'}, 
+							 {header : '备注', name : 'remarks', width : 80, align : 'left'}
+						 ]
+            });
+	});
+	function searchData(){
+		var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#grid').omGrid('setData',"warehouse/WayBill/0/searchWayBill?"+params);
+	}	
+	function saveWayBill(){	 
+	     if(validateForm("waybill")==false)return false;      
+		 var url =  $("#id").val()=="" ? "warehouse/WayBill/0/add" : "warehouse/WayBill/0/edit";
+		 var vo=$("#waybill").getVo();
+		 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   dialog.omDialog("close");//关闭
+			   $('#grid').omGrid('reload');
+		   }
+		 });
+	}
+	function saveWayBill1(){	
+	     if(validateForm("waybill1")==false)return false;      
+		 var url =  $("#id").val()=="" ? "warehouse/WayBill/0/add" : "warehouse/WayBill/0/edit";
+		 var vo=$("#waybill1").getVo();
+		 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   dialog1.omDialog("close");//关闭
+			   $('#grid').omGrid('reload');
+		   }
+		 });
+	}
+	function saveWayBill2(){
+	     if(validateForm("waybill2")==false)return false;
+		 var url =  $("#id").val()=="" ? "warehouse/WayBill/0/add" : "warehouse/WayBill/0/edit";
+		 var vo=$("#waybill2").getVo();
+		 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   dialog2.omDialog("close");//关闭
+			   $('#grid').omGrid('reload');
+		   }
+		 });
+	}
+		
+	function addWayBill(){
+		dialog.initializeInput(); //初始化
+		dialog.omDialog("option", "title", '新增');
+		dialog.omDialog("open");//显示dialog	
+	}
+	function editWayBill(){		    
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			return;
+		}
+		if (rowDatas[0].status == 20 ) {
+			$('#btnSave').attr('disabled',"true");
+		} else {
+			$('#btnSave').attr('disabled',false);
+		}
+		dialog.initializeInput({"vo":rowDatas});
+		dialog.omDialog("option", "title", '修改');
+		dialog.omDialog("open");//显示dialog	
+	}	
+	function confirmWayBill(){
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+	   }
+	   if (rowDatas[0].status != 10 ) {
+			$.omMessageTip.show({title : '提示',content : '该状态不能确定！',type:'error'});
+			 return;
+	   }	
+	  $.omMessageBox.confirm({title:'确定',content:'你确定吗？',onClose:function(v){
+			if (v){
+				var url="warehouse/WayBill/0/confirmWayBill?wayBillId="+rowDatas[0].id;
+				$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					$('#grid').omGrid('reload');//刷新grid
+					$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+				  }
+				});
+			}		        
+	  }}); 
+	}
+	
+	function backWayBill(){
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			 return;
+	   }
+	   if (rowDatas[0].status != 20 ) {
+			$.omMessageTip.show({title : '提示',content : '该状态不能返回！',type:'error'});
+			 return;
+	   }			 
+	  $.omMessageBox.confirm({title:'返回',content:'你确定要返回吗？',onClose:function(v){
+			if (v){
+				var url="warehouse/WayBill/0/backWayBill?wayBillId="+rowDatas[0].id;
+				$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					$('#grid').omGrid('reload');//刷新grid
+					$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+				  }
+				});
+			}		        
+	  }}); 
+	}
+	function settlementAr(){
+		var vo=$("#search-panel").getVo();
+		if(vo.startTime==""){
+		  $.omMessageTip.show({content : "请在搜索栏选开始时间！",timeout : 2000,type : 'error'});
+		  return ;
+		}
+		if(vo.endTime==""){
+		  $.omMessageTip.show({content : "请在搜索栏选截止时间！",timeout : 2000,type : 'error'});
+		  return ;
+		}
+		var params=convertParamToUrl(vo);
+		var url=baseUrl+"warehouse/WayBill/0/outSettlementArAp?arApType=1&orderStatus=20&"+params;
+		//showFullScreen(url);
+		window.location.href=url;		
+	}
+	function settlementAp(){
+		var vo=$("#search-panel").getVo();
+		if(vo.startTime==""){
+		  $.omMessageTip.show({content : "请在搜索栏选开始时间！",timeout : 2000,type : 'error'});
+		  return ;
+		}
+		if(vo.endTime==""){
+		  $.omMessageTip.show({content : "请在搜索栏选截止时间！",timeout : 2000,type : 'error'});
+		  return ;
+		}
+		var params=convertParamToUrl(vo);
+		var url=baseUrl+"warehouse/WayBill/0/outSettlementArAp?arApType=2&orderStatus=20&"+params;
+		//showFullScreen(url);	
+		window.location.href=url;
+	}
+	function deliverOrder(){ //送货单
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录行！'});
+			return;
+		}	
+		if(rowDatas.length > 1 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择单行记录！'});
+			return;
+		}
+		var url="/order/delivery-order.html?deliverId="+rowDatas[0].deliverId;
+		if (rowDatas[0].deliver.customerName.indexOf("富昌")>=0){//富昌专用
+		    url="/order/delivery-order_fuchang.html?deliverId="+rowDatas[0].deliverId;
+		}
+		if (rowDatas[0].deliver.stockOut.manageModel==2){
+		    url="/order/delivery-batch-order.html?deliverId="+rowDatas[0].deliverId;   
+		}
+	    showFullScreen(url); 
+	}
+	function customerValueChange(data){ //
+	    var url="business/Receiver/0/searchReCompany?customerCompanyId="+data.id+"&searchValue=";
+		$('#receiveId').setData(url);
+		$('#receiveId').clearValue();
+	}
+	function viewWayBill(){
+	  
+	}
+	//子状态
+	function getStatus(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+	   }
+	   var paras={ids:rowDatas[0].id,eoOrderNo:rowDatas[0].stockOutNo,tabId:"orgStatus001"};
+ 	   addNewTab("定单状态列表","/order/orderSatePage.html", paras,function(){
+	   });       
+	}
+	
+	function editReceivable(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			return;
+		}
+		dialog1.initializeInput({"vo":rowDatas});
+		dialog1.omDialog("option", "title", '编辑应收');
+		dialog1.omDialog("open");//显示dialog
+	}
+	
+	function receiptManager(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+			return;
+		}		
+		dialog2.initializeInput({"vo":rowDatas});
+		dialog2.omDialog("option", "title", '回单管理');
+		dialog2.omDialog("open");//显示dialog
+	}
+	
+	//修改货重后联动货值	
+	function updateNgAndPrice(){
+		//获得货重
+		var ng=$("#gw1")[0].value;
+		//判断运送公司是否为SF
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		var transCompanyId=rowDatas[0].deliver.transCompanyId;
+		var stockId=rowDatas[0].deliver.stockOutId;
+		var params=[];
+		params.push("wb.gw="+ng);
+		params.push("wb.stockOutId="+stockId);
+		params.push("wb.transConpanyId="+transCompanyId);
+		//判断收费方式1.免费则价格为0；2.抛货免费还是计算
+		//是否泡货
+		var isbCargo= rowDatas[0].bulkyCargo;
+		//收费方式
+		var isFree=rowDatas[0].deliver.payWay;
+		if(isbCargo==1 && isFree==4){
+			$("#receiveAmt")[0].value=0;
+			$("#payAmt1")[0].value=0;
+		}else{
+			if(transCompanyId==4){
+		    var url="warehouse/WayBill/0/searchChangePrice?"+params.join("&");
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					if(json.entity!=null){
+						var payPrice=json.entity.payAmt;
+						var recivePrice=json.entity.receiveAmt;
+						$("#receiveAmt")[0].value=recivePrice;
+						$("#payAmt1")[0].value=payPrice;		
+					}			
+				  }
+			});
+		  }
+		}
+	}
+	
+	//编辑	
+	function updateNgAndPrice1(){
+		//获得货重
+		var ng=$("#gw3")[0].value;
+		//判断运送公司是否为SF
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		var transCompanyId=rowDatas[0].deliver.transCompanyId;
+		var stockId=rowDatas[0].deliver.stockOutId;
+		var params=[];
+		params.push("wb.gw="+ng);
+		params.push("wb.stockOutId="+stockId);
+		params.push("wb.transConpanyId="+transCompanyId);
+		//判断收费方式1.免费则价格为0；2.抛货免费还是计算
+		//是否泡货
+		var isbCargo= rowDatas[0].bulkyCargo;
+		//收费方式
+		var isFree=rowDatas[0].deliver.payWay;
+		if(isFree==4){
+			//$("#receiveAmt")[0].value=0;
+			$("#payAmt1")[0].value=0;
+		}else{
+			if(transCompanyId==4){
+		    var url="warehouse/WayBill/0/searchChangePrice?"+params.join("&");
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					if(json.entity!=null){
+						var payPrice=json.entity.payAmt;
+						var recivePrice=json.entity.receiveAmt;
+						$("#receiveAmt3")[0].value=recivePrice;
+						$("#payAmt3")[0].value=payPrice;	
+					}	
+				  }
+			});
+		   }
+		}
+	}
+</script>	
+</head>
+<body class="dfbody">
+<div id="search-panel">
+   <table class="edit-panel">		
+	<tr >
+		<td>合同号：</td>    
+		<td><input id="refOrderNo" name="refOrderNo" /></td>
+	    <td>客户：</td>   
+		<td><input id="customerId" name="customerId"  onfocus="myFocus(this,'#f4eaf1')" 
+		   onblur="myblur(this,'white')" tip="选择客户" showtext="" />
+		</td>
+		<td>收货公司：</td> 
+		<td><input id="receiveId" name="receiveId"  onfocus="myFocus(this,'#f4eaf1')" 
+		   onblur="myblur(this,'white')" tip="收货公司" showtext="" />
+		</td>
+		<td>快递单号：</td>    
+		<td><input id="wayBillNo" name="wayBillNo"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>出库单号：</td>    
+		<td><input id="deliverNo" name="deliverNo"   onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+	</tr>
+	<tr>
+	   <td>物流公司：</td>   
+	   <td><input id="tranId" name="tranId"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  showtext="" /></td>
+	   <td>订单状态：</td>   
+	   <td><input id="orderStatus" name="orderStatus" pattern='combo' editable='false'  width="80" remote="WayBillStatus" /></td>	  
+	   <td>是否泡货：</td> 
+	   <td><input id="bulkyCargo" name="bulkyCargo" pattern='combo' editable='false'  width="80" remote="YesNot" /></td>
+	   <td>付费方式：</td>   
+	   <td><input id="payWay" name="payWay" pattern='combo' editable='false'  width="80" remote="PayWay" /></td>
+	</tr>	
+	<tr>
+	   <td>客户识别号：</td>   
+	   <td><input id="customerOrderNo" name="customerOrderNo" /></td>	  
+	   <td>制单时间：</td>
+	   <td><input id="startTime" name="startTime" pattern='date' editable='false' /></td>
+	   <td>到：</td>
+	   <td><input id="endTime" name="endTime" pattern='date' editable='false' /></td>
+	   <td colspan="2"><span id="button-search">搜索</span></td>
+	</tr>	
+  </table> 	 
+</div>		
+     <div id="nav_waybill" title="新增运单" style="display:none;">
+	    <form id="waybill">	
+	   	 <input type="hidden" id="id" name="wb.id" />
+		 <input type="hidden" id="status" name="wb.status" />
+		 <input type="hidden" id="deliverId" name="wb.deliverId" />
+		 <input type="hidden" id="stockOutId" name="wb.stockOutId" />
+		 <input type="hidden" id="receiveAmt" name="wb.receiveAmt" />		
+		 <input type="hidden" id="lastModifyTime" name="wb.lastModifyTime" />
+	     <input type="hidden" id="createTime" name="wb.createTime" />
+	     <input type="hidden" id="lastModifyBy" name="wb.lastModifyBy" />
+		 <input type="hidden" id="createBy" name="wb.createBy" />
+		 <input type="hidden" id="backNo" name="wb.backNo" />
+		 <input type="hidden" id="backNoStatus" name="wb.backNoStatus" />
+		 <input type="hidden" id="backDate" name="wb.backDate" />
+	     <table class="edit-table">
+		 	<tr>   			    
+				<td class="label">快递单号：</td>
+				<td class="field" ><input id="wayBillNo1" name="wb.wayBillNo" /></td>
+				<td class="label" >客户：</td>
+				<td class="field" ><span id="customerName1" name="wb.deliver.customerName"  ></span></td>					
+			</tr>			
+			<tr>   			    
+				<td class="label">是否泡货：</td>
+				<td class="field" ><input id="bulkyCargo1" name="wb.bulkyCargo"  pattern="combo" remote="YesNot" value="1"/></td>
+				
+				<td class="label"></td>
+				<td class="field" >
+				<input id="recivePrice" type="hidden" editable='false' />
+				</td>
+			</tr>
+			<tr>
+				<td class="label">运费(成本)：</td>
+				<td class="field" ><input id="payAmt1" name="wb.payAmt" pattern="float" validate="rules:['required']"/></td>
+				<td class="label" >毛重：</td>
+				<td class="field" ><input id="gw1" name="wb.gw"  pattern="float" onblur="updateNgAndPrice();"/><span>KG</span></td>
+				</td>
+			</tr>			
+			<tr>			    							
+				<td class="label" >备注：</td>
+				<td class="field" colspan="3" ><textarea id="remarks1" name="wb.remarks"  style="height:80px;"></textarea></td>
+			</tr>		
+		</table>
+	  </form>		
+	</div>
+	<div id="nav_waybill1" title="编辑应收" style="display:none;">
+	    <form id="waybill1">	
+	   	 <input type="hidden" id="id3" name="wb.id" />
+	   	 <input type="hidden" id="wayBillNo3" name="wb.wayBillNo" />
+	   	 <input type="hidden" id="customerName3" name="wb.deliver.customerName" />
+	   	 <input type="hidden" id="payAmt3" name="wb.payAmt" />
+	   	 <input type="hidden" id="actualArriveDate3" name="wb.actualArriveDate" />
+		 <input type="hidden" id="status3" name="wb.status" />
+		 <input type="hidden" id="deliverId3" name="wb.deliverId" />
+		 <input type="hidden" id="stockOutId3" name="wb.stockOutId" />
+		 <input type="hidden" id="lastModifyTime3" name="wb.lastModifyTime" />
+	     <input type="hidden" id="createTime3" name="wb.createTime" />
+	     <input type="hidden" id="lastModifyBy3" name="wb.lastModifyBy" />
+		 <input type="hidden" id="createBy3" name="wb.createBy" />
+		 <input type="hidden" id="backNo3" name="wb.backNo" />
+		 <input type="hidden" id="backNoStatus3" name="wb.backNoStatus" />
+		 <input type="hidden" id="backDate3" name="wb.backDate" />
+	     <table class="edit-table">
+			<tr>
+				<td class="label">运费(应收)：</td>
+				<td class="field" ><input id="receiveAmt3" name="wb.receiveAmt" pattern="float" validate="rules:['required']" />
+				</td>
+				<td class="label">是否泡货：</td>
+				<td class="field" ><input id="bulkyCargo3" name="wb.bulkyCargo"  pattern="combo" remote="YesNot" value="1"/></td>
+			</tr>
+			<tr>			
+				<td class="label" >毛重：</td>
+				<td class="field" ><input id="gw3" name="wb.gw" onblur="updateNgAndPrice1();" pattern="float" /><span>KG</span></td>
+				</td>
+				<td class="label" ></td>
+				<td class="field" ></td>
+			</tr>			
+			<tr>			    							
+				<td class="label" >备注：</td>
+				<td class="field" colspan="3" ><textarea id="remarks3" name="wb.remarks"  style="height:80px;"></textarea></td>
+			</tr>		
+		</table>
+	  </form>		
+	</div>
+	<div id="nav_waybill2" title="回单管理" style="display:none;">
+	    <form id="waybill2">	
+	   	 <input type="hidden" id="id2" name="wb.id" />
+	   	 <input type="hidden" id="wayBillNo2" name="wb.wayBillNo" />
+	   	 <input type="hidden" id="customerName2" name="wb.deliver.customerName" />
+	   	 <input type="hidden" id="payAmt2" name="wb.payAmt" />
+	   	 <input type="hidden" id="receiveAmt2" name="wb.receiveAmt" />
+	   	 <input type="hidden" id="actualArriveDate2" name="wb.actualArriveDate" />
+	   	 <input type="hidden" id="bulkyCargo2" name="wb.bulkyCargo" />
+	   	 <input type="hidden" id="gw2" name="wb.gw" />
+		 <input type="hidden" id="status2" name="wb.status" />
+		 <input type="hidden" id="deliverId2" name="wb.deliverId" />
+		 <input type="hidden" id="stockOutId2" name="wb.stockOutId" />
+		 <input type="hidden" id="lastModifyTime2" name="wb.lastModifyTime" />
+	     <input type="hidden" id="createTime2" name="wb.createTime" />
+	     <input type="hidden" id="lastModifyBy2" name="wb.lastModifyBy" />
+		 <input type="hidden" id="createBy2" name="wb.createBy" />
+	     <table class="edit-table">
+	     	<tr>    
+				<td class="label">返单号码：</td>
+				<td class="field" ><input id="backNo2" name="wb.backNo" /></td>
+				<td class="label">回单状态：</td>
+				<td class="field" ><input id="backNoStatus2" name="wb.backNoStatus" pattern="combo" 
+				editable='false' remote="BackNoStatus" value='2'/></td>
+			</tr>
+			<tr>
+				<td class="label">回单时间：</td>
+				<td class="field" ><input id="backDate2" name="wb.backDate" validate="rules:['required']" pattern='datetime' editable='false'/></td>
+				<td class="label" >到达时间</td>
+				<td class="field" >
+				<input id="actualArriveDate" name="wb.actualArriveDate" pattern='datetime' editable='false' />
+				</td>
+				</td>
+			</tr>
+			<tr>			    							
+				<td class="label" >备注：</td>
+				<td class="field" colspan="3" ><textarea id="remarks2" name="wb.remarks"  style="height:80px;"></textarea></td>
+			</tr>		
+		</table>
+	  </form>		
+	</div>	
+	<div id="buttonbar"></div>
+	<div id="grid"></div>
+</body>
+</html>

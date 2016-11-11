@@ -1,0 +1,131 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>		 
+    <script type="text/javascript">
+	var dialog=null;
+	$(function() {
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput(); //初始化	
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+					 var vo=$("#search-panel").getVo();
+					 var params=convertParamToUrl(vo);
+					 $('#grid').omGrid('setData',"systemmanager/Role/0/searchRole?"+encodeURI(params));
+			   }
+		});	
+		dialog=$("#nav_role").omDialog({
+			autoOpen: false,
+			draggable : false,
+			resizable : false,
+			height: 300,
+			width:750,			
+			modal: true,
+			buttons: [{
+                text : "确定", 
+                click :saveRole
+            }, {
+                text : "取消", 
+                click : function () {                   
+                    dialog.omDialog("close");
+                }
+            }]
+		});
+		$('#buttonbar').initToolBar();			
+		$('#grid').omGrid({
+				limit:15,
+				autoFit:true,
+                title : '角色列表',
+                dataSource :"systemmanager/Role/0/searchRole",
+                colModel : [
+                             {header : '角色名称', name : 'roleName', width : 120, align : 'left'},
+                             {header : '描述', name : 'description', align : 'left', width :300}
+							],
+				     rowDetailsProvider:function(rowData,rowIndex){
+                		return '';								
+	            }
+            });				
+		      
+	});
+	
+	function saveRole(){	 		   
+		 var url = $("#id").val()=="" ? "systemmanager/Role/0/add" : "systemmanager/Role/0/edit";
+		 var vo=$("#role").getVo();
+		 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   $('#grid').omGrid('reload');
+			}
+		 });
+		 dialog.omDialog("close");         	            
+	}	
+	function addRole(){
+		dialog.initializeInput(); //初始化
+	    dialog.omDialog("option", "title", '新增');
+		dialog.omDialog("open");//显示dialog
+	}
+	function editRole(){
+	  var rowDatas = $('#grid').omGrid('getSelections',true);
+      if(rowDatas.length <= 0 ){
+         $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+         return;
+      }		
+	  dialog.initializeInput({"vo":rowDatas});	
+      dialog.omDialog('open');	       	     
+	}		
+	function viewRole(){ //查看角色
+	   
+	}
+	</script>	
+</head>
+<body class="dfbody">
+<div id="search-panel">
+	 <table class="edit-panel">		
+		<tr>  
+			<td>关键字：</td>		     	
+			<td><input type="text" id="searchValue" name="searchValue" /></td>
+			<td ><span id="button-search">搜索</span></td>						
+		</tr>	
+	 </table> 	 
+</div>		
+	<div id="nav_role" title="新增角色" style="display:none;">
+	    <form id="role">
+		<input type="hidden" id="id" name="role.id" />
+		<input type="hidden" id="lastModifyTime" name="role.lastModifyTime" />
+	    <input type="hidden" id="createTime" name="role.createTime" />
+		<table class="edit-table">
+			<tr>							
+				<td class="label">角色名称：</td>
+				<td class="field"><input id="roleName" name="role.roleName" /></td>				
+			</tr>						
+			<tr>
+   			    <td class="label">角色描述：</td>
+				<td class="field" colspan="3">
+					<textarea id="description" name="role.description"  style="height:50px;"></textarea>
+				</td>				
+			</tr>
+		</table>		
+		</form>	
+	</div>
+	<div id="buttonbar"></div>	
+	<div id="grid"></div
+></body>
+</html>

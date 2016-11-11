@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+		<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+   <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-validate.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null,depgrid=null;
+	$(function() {
+	    $("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});		
+		dialog=$("#nav_department").omDialog({autoOpen: false,draggable : false,resizable : false,height: 400,width:750,modal: true,
+			buttons: [{
+                text : "确定", 
+                click :saveDepartment 
+            }, {
+                text : "取消", 
+                click : function () {                   
+                    dialog.omDialog("close");
+                }
+            }]
+		});
+		$('#buttonbar').initToolBar();
+		depgrid=$('#grid').omGrid({
+				limit:15,
+				autoFit:true,
+                title : '部门列表',
+                dataSource : "systemmanager/Department/0/searchDepartment",
+                colModel : [
+                             {header : '部门名称', name : 'departmentName', width : 120, align : 'left'}, 
+							 {header : '负责人', name : 'leader', width : 120, align : 'left'}, 
+ 							 {header : '联系电话', name : 'tel', width : 80, align : 'left'},
+  							 {header : '邮箱', name : 'email', width : 100, align : 'left'}, 
+                             {header : '描述', name : 'remark', align : 'left', width : '200'} ],
+            });		
+			
+			 $('#enterpriseId').omCombo({
+                dataSource :   "business/OperationCompany/0/searchOpCompany?outRows=true&limit=100000",             
+                listAutoWidth:true,               
+                listMaxHeight:'300',           
+                inputField : 'cname',              
+                valueField : 'id',
+				forceSelection:true,               
+                listProvider : function(container,records){
+                    var html='<table cellpadding="2" cellspacing="0"><thead><tr>';                       
+						html +='<tr><th width="60">名称</th><th width="60">简称</th></tr>';
+						html +='</thead>';
+                        html +='<tbody>';
+                    $(records).each(function(){
+                        html += '<tr><td>' + this.cname + '</td><td>' + this.csname + '</td></tr>'; // buildTr(this);
+                    });
+                    html +=      '</tbody>';
+                             +'</table>';									
+                    $(html).appendTo(container);					
+                    return container.find('tbody>tr');
+                },           
+                filterStrategy:function(text,record){
+                    var text=text.toLowerCase();
+                    return record.cname.toLowerCase().indexOf(text)>-1 || record.csname.toLowerCase().indexOf(text)>-1;
+                },
+                onValueChange:function(target, newValue, oldValue){
+                   // $('#msg').html(newValue);
+                }
+            });
+	});
+	function searchData(){
+	    var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#grid').omGrid('setData',"systemmanager/Department/0/searchDepartment?"+encodeURI(params));
+	}
+	function saveDepartment(){	 
+		var url = $("#depId").val()=="" ? "systemmanager/Department/0/add" : "systemmanager/Department/0/edit";		
+		var vo=$("#department").getVo()
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   depgrid.omGrid('reload');
+		  }
+		 });
+		 dialog.omDialog("close");         	            
+	}	
+	function addDepartment(){
+		dialog.initializeInput(); //初始化
+		dialog.omDialog("option", "title", '新增');
+		dialog.omDialog("open");//显示dialog
+	}
+	function editDepartment(){
+	  var rowDatas =depgrid.omGrid('getSelections',true);
+      if(rowDatas.length <= 0 ){
+         $.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+         return;
+      }		
+	  dialog.initializeInput({"vo":rowDatas});	
+      dialog.omDialog('open');	       	     
+	}	
+	function approveDepartment(){
+	          	     
+	}
+	function viewDepartment(){ //查看
+	}
+	</script>	
+</head>
+<body class="dfbody">
+<div id="search-panel">
+ <table class="edit-panel">		
+	<tr>   	
+		<td><input type="text" id="searchValue" name="searchValue" /></td>
+		<td ><span id="button-search">搜索</span></td>						
+	</tr>	
+ </table> 	 
+</div>				
+	<div id="nav_department" title="新增部门" style="display:none;">
+  	    <form id="department">
+		<input type="hidden" id="depId" name="dep.id" />
+		<table class="edit-table">
+			<tr>			
+				<td class="label">部门名称：</td>
+				<td class="field"><input id="departmentName" name="dep.departmentName" validate="rules:['required']" /></td>				
+				<td class="label">所属单位：</td>
+				<td class="field"><input id="enterpriseId" name="dep.enterpriseId" pattern='combo' validate="rules:['required']" /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">负责人：</td>
+				<td class="field" ><input id="leader" name="dep.leader" /></td>
+				<td class="label">拼音：</td>
+				<td class="field" ><input id="pinyin" name="dep.pinyin" /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">联系电话：</td>
+				<td class="field" ><input id="tel" name="dep.tel" /></td>
+				<td class="label">邮箱：</td>
+				<td class="field" ><input id="email" name="dep.email" /></td>				
+			</tr>								
+			<tr>
+   			    <td class="label">备注：</td>
+				<td class="field" colspan="3"><textarea id="remark" name="dep.remark" style="height:50px;"></textarea></td>				
+			</tr>
+		</table>
+		</form>
+		<div class="separator"></div>		
+	</div>
+	<div id="buttonbar"></div>	
+	<div id="grid"></div>
+</body>
+</html>

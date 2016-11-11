@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---货物验核</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(document).ready(function(){	
+		 $("#search-panel").omPanel({title : "",collapsed:true});
+		 $('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });
+		 var params=[];		 
+		 var stockInId=getIframeParm("stockInId");
+		 var customOrderId=getIframeParm("customOrderId");
+		 var etOrderId=getIframeParm("etOrderId");
+		 params.push("stockInId="+stockInId);
+		 params.push("customOrderId="+customOrderId);
+		 params.push("etOrderId="+etOrderId);
+		 var url="warehouse/StockInCheckStandardsRalation/0/getCheckStandardsList?"+params.join("&");
+		 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				 var mutitable=$(".mutitable");
+				 $(".tbody_item").remove();
+				 var html="";
+				 var items=json.entity;
+				 for(var i=0;i<items.length;i++){
+					 var csr=items[i];
+					 var csd=csr.checkStandards;
+					 html=html+"<div class='tbody_item'>";
+					 html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+					 html=html+" <tr> ";
+					 html=html+"   <td width='100'><span name='checkType'>";
+					 html=html+      Dictionary.getDictName(Dictionary.CheckStandardsType,csd.checkType)+"</span></td>";
+					 html=html+"   <td width='150'>";
+					 html=html+"       <span>"+csd.name+"</span> ";
+					 html=html+"   </td>";
+					 html=html+"   <td width='80'>";
+					 html=html+"       <span>"+((csr.status==1)?"异常":"正常")+"</span> ";
+					 html=html+"   </td>";	 
+					 html=html+"   <td  style='text-align:left;'>";
+					 html=html+"       <span>"+csr.remark+"</span> ";
+					 html=html+"   </td>";
+					 html=html+"</tr>";
+					 html=html+"</table></div>";
+				 } 
+				 mutitable.append(html);
+		 }});
+	});
+
+	</script>
+</head>
+<body class="dfbody">	
+	<div id="search-panel"></div>
+	<div id="buttonbar"></div>
+	<div class="mutitable" id="checkstandards">
+		<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+			 <thead>
+				   <tr>
+					  <td width="100">验核类型</td>
+					  <td width="150" >名称</td>
+					  <td width="80" >是否有异常</td>
+					  <td style="text-align:center;">来货异常项目</td>
+				   </tr>
+			</thead>
+	   </table>
+	</div>
+</body>
+</html>

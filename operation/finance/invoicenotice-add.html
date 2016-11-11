@@ -1,0 +1,405 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-grid-rowexpander.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+    var combodata=[{id : "settlementState", onValueChange :stateChange,data:null}]; 
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:customerValueChange,
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+     };
+	$(function() {
+		$("#invoicenotice").initializeInput({"comb":combodata}); //初始化
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("invoicenotice");
+		var invoiceNoticeId=getIframeParm("invoiceNoticeId");
+		if (invoiceNoticeId !=""){ //编辑状态
+		     var url="finance/InvoiceNotice/0/get?invoiceNoticeId="+invoiceNoticeId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				$("#invoicenotice").initializeInput({"vo":json.entity}); //初始化
+			  }			
+			 });
+ 		 }else{
+			$("#invoicenotice").initializeInput(); //初始化
+			$("#customerId").initGridDropList(cusParams); 
+		 }
+		
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: function(){
+				 	var st = $("#settlementState").val();
+				 	if(st == 2){
+				 		saveInvoiceNoticeNo();
+				 	} else {
+				 		saveInvoiceNotice();				 		
+				 	}				 	
+				 }
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });
+		
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+				height:550,
+				singleSelect:false,
+                title : '结算列表',
+                dataSource : "",
+                colModel : [
+			 				 {header : '结算编码', name : 'settlementNo', width : 60, align : 'left'},
+							 {header : '客户', name : 'customerName', width : 120, align : 'left'},								 
+							 {header : '结算类型', name : 'type', width : 80, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									if (colValue==1){
+								       return Dictionary.getDictName(Dictionary.SettlementType,rowData.opType);
+									}else {
+									   return Dictionary.getDictName(Dictionary.SettlementType,colValue);
+									}
+								}
+							 },
+							 {header : '订单号', name : 'referOrderNo', width : 60, align : 'left'}, 
+							 {header : '状态', name : 'status', width : 40, align : 'left',
+							      renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.SettlementStatus,colValue);
+								}
+							 }, 
+							 {header : '可开票金额', name : 'canInvoiceAmt', width : 50, align : 'right'},
+							 {header : '本次开票金额', name : 'invoiceNoticeAmt', width : 80, align:'right',
+							      renderer : function(colValue, rowData, rowIndex) {
+									 var html="<input style='width:100px;text-align: right;' name='invoiceNoticeAmt"+rowData.id+"' ";
+									 html=html+" value='"+rowData.invoiceNoticeAmt+"'  />";
+									 return html;
+							      } 
+							 },
+							 {header : '结算币种', name : 'currency', width : 50, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.Currency,colValue);
+								}
+							 },
+							 {header : '操作时间', name : 'opTime', width : 100, align : 'left'}
+ 							],			
+				onRefresh:function(nowPage,pageRecords,event){
+					$('#grid').find("input").omNumberField({allowDecimals:true,decimalPrecision:10});       
+				},
+				onRowClick:function(rowIndex,rowData,event){
+					$('#customerId').val(rowData.customerName).attr('_trueValue',rowData.customerId);
+					if (rowData.opType==1){
+					   $('#type').omCombo('value',2); //Vat发票
+					}else if (rowData.opType==2){
+					   $('#type').omCombo('value',1); //服务发票
+					}
+     			}, //展开行时使用下面的方法生成详情，必须返回一个字符串
+				rowDetailsProvider:function(rowData,rowIndex){
+				    if (rowData.opType==1){ //单抬头的需要展开
+					    return loadPayItem(rowIndex,rowData);
+					}else{
+					    return "";
+					}
+				}	
+            });
+			var vos=[];
+			$("#grid").find('input[name=checkAll]').live('click', function() {
+                vos=[];			
+				var $table=$(this).parents("table");
+				var settlementId=$table.find('span[name=settlementId]').html();
+				var $invoiceAmt=$("#grid").find('input[name=invoiceNoticeAmt'+settlementId+']');
+				$table.find('input[name="subBox"]').attr("checked",this.checked);
+				$table.find("input[name='subBox']:checked").each(function(i){
+					 var $this=$(this);
+					 var $tr=$this.parent("td").parent("tr");
+					 var vo=$tr.getVo();
+					 vos.push(vo);
+			    });
+				if (vos.length>0){
+				   iniInvoiceAmt(vos,$invoiceAmt);
+				}else{
+				   $invoiceAmt.val(0);
+				}
+		   });
+		   
+		   $("#grid").find('input[name="subBox"]').live('click', function() {
+			   vos=[];
+			   var $table=$(this).parents("table");
+			   var settlementId=$table.find('span[name=settlementId]').html();
+			   var $invoiceAmt=$("#grid").find('input[name=invoiceNoticeAmt'+settlementId+']');
+			   $table.find("input[name='subBox']:checked").each(function(i){
+					 var $this=$(this);
+					 var $tr=$this.parent("td").parent("tr");
+					 var vo=$tr.getVo();
+					 vos.push(vo);
+			    });
+				if (vos.length>0){
+				   iniInvoiceAmt(vos,$invoiceAmt);
+				}else{
+				   $invoiceAmt.val(0);
+				}
+		   }); 
+	});
+	function iniInvoiceAmt(vos,$invoiceAmt){
+	   var totalAmt=0.0;
+	   for(var i=0;i<vos.length;i++){
+	       var vo=vos[i];
+	       totalAmt=totalAmt.add(vo.invoiceAmt);
+	   }
+	   $invoiceAmt.val(totalAmt.toFixed(2));
+	}
+	function loadPayItem(rowIndex,rowData){
+		 var params={};
+		 params["fp.opCompanyId"]=rowData.opCompanyId;
+		 params["fp.settlementType"]=rowData.type;
+		 params["fp.customerId"]=rowData.customerId;
+		 params["fp.referOrderId"]=rowData.referOrderId;
+		 params["fp.settlementId"]=rowData.id;
+		 params["fp.useType"]=2;		 
+		 var html="<table cellpadding='0' cellspacing='0' border='0' width='100%' style='background:#f0f0f0;'>";
+		 html=html+"	<tbody>";
+		 html=html+"	<tr>";
+		 html=html+"		<td class='clsInvoice' height='20' align='center'  width='30'>";
+		 html=html+"		  <input type='checkbox' name='checkAll' id='checkAll_"+rowData.id+"' checked='true' style='width:15px;height:15px;' />";
+		 html=html+"		  <span name='settlementId' style='display:none;'>"+rowData.id+"</span>";
+		 html=html+"		</td>";
+		 html=html+"		<td class='clsinvoicerbt' height='20' align='center' >";
+		 html=html+"			<b>序号</b>";
+		 html=html+"		</td>";
+		 html=html+"		<td class='clsinvoicerbt' height='20' align='center' >";
+		 html=html+"			<b>品名</b>";
+		 html=html+"		</td>";
+		 html=html+"		<td class='clsinvoicerbt' height='20' align='center' >";
+		 html=html+"			<b>料号</b>";
+		 html=html+"		</td>";
+		 html=html+"		<td class='clsinvoicerbt' height='20' align='right'  style='font-weight: bold;'>";
+		 html=html+"			<b>数量</b>";
+		 html=html+"		</td>";
+		 html=html+"		<td class='clsinvoicerbt' height='20' align='center'  style='font-weight: bold;'>";
+		 html=html+"			<b>单位</b>";
+		 html=html+"		</td>";
+		 html=html+"		<td class='clsinvoicerbt' height='20' align='right' >";
+		 html=html+"			<b>开票金额(RMB)</b>";
+		 html=html+"		</td>";
+		 html=html+"	</tr>";
+		 var url="finance/SettlementFeeTrade/0/paymentTrading";
+		 $.ajaxPost({data:params,url:url,asynced:false,msg:false,success:function(json,textStatus){
+		    if(json.msgCode==1){	
+			    var productItemList=json.entity.productItemList;
+			    for(var i=0;i<productItemList.length;i++){
+					var pil=productItemList[i];	
+					html=html+"	<tr height='16'>";
+					html=html+"		<td class='clsInvoiceRBL' height='20' align='left' >";
+					html=html+"			<input type='checkbox' value='checkbox1' checked='true' name='subBox' style='width:15px;height:15px;' /> ";
+					html=html+"			<span name='productId' style='display:none;'>"+pil.productId+"</span>";
+					html=html+"			<span name='settlementId' style='display:none;'>"+rowData.id+"</span>";
+					html=html+"     </td>"; 
+					html=html+"		<td class='clsInvoiceRB' height='20' align='left' >";
+					html=html+"			<span name='orderNo'>"+pil.orderNo+" </span></td>";
+					html=html+"		<td class='clsInvoiceRB' height='20' align='left' >";
+					html=html+"			<span name='productName'>"+pil.productName+" </span></td>";
+					html=html+"		<td class='clsInvoiceRB' height='20' align='left' >";
+					html=html+"			<span name='pn'>"+pil.pn+"</span></td>";
+					html=html+"		<td class='clsInvoiceRB' height='20' align='right' >";
+					html=html+"			<span name='qty'>"+pil.qty+"</span></td>";
+					html=html+"		<td class='clsInvoiceRB' height='20' align='right' >";
+					html=html+"			<span name='unit'>"+pil.unit+"</span></td>";
+					html=html+"		<td class='clsInvoiceRB' height='20' align='right' >";
+					html=html+"			<span name='invoiceAmt'>"+pil.invoiceAmt+" </span></td>";
+					html=html+"	</tr>";
+				}
+			}			
+		}});
+		html=html+"</tbody>";
+		html=html+"</table>";
+		return html;
+	}
+	function customerValueChange(rowData){
+		$('#grid').omGrid('setData', "finance/Settlement/0/searchSettlementByInvoice?useType=2&customerId="+rowData.id);
+	}
+	
+	
+	function saveInvoiceNoticeNo(){
+		var vo=$("#invoicenotice").getVo();
+		vo["in.amt"] = $("#setAmt").val()*100;
+		vo["in.isSettlement"] = 2;
+		if ($("#setAmt").val() == null || $("#setAmt").val() == "") {
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请输入开票金额！',type : 'error'});
+			return;
+		}
+		$.omMessageBox.confirm({title:'新增开票确认',content:'您你确定要这样做吗？',onClose:function(v){
+		if(v){
+			var url ="finance/InvoiceNotice/0/add";
+			$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+				$('#grid').omGrid('reload');
+				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			}});
+		 }
+       }});
+	}
+	function saveInvoiceNotice(){	 
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录行！'});
+			return;
+		}		
+		var vo=$("#invoicenotice").getVo();
+		var orderNoArr=[],settlementIdsArr=[],details=[],totalAmt=0.0,amt=0.0;
+		for(var i=0;i<rowDatas.length;i++){
+			if (rowDatas[i].customerId!=(vo["in.customerId"])) {
+			   $.omMessageTip.show({title : '错误',timeout : 2000,content : '订单'+rowDatas[i].referOrderNo+'的客户跟表头客户不一致！',type : 'error'});
+		       throw new Error("客户不一致！");
+			   return false;
+			}
+			amt=parseFloat($("#grid input[name=invoiceNoticeAmt"+rowDatas[i].id+"]").val());
+			if ( amt > rowDatas[i].canInvoiceAmt){
+			   $.omMessageTip.show({title:'提示',timeout:2000,content:rowDatas[i].referOrderNo + '本次开票金额不能大于可开票金额！',type : 'error'});
+			   throw new Error(rowDatas[i].referOrderNo + '本次开票金额不能大于可开票金额！');
+			}
+            totalAmt=totalAmt.add(amt);			
+			//vo["in.settlementId"]=rowDatas[0].id;
+			settlementIdsArr.push(rowDatas[i].id);
+			orderNoArr.push(rowDatas[i].referOrderNo);
+			if (rowDatas[i].opType==1){ //单抬头
+				var $table=$('#grid').find("input[name=checkAll][id=checkAll_"+rowDatas[i].id+"]").parents("table");
+				var vod=null;
+				var indAmt=0.0;
+				$table.find("input[name='subBox']:checked").each(function(i){
+					 var $this=$(this);
+					 var $tr=$this.parent("td").parent("tr");
+					 vod=$tr.getVo();
+					 indAmt=indAmt.add(vod.invoiceAmt);
+					 details.push(vod);
+				});
+				if (vod==null){
+				   $.omMessageTip.show({title : '提示',timeout : 4000,content : '单抬头的开票请点击右边的+符展开产品项！',type : 'error'});
+				   throw new Error("单抬头的开票请点击右边的+符展开产品项!");
+				}
+				if (indAmt.toFixed(2)!=amt){
+					$.omMessageTip.show({title:'提示',timeout:4000,content:rowDatas[i].referOrderNo+"的金额"+amt+" 明细的总金额 "+indAmt+"对不上！",
+					type : 'error'});
+				    throw new Error(rowDatas[i].referOrderNo+"的金额"+amt+" 明细的总金额 "+indAmt+"对不上！");
+				}
+			}else{ //双抬头
+			    var vod={};
+				vod["settlementId"]=rowDatas[i].id;
+				vod["invoiceAmt"]=amt;
+				details.push(vod);
+			}
+		}
+		var sts= JSON.stringify(details); 
+		if (sts!=''){
+		   vo["in.details"]=sts;   
+		}
+		vo["in.actualAmt"]=totalAmt;
+		vo["in.settlementIds"]=settlementIdsArr.join(",");
+		vo["in.orderNo"]=orderNoArr.join(",");
+		vo["in.opType"]=rowDatas[0].opType;
+		$.omMessageBox.confirm({title:'新增开票确认',content:'您目前选择了'+vo["in.orderNo"]+' 结算单进行开票，你确定要这样做吗？',onClose:function(v){
+		if(v){
+			var url ="finance/InvoiceNotice/0/add";
+			$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+				$('#grid').omGrid('reload');
+				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			}});   	            
+		 }
+       }});
+	}
+	function stateChange(target,newValue,oldValue){
+		if (newValue == 1) {
+			$("#amtTxt").hide();
+			$("#amtInput").hide();
+			$("#setAmt").val("");
+			$("#grid").show();
+		} else {
+			$("#amtTxt").show();
+			$("#amtInput").show();
+			$("#setAmt").val("");
+			$("#grid").hide();
+		}
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>			
+<div id="nav_invoicenotice" title="新增开票" >
+	<form id="invoicenotice">	
+	<input id="id" name="in.id" type="hidden" />
+	<input id="status" name="in.status" type="hidden" />
+	<input type="hidden" id="amt" name="in.amt" />
+	<input type="hidden" id="titleCompanyId" name="in.titleCompanyId" />
+	<input type="hidden" id="settlementIds" name="in.settlementIds" />
+	<input type="hidden" id="orderNo" name="in.orderNo" />
+	<input type="hidden" id="lastModifyTime" name="in.lastModifyTime" />
+	<input type="hidden" id="createTime" name="in.createTime" />
+	<input type="hidden" id="noticeUserId" name="in.noticeUserId" />
+	<input type="hidden" id="invoiceUserId" name="in.invoiceUserId" />	
+	<table class="edit-table">
+		<tr>
+			<td class="label">结算状态：</td>
+			<td class="field" ><input id="settlementState"  pattern='combo' editable='false' validate="rules:['required']" 
+			remote='SettlementState' /></td>
+			<td class="label"><span id="amtTxt" style="display:none">开票金额：</span></td>
+			<td class="field"><span id="amtInput" style="display:none"><input id="setAmt" name="in.amt" /></span></td>
+		</tr>
+		<tr>
+			<td class="label">客户：</td>
+			<td class="field"><input id="customerId" name="in.customerId" showtext="id.customerName" validate="rules:['required']" /></td>
+			<td class="label">开票类型：</td>
+			<td class="field" ><input id="type" name="in.type" pattern='combo' editable='false' validate="rules:['required']" 
+			remote='InvoicenoticeType' /></td>				
+		</tr>
+		<tr>
+			<td class="label">币种：</td>
+			<td class="field" ><input id="currency" name="in.currency" pattern='combo' editable='false' validate="rules:['required']" 
+			remote='Currency' value='142' /></td>				
+		    <td class="label">开票日期：</td>
+			<td class="field"><input id="invoiceDate" name="in.invoiceDate" validate="rules:['required']" pattern='datetime' editable='false' 
+				defaultDate='now' /></td>
+		</tr>
+		<tr>   			    
+			<td class="label">备注：</td>
+			<td class="field" colspan="3"><input id="remark" name="in.remark" /></td>
+		</tr>
+		
+	</table>
+	</form>	
+</div>
+<div id="buttonbar"></div>	
+<div id="grid"></div>
+</body>
+</html>

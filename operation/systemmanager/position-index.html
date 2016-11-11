@@ -1,0 +1,478 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<script type="text/javascript" src="/js/jquery.js"></script>	
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	 <script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+    var dialog = null;
+    var dialogCustomer = null;
+    var nodeId = "";
+	var data = 
+		[{
+			"text": "总裁",
+			"id":"10",
+			"hasChildren":true,
+			"positionLevel":"1",
+			"parentId":""			
+		}];	
+	$(document).ready(function() {
+		dialog=$( "#nav_users").omDialog({autoOpen: false,draggable : false,resizable : false,height: 550,width:750,modal: true,
+			buttons: [{
+                text : "确定", 
+                click : pickUser
+            	},{            	
+					text : "取消", 
+					click : function () {                   
+						dialog.omDialog("close");
+				  }
+				}
+			]
+		});
+		dialogCustomer=$( "#nav_customers").omDialog({autoOpen: false,draggable : false,resizable : false,height: 550,width:750,modal: true,
+			buttons: [{
+                text : "确定", 
+                click : pickCustomer
+            	},{            	
+					text : "取消", 
+					click : function () {                   
+						dialogCustomer.omDialog("close");
+				  }
+				}
+			]
+		});
+      	var element = $('#nav_position').omBorderLayout({
+           	   panels:[{id:"center-panel",header:false,title:"职位信息",region:"center",width:"100%",height:700},
+           	    {id:"west-panel",resizable:true,collapsible:true,title:"职位列表",region:"west",width:300,height:700}
+           	    ]
+         });
+         var element1 = $('#center-panel').omBorderLayout({
+           	   panels:[{id:"up-panel",header:true,title:"职位信息",region:"north",width:"100%",height:150},
+           	    {id:"cent-panel",collapsible:true,title:"用户列表",region:"center",width:"100%",height:250},
+           	    {id:"down-panel",collapsible:true,title:"客户列表",region:"south",width:"100%",height:300}
+           	    ]
+         });
+          
+		  
+	    loadPositionList();
+		$('#positionTree').omTree('expandAll'); 
+		$('#buttonbar').initToolBar(1);
+		$('#buttonuserbar').initToolBar(2);
+		$('#buttoncustomerbar').initToolBar(3);
+		$('#txtMode').omCombo({dataSource:[{text:'新增模式',value:'0'},{text:'编辑模式',value:'1'}],value : '0',width:80});
+		
+		
+		$('#usergrid').omGrid({
+				autoFit:true,
+				height:150,
+				limit:10,
+                title : '用户列表',
+                dataSource : "",
+                colModel : [{header : '登录账户', name : 'userName', width : 50, align : 'left'}, 
+							 {header : '性别', name : 'sex', width : 30, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.Sex,colValue);
+								}
+							 }, 
+							 {header : '用户类型', name : 'userType', width : 50, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.UserType,colValue);
+								}
+							 }, 
+ 							 {header : '联系电话', name : 'tel', width : 60, align : 'left'},
+							 {header : '真实姓名', name : 'realName', width : 80, align : 'left'}]				
+         });
+         
+         $('#dgUserGrid').omGrid({
+				autoFit:true,
+				height:320,
+				limit:10,
+                title : '用户列表',
+                dataSource : "systemmanager/User/0/searchUser",
+                colModel : [{header : '登录账户', name : 'userName', width : 100, align : 'left'}, 
+							 {header : '性别', name : 'sex', width : 50, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.Sex,colValue);
+								}
+							 }, 
+							 {header : '用户类型', name : 'userType', width : 120, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.UserType,colValue);
+								}
+							 }, 
+ 							 {header : '联系电话', name : 'tel', width : 120, align : 'left'},
+							 {header : '真实姓名', name : 'realName', width : 100, align : 'left'}]				
+         });
+         
+         $('#customergrid').omGrid({
+				autoFit:true,
+				height:245,
+				limit:10,
+                title : '客户列表',
+                dataSource : "",
+                singleSelect : false,
+                colModel : [{header : '公司名', name : 'company.cname', width : 60, align : 'left'},
+  							 {header : '联系电话', name : 'company.tel', width : 50, align : 'left'}, 
+							 {header : '业务类型', name : 'businessType', width : 50, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getMulDictName(Dictionary.BusinessType,colValue);
+								 }
+							 }, 
+							 {header : '客户类型', name : 'cusType', width : 60, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getDictName(Dictionary.CustomerType,colValue);
+								 }
+							 },						 
+							 {header : '客服负责人', name : 'serviceMan', width : 60, align : 'left'},							 
+                             {header : '描述', name : 'company.remark', align : 'left', width : 100} ]				
+         });
+         
+         $('#dgCustomerGrid').omGrid({
+				autoFit:true,
+				height:320,
+				limit:10,
+                title : '客户列表',
+                singleSelect : false,
+                dataSource : "business/Customer/0/searchCustomerByAll",
+                colModel : [{header : '公司名', name : 'company.cname', width : 150, align : 'left'},
+  							 {header : '联系电话', name : 'company.tel', width : 80, align : 'left'}, 
+							 {header : '业务类型', name : 'businessType', width : 80, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getMulDictName(Dictionary.BusinessType,colValue);
+								 }
+							 }, 
+							 {header : '客户类型', name : 'cusType', width : 80, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getDictName(Dictionary.CustomerType,colValue);
+								 }
+							 },						 
+							 {header : '客服负责人', name : 'serviceMan', width : 60, align : 'left'},							 
+                             {header : '描述', name : 'company.remark', align : 'left', width : 100} ]				
+         });
+         
+         $("#button-search").omButton({
+	    	onClick : function(event){
+			    var vo=$("#nav_users .edit-panel").getVo();
+				var params=convertParamToUrl(vo);
+				var url= "systemmanager/User/0/searchUser?"+params;
+				url=encodeURI(url);
+				$('#dgUserGrid').omGrid("setData", url);
+			}
+		 });	
+		 $("#button-search-cus").omButton({
+	    	onClick : function(event){
+			    var vo=$("#nav_customers .edit-panel").getVo();
+				var params=convertParamToUrl(vo);
+				var url= "business/Customer/0/searchCustomerByAll?"+params;
+				url=encodeURI(url);
+				$('#dgCustomerGrid').omGrid("setData", url);
+			}
+		 });	
+	});
+	
+	function loadPositionList(){
+	     $("#positionTree").empty();
+		 var url="systemmanager/Position/0/loadPositionTreeAll?positionCode=''";
+	     $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			 $("#positionTree").omTree({
+					dataSource : json.entity,
+					simpleDataModel: true,
+					onSelect: function(node){
+						nodeId = node.id;
+						var modeValue = $('#txtMode').omCombo('value');				
+						if (modeValue==1){
+						  $("#positionName").val(node.text);
+						}else{
+						  $("#positionName").val("");
+						}
+						var url= "systemmanager/Position/0/searchUser?positionCode="+node.id;
+						url=encodeURI(url);
+						$('#usergrid').omGrid('setData',url);
+						var url= "systemmanager/Position/0/searchCustomer?positionCode="+node.id;
+						url=encodeURI(url);
+						$('#customergrid').omGrid('setData',url);
+					}				
+				}); 
+		  }});
+	}	
+		
+	function addPosition(){	
+	    var modeValue = $('#txtMode').omCombo('value');				
+		if (modeValue==1){
+		    $.omMessageTip.show({content :"对不起！请选择新增模式",timeout : 2000,type : 'error'});
+	        return false;	  
+   		}
+		var positionTree=$('#positionTree').omTree('getSelected');	
+		if (positionTree!=null){ 			    	     			
+			 var url =  "systemmanager/Position/0/savePosition";
+			 var vo = $('#position').getVo();
+			 if (vo.positionName!=""){		
+			     vo["p.positionLevel"]=parseInt(positionTree.positionLevel)+1;
+				 vo["p.parentPositionCode"]=positionTree.id;
+				 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+					   loadPositionList();						   
+					   $.omMessageTip.show({content:json.msg,timeout:2000,type:'success'});					 
+					}
+				 });		
+			 } else{
+			    $.omMessageTip.show({title : '提示',content : '职位名称不能为空！',type:'error'});    
+			 }
+		}else{
+			$.omMessageTip.show({title: '提示',content:'请选该职位的上级职位！',type:'error'});
+		}
+	}	
+	
+	function editPosition(){		    	    		
+	    var modeValue = $('#txtMode').omCombo('value');				
+		if (modeValue==0){
+		    $.omMessageTip.show({content :"对不起！请选择编辑模式!",timeout : 2000,type : 'error'});
+	        return false;	  
+   		}
+		var positionTree=$('#positionTree').omTree('getSelected');	
+		if (positionTree!=null){ 			    	     			
+			 var url =  "systemmanager/Position/0/savePosition";
+			 var vo = $('#position').getVo();
+			 if ((vo["p.positionName"]!="") && (vo["p.positionName"]!=positionTree.text.trim())){		
+			     vo["p.positionCode"]=positionTree.id;
+				 vo["p.positionLevel"]=positionTree.positionLevel;
+				 vo["p.parentPositionCode"]=positionTree.parentId;
+				 vo["p.positionStatus"]= positionTree.positionStatus;
+				 vo["p.positionIndex"]= positionTree.positionIndex;
+				 vo["p.id"]=positionTree.positionId;
+				 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+					   loadPositionList();						   
+					   $.omMessageTip.show({content:json.msg,timeout:2000,type:'success'});					 
+					}
+				 });		
+			 }
+		}else{
+			$.omMessageTip.show({title: '提示',content:'请选该职位的上级职位！',type:'error'});
+		}
+	}
+	function viewPosition(){
+	}
+	function setUser(){
+		dialog.initializeInput(); //初始化
+        dialog.omDialog("option", "title", '添加用户');
+        dialog.omDialog("open");//显示dialog	
+	}
+	
+	
+	function delUser(){
+		var pSelectNode=$('#positionTree').omTree('getSelected');	
+		var rowDatas = $('#usergrid').omGrid('getSelections',true);
+		if(rowDatas == undefined || rowDatas.length <= 0 ){
+            $.omMessageTip.show({title : '提示',content : '请选择行！'});
+            return;
+        }
+		$.omMessageBox.confirm({title:'确定',content:'你确定解除绑定该用户吗?',onClose:function(v){
+			 if(v){
+			        var params=[];
+					params.push("userId="+rowDatas[0].id);
+					params.push("positionCode="+pSelectNode.id);
+					var url="systemmanager/User/0/delPosition?"+params.join("&");
+					$.ajaxPost({url:url,msg:false,success:function(json,textStatus){	
+						$('#usergrid').omGrid('setData',"systemmanager/Position/0/searchUser?positionCode="+nodeId);		  		
+						$.omMessageTip.show({content:json.msg,timeout:2000,type:'success'});					 
+					}
+					});	
+			 }else{
+			 	return;
+			 }			        
+	    }});	
+	}
+	function addCustomer(){
+		dialogCustomer.initializeInput(); //初始化
+        dialogCustomer.omDialog("option", "title", '添加客户');
+        dialogCustomer.omDialog("open");//显示dialog	
+	}
+	function delCustomer(){
+		var rowDatas = $('#customergrid').omGrid('getSelections',true);
+	    var pSelectNode=$('#positionTree').omTree('getSelected');	
+	  	if(rowDatas.length <= 0 ){
+            $.omMessageTip.show({title : '提示',content : '请选择行！'});
+            return;
+        }
+		if (pSelectNode!=null){
+			$.omMessageBox.confirm({title:'确定',content:'你确定解除绑定该用户吗?',onClose:function(v){
+				 if(v){
+				    var params=[];
+					var cIds = "";
+					for ( var i = 0; i < rowDatas.length; i++) {
+						cIds = cIds + rowDatas[i].company.id + ",";
+					}
+					cIds = cIds.substring(0,cIds.length - 1);					
+					params.push("companyIDs="+cIds);
+					params.push("positionCode="+pSelectNode.id);
+					var url="systemmanager/Position/0/deleteCustomerPosition?"+params.join("&");
+					$.ajaxPost({url:url,msg:false,success:function(json,textStatus){	
+						$('#customergrid').omGrid('setData',"systemmanager/Position/0/searchCustomer?positionCode="+nodeId);		  		
+						$.omMessageTip.show({content:"删除客户成功",timeout:2000,type:'success'});					 
+					}
+					});
+				 }else{
+				 	return;
+				 }			        
+		    }});
+				 
+		}else{
+			$.omMessageTip.show({title: '提示',content:'请选该职位的上级职位！',type:'error'});
+		}
+	}
+	
+	function pickUser(){ //选择用户		
+		var rowDatas = $('#dgUserGrid').omGrid('getSelections',true);
+	    var pSelectNode=$('#positionTree').omTree('getSelected');	
+	  	if(rowDatas.length <= 0 ){
+            $.omMessageTip.show({title : '提示',content : '请选择行！'});
+            return;
+        }
+		if (pSelectNode!=null){
+			var params=[];
+			params.push("userId="+rowDatas[0].id);
+			params.push("positionCode="+pSelectNode.id);
+			var url="systemmanager/User/0/updatePosition?"+params.join("&");
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){	
+				$('#usergrid').omGrid('setData',"systemmanager/Position/0/searchUser?positionCode="+nodeId);		  		
+				$.omMessageTip.show({content:json.msg,timeout:2000,type:'success'});					 
+			}
+			});	 
+		}else{
+			$.omMessageTip.show({title: '提示',content:'请选该职位的上级职位！',type:'error'});
+		}
+		dialog.omDialog("close");  	  
+	}
+	
+	function pickCustomer(){
+		var rowDatas = $('#dgCustomerGrid').omGrid('getSelections',true);
+	    var pSelectNode=$('#positionTree').omTree('getSelected');	
+	  	if(rowDatas.length <= 0 ){
+            $.omMessageTip.show({title : '提示',content : '请选择行！'});
+            return;
+        }
+		if (pSelectNode!=null){
+			var params=[];
+			var cIds = "";
+			for ( var i = 0; i < rowDatas.length; i++) {
+				cIds = cIds + rowDatas[i].company.id + ",";
+			}
+			cIds = cIds.substring(0,cIds.length - 1);
+			params.push("companyIDs="+cIds);
+			params.push("positionCode="+pSelectNode.id);
+			var url="systemmanager/Position/0/saveCustomerPosition?"+params.join("&");
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){	
+				$('#customergrid').omGrid('setData',"systemmanager/Position/0/searchCustomer?positionCode="+nodeId);		  		
+				$.omMessageTip.show({content:"添加客户成功",timeout:2000,type:'success'});					 
+			}
+			});	 
+		}else{
+			$.omMessageTip.show({title: '提示',content:'请选该职位的上级职位！',type:'error'});
+		}
+		dialogCustomer.omDialog("close");
+	}
+	
+	function delPosition(){
+		var pSelectNode=$('#positionTree').omTree('getSelected');	
+		if (pSelectNode == null){
+			$.omMessageTip.show({title : '提示',content : '请选择职位！'});
+			return;
+		}		
+		$.omMessageBox.confirm({title:'确定',content:'你确定解除绑定该用户吗?',onClose:function(v){
+			 if(v){
+			    if (pSelectNode!=null){
+					var url="systemmanager/Position/0/delPosition?positionCode="+pSelectNode.id;
+					$.ajaxPost({url:url,msg:false,success:function(json,textStatus){	
+						loadPositionList();		  		
+						$.omMessageTip.show({content:"删除职位成功",timeout:2000,type:'success'});					 
+					}
+					});
+				} 
+	    	}
+	    }});
+	}
+	</script>	
+</head>
+<body class="dfbody">
+<div id="nav_users" title="用户列表" style="display:none;">
+<table class="edit-panel">
+	<tr>  
+		<td>关键字：</td>		     	
+		<td><input type="text" id="searchValue" name="searchValue" /></td>
+		<td>用户类型：</td>	
+		<td><input type="text" id="userType" name="userType" pattern='combo' editable='false' width="100" remote="UserType" /></td>
+		<td>是否有效：</td>
+		<td ><input id="flag" name="flag"  pattern='combo' editable='false' width="100" remote="YesNot" /></td>
+		<td ><span id="button-search">搜索</span></td>						
+	</tr>
+ </table> 	 
+  <div id="dgUserGrid"></div>
+</div>
+
+<div id="nav_customers" title="客户列表" style="display:none;">
+   <table class="edit-panel">
+	<tr>
+		<td>中文全称：</td>    
+		<td><input id="cname" name="cname"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>英文名称：</td>   
+		<td><input id="ename" name="ename"   onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>责任人：</td>    
+		<td><input id="respPerson" name="respPerson" onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" /></td>
+		<td><span id="button-search-cus">搜索</span></td>
+	</tr>
+  </table> 	
+  <div id="dgCustomerGrid"></div>
+</div>
+
+<div id="nav_position" title="地区"  style="width:100%; height:95%;">
+	<div id="center-panel">    	
+		<div id="up-panel">
+			<div id="buttonbar"></div>			    	
+			<div style="margin:20px 20px 15px 10px">
+			   <form id="position">	
+					<table class="edit-panel" >		
+					<tr>
+						<td class="label">职位名称：</td>
+						<td class="field" ><input id="positionName" name="p.positionName" class="ui-textbox"/></td>
+						<td class="field" ><input id="txtMode" /></td>							
+					</tr>
+					</table>
+				</form>
+			</div>
+		</div>	
+		<div id="cent-panel">
+			<div id="buttonuserbar"></div>
+			<div id="usergrid"></div>
+		</div>
+		<div id="down-panel">
+			<div id="buttoncustomerbar"></div>			
+			<div id="customergrid"></div>
+		</div>	
+	</div>
+	<div id="west-panel">
+		<ul id="positionTree"></ul>
+	</div>						
+</div>
+</body>
+</html>

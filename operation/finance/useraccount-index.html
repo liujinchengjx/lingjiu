@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统-客户账本</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource : "business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#customerId").initGridDropList(cusParams);
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});				
+	    var element = $('#nav_areadict').omBorderLayout({
+            	   panels:[{id:"center-panel",header:true,title:"地区信息",region:"center",width:"100%"},
+            	    {id:"west-panel",resizable:true,collapsible:true,title:"地区列表",region:"south",width:"100%"}
+            	    ]
+        });
+		$('#buttonbar').initToolBar();
+		$('#userGrid').omGrid({
+				height:280,
+				limit:20,
+				autoFit:true,
+                title : '客户账号列表',
+                dataSource :"finance/UserAccount/0/searchUserAccount",
+                colModel : [
+                             {header : '客户', name : 'customerName', width : 60, align : 'left'},								 
+							 {header : '币种', name : 'currency', width : 40, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.Currency,colValue);
+								}
+							 }, 
+							 {header : '余额', name : 'actualBalance', width : 60, align : 'left'},
+							 {header : '创建时间', name : 'createTime', width : 80, align : 'left'}
+ 							],
+				onRowSelect:function(rowIndex,rowData,event){
+				    var url="finance/UserAccount/0/detailList?userAccountId="+rowData.id;
+         			$('#detailGrid').omGrid('setData',url);	
+     			}
+            });
+			
+			$('#detailGrid').omGrid({
+				height:300,
+				limit:20,
+				autoFit:true,
+                title : '明细列表',
+                dataSource :"",
+                colModel : [
+                             {header : '时间', name : 'opTime', width : 60, align : 'left'},								 
+							 {header : '操作人', name : 'opUserName', width : 40, align : 'left'}, 
+							 {header : '操作类型', name : 'opType', width : 60, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.AccountStatus,colValue);
+								} 
+							 },
+							 {header : '操作前余额', name : 'actualBeforeBalance', width : 60, align : 'left'},
+							 {header : '金额', name : 'actualAmt', width : 60, align : 'left'},
+							 {header : '操作后余额', name : 'actualAfterBalance', width : 60, align : 'left'},
+							 {header : '当前汇率', name : 'exchangeRate', width : 60, align : 'left'},
+							 {header : '相关单号', name : 'referNo', width : 60, align : 'left'}
+ 							],
+				rowDetailsProvider:function(rowData,rowIndex){
+                		return '';								
+	            },
+				onRowClick:function(rowIndex,rowData,event){
+     			}
+            });
+		    
+	});
+	function searchData(){
+	   var vo=$("#search-panel").getVo();
+	   var params=convertParamToUrl(vo);
+	   $('#userGrid').omGrid('setData', "finance/UserAccount/0/searchUserAccount?"+params);
+	}
+	function addUserAccount(){
+		 var paras={tabId:"addUserAccount001"}; //tabId用方法名加001命名而成，这样就不会重复
+		 addNewTab("新增客户账户","/finance/useraccount-edit.html",paras,function(){
+			 $('#userGrid').omGrid('reload');
+		 });	
+	}
+	function editUserAccount(){
+	    var rowDatas = $('#userGrid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择记录！',timeout : 2000});
+			 return;
+		}	
+	    var paras={userAccountId:rowDatas[0].id,tabId:"editUserAccount001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	    addNewTab("编辑客户账户","/finance/useraccount-edit.html",paras,function(){
+	        $('#userGrid').omGrid('reload');
+	    });
+	}	
+	function inUserAccount(){ //进账
+	    var rowDatas = $('#userGrid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择记录！',timeout : 2000});
+			 return;
+		}	
+	   var paras={userAccountId:rowDatas[0].id,opType:0,tabId:"inUserAccount001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	   addNewTab("进账","/finance/useraccountdetail.html",paras,function(){
+	        $('#userGrid').omGrid('reload');
+		    $('#detailGrid').omGrid('reload');
+	   });
+	}
+	function outUserAccount(){ //出账
+	    var rowDatas = $('#userGrid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择记录！',timeout : 2000});
+			 return;
+		}	
+	   var paras={userAccountId:rowDatas[0].id,opType:1,tabId:"outUserAccount001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	   addNewTab("扣账","/finance/useraccountdetail.html",paras,function(){
+		    $('#userGrid').omGrid('reload');
+		    $('#detailGrid').omGrid('reload');
+	   });
+	}
+	function viewUserAccount(){
+	}
+	</script>
+</head>
+<body class="dfbody">			
+<div id="nav_account" title="地区"  style="width:100%; height:95%;">
+	<div id="search-panel">
+	 <table class="edit-panel">		
+		<tr>   	
+			<td>客户：</td>    
+			<td><input id="customerId" name="customerId"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" 
+			showtext=""  /></td>
+		   <td>时间：</td>
+		   <td><input id="startTime" name="startTime" pattern='date' editable='false' /></td>
+		   <td>到：</td>
+		   <td><input id="endTime" name="endTime" pattern='date' editable='false' /></td>
+			<td><span id="button-search">搜索</span></td>
+		</tr>	
+	 </table> 	 
+	</div>	
+	<div id="center-panel">	
+		<div id="buttonbar"></div>
+		<div id="userGrid"></div>
+	</div>
+	<div id="west-panel">
+		<div id="detailGrid"></div>
+	</div>				
+</div>
+</body>
+</html>

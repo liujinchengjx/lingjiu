@@ -1,0 +1,186 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	 <script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>		 
+    <script type="text/javascript">
+	$(function() {	
+   	    $("#search-panel").omPanel({title : "",collapsed:true});	
+	    initValidateForm("company");	
+	    var opCompanyId=getIframeParm("opCompanyId");	
+		var cusid=getIframeParm("cusid");
+		if (opCompanyId !=""){
+		     var url="business/OperationCompany/0/get?opCompanyId="+opCompanyId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){ 				
+					$("#company").initializeInput({"vo":json.entity}); //初始化
+				}			
+			 });
+ 		 }else{
+			$("#company").initializeInput(); //初始化			
+		 }
+		 
+		 $('#buttonbar').omButtonbar({
+            	 width : "100%",
+            	 btns : [{label:"保存",
+            		     id:"btnSave" ,
+            		     icons : {left : '/images/icon/add.png'},
+            	 		 onClick: saveOpCompany
+            			},
+						{separtor:true},
+						{label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);
+						  }
+						 }	           			
+            	 ]
+          }); 	
+	});
+	
+	function saveOpCompany(){
+	    if(validateForm("company")==false)return false;
+	    var vo=	$("#company").getVo(); 
+		var url = $("#id").val()=="" ? "business/OperationCompany/0/add" : "business/OperationCompany/0/edit";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $("#id").val(json.entity);
+			   $.omMessageTip.show({content :json.msg,timeout : 2000,type : 'success'});				 
+			}
+		 });		    	            
+	}		
+	</script>	
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+ 	 <span><input type="text" class="input-text" id="txtCompany" /><span id="button-search">搜索</span></span>	
+</div>		
+	<div id="nav_company" title="新增经营公司">
+ 	    <form id="company">
+		<input  type="hidden" id="id" name="comp.id"  />
+		<input id="companyType" name="comp.companyType" type="hidden" />
+		<input type="hidden" id="lastModifyTime" name="comp.lastModifyTime" />
+		<input type="hidden" id="createTime" name="comp.createTime" />
+		<input type="hidden" id="lastModifyBy" name="comp.lastModifyBy" />
+ 		<input type="hidden" id="createTime" name="comp.createBy" />
+		<table class="edit-table">		
+			<tr>
+				<td class="label">档案编号(只读)：</td>
+				<td class="field"><input  id="ccode" name="comp.ccode" disabled="" /></td>				
+				<td class="label"></td>
+				<td class="field"></td>
+			</tr>
+			<tr>
+   			    <td class="label">中文名称：</td>
+				<td class="field" >
+				<input id="cname" name="comp.cname" validate="rules:['required']"  /></td>
+				<td class="label">英文名称：</td>
+				<td class="field" >
+				<input id="ename" name="comp.ename" validate="rules:['required']"  /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">中文简称：</td>
+				<td class="field" >
+				<input id="csname" name="comp.csname" validate="rules:['required']" /></td>
+				<td class="label">英文简称：</td>
+				<td class="field" >
+				<input id="esname" name="comp.esname" validate="rules:['required']" /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">拼音：</td>
+				<td class="field" >
+				<input id="pinyin" name="comp.pinyin" validate="rules:['required']"  /></td>
+				<td class="label">法人代表：</td>
+				<td class="field">
+				<input id="legalName" name="comp.legalName" validate="rules:['required']"  /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">营业执照：</td>
+				<td class="field" >
+				<input id="license" name="comp.license"  validate="rules:['required']" /></td>
+   			    <td class="label">税务登记税号：</td>
+				<td class="field" ><input id="taxNo" name="comp.taxNo" /></td>							
+			</tr>
+			<tr>
+				<td class="label">组织机构代码：</td>
+				<td class="field" >
+				<input id="orgCode" name="comp.orgCode" validate="rules:['required']"  /></td>
+				<td class="label">海关代码：</td>
+				<td class="field" >
+				<input id="hsCode" name="comp.hsCode" validate="rules:['required']" /></td>				
+			</tr>
+			<tr>
+				<td class="label">联系人：</td>
+				<td class="field"><input id="linkMan" name="comp.linkMan"  /></td>
+   			    <td class="label">联系电话：</td>
+				<td class="field" ><input id="tel" name="comp.tel"  /></td>
+			</tr>
+			<tr>
+   			    <td class="label">客户手机号：</td>
+				<td class="field" ><input id="phone" name="comp.phone"  /></td>
+				<td class="label">传真：</td>
+				<td class="field" ><input id="fax" name="comp.fax"  /></td>
+			</tr>
+			<tr>
+   			    <td class="label">SWIFT CODE：</td>
+				<td class="field" ><input id="swiftCode" name="comp.swiftCode"  /></td>
+				<td class="label">邮政编码：</td>
+				<td class="field" ><input id="pcode" name="comp.pcode"  /></td>				
+			</tr>
+			<tr>
+  			    <td class="label">开户行：</td>
+				<td class="field" >
+				<input id="bank" name="comp.bank"  validate="rules:['required']" /></td>
+   			    <td class="label">开户行名称：</td>
+				<td class="field" >
+				<input id="bankName" name="comp.bankName"  validate="rules:['required']"  /></td>				
+			</tr>
+			<tr>		
+				<td class="label">银行账户：</td>
+				<td class="field" >
+				<input id="bankAccount" name="comp.bankAccount" validate="rules:['required']" /></td>							    
+				 <td class="label"></td>
+				<td class="field" ></td>	
+			</tr>
+			<tr>
+				<td class="label">邮箱：</td>
+				<td class="field" ><input id="email" name="comp.email"  /></td>	
+			    <td class="label">开户人：</td>
+				<td class="field" ><input id="bankAcountName" name="comp.bankAcountName"  /></td>				
+			</tr>
+			<tr>				
+				<td class="label">银行地址：</td>
+				<td class="field" colspan="3"><input id="bankAddress" name="comp.bankAddress"  /></td>			    
+			</tr>			
+			<tr>
+				<td class="label">公司地址：</td>
+				<td class="field" colspan="3">
+				<input id="address" name="comp.address"  validate="rules:['required']" /></td>   			    
+			</tr>
+			<tr>
+   			    <td class="label">备注：</td>
+				<td class="field" colspan="3" ><textarea id="remark" name="comp.remark" style="height:50px;" ></textarea></td>				
+			</tr>
+		</table>
+		</form>	
+	</div>
+	<div id="buttonbar"></div>	
+	<div id="grid"></div>
+</body>
+</html>

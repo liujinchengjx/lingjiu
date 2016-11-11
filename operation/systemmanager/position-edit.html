@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-grid-sort.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {
+	    $("#search-panel").omPanel({title:"",collapsed:true});	
+		initValidateForm("position");
+	    var positionId=getIframeParm("positionId");	
+	    if (positionId !=""){
+		     var url="systemmanager/User/0/get?positionId="+positionId;
+		  	 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				  $("#position").initializeInput({"vo":json.entity}); //初始化
+			 }});
+ 	    }else{
+			$("#position").initializeInput();//初始化	
+	    }
+		$('#buttonbar').omButtonbar({
+            	 width : "100%",
+            	 btns : [{label:"保存",
+            		     id:"btnSave" ,
+            		     icons : {left : '/images/icon/add.png'},
+            	 		 onClick: savePosition
+            			},
+						{separtor:true},
+						{label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);
+						  }
+						 }	           			
+            	 ]
+          }); 
+		
+	});
+	
+	function savePosition(){
+		if(validateForm("position")==false)return false; 
+		var url ="systemmanager/Position/0/savePosition";	
+		var vo=$("#position").getVo();
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		    $("#id").val(json.entity);
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		}});		 
+	}		
+	
+	</script>	
+</head>
+<body class="dfbody">
+	<div id="search-panel"></div>
+	<div id="nav_position" title="新增职位" >
+	    <form id="position">	    
+			<input type="hidden" id="id" name="p.id" />	
+			<input type="hidden" id="createTime" name="p.createTime" />
+			<input type="hidden" id="lastModifyTime" name="p.lastModifyTime" />
+			<input type="hidden" id="createBy" name="p.createBy" />
+			<input type="hidden" id="lastModifyBy" name="p.lastModifyBy" />
+			<input type="hidden" id="positionIndex" name="p.positionIndex" />
+			<input type="hidden" id="positionStatus" name="p.positionStatus" />
+			<table class="edit-table">
+				<tr>
+					<td class="label">职位名称：</td>
+					<td class="field"><input  id="positionName" name="p.positionName"  validate="rules:['required']"  /></td>				
+					<td class="label">职位级别：</td>
+					<td class="field"><input id="positionLevel" name="p.positionLevel" pattern='combo' editable='false' 
+					    remote='PositionLevel' width="80px"  validate="rules:['required']"  />
+					</td>				
+				</tr>
+			</table>
+		</form>		
+	</div>
+	<div id="buttonbar"></div>	
+</body>
+</html>

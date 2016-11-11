@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+                dataSource : "business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+     };
+	 var opParams={
+                title :'经营公司',
+				text:"cname",
+                dataSource : "business/OperationCompany/0/searchOpCompany",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+     };
+	
+	$(function() {		
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveSettlement
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });	
+		
+		$("#nav_settlement").omPanel({title : "<label style='font-weight:bolder'>结算主档</label>",collapsed:false});
+		initValidateForm("settlement");
+		var settlementId=getIframeParm("settlementId");
+		if (settlementId !=""){ //编辑状态
+		     var url="finance/Settlement/0/get?settlementId="+settlementId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   $("#settlement").initializeInput({"vo":json.entity}); //初始化
+				   $('#type').omCombo({dataSource :Dictionary.SettlementType,optionField:'dictName',valueField : "dictCode",
+						width:'120',editable:false,value:json.entity.type,onValueChange:function(target,newValue,oldValue,event){}});
+				   $('#currency').omCombo({dataSource :Dictionary.Currency,optionField:'dictName',valueField : "dictCode",
+						width:'120',editable:false,value:json.entity.currency,onValueChange:function(target,newValue,oldValue,event){}});
+				   $('#ifTradeMixFee').omCombo({dataSource :Dictionary.YesNot,optionField:'dictName',valueField : "dictCode",
+						width:'60',editable:false,value:json.entity.ifTradeMixFee+"",onValueChange:function(target,newValue,oldValue,event){}});
+							
+				   if((json.entity.status >15) ){ //只有未审核的状态下才允许修改
+					 $("#btnSave").omButton('disable');
+				   }
+			  }			
+			 });
+ 		 }else{
+			$("#settlement").initializeInput(); //初始化
+			$("#customerId").initGridDropList(cusParams);		  
+		}
+		$("#opCompanyId").initGridDropList(opParams);
+
+	});
+	
+	function saveSettlement(){	 
+		if(validateForm("settlement")==false)return false; 	
+		var vo=$("#settlement").getVo();
+		var url = $("#id").val()=="" ? "finance/Settlement/0/add" : "finance/Settlement/0/edit";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $("#btnSave").omButton('disable');
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			}
+		 });
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="nav_settlement">
+        <form id="settlement">	
+		<input id="id" name="st.id" type="hidden" />
+		<input id="status" name="st.status" type="hidden" />
+		<input  id="settlementNo" name="st.settlementNo" type="hidden" />
+        <input  id="referOrderId" name="st.referOrderId" type="hidden" />
+        <input  id="referOrderNo" name="st.referOrderNo" type="hidden" />
+		<input id="invoiceAmt" name="st.invoiceAmt" type="hidden" />
+		<input id="outInvoiceAmt" name="st.outInvoiceAmt" type="hidden" />
+        <input name="st.type" type="hidden" />
+        <input name="st.currency" type="hidden" />
+		<input  id="auditMan" name="st.auditMan" type="hidden" />
+        <input name="st.ifTradeMixFee" type="hidden" />
+		<input type="hidden" id="lastModifyTime" name="st.lastModifyTime" />
+		<input type="hidden" id="createTime" name="st.createTime" />
+		<input type="hidden" id="lastModifyBy" name="st.lastModifyBy" />
+		<input type="hidden" id="createBy" name="st.createBy" />	 
+		<table class="edit-table">		
+			<tr>		
+  			    <td class="label">结算主体公司：</td>
+				<td class="field" >
+				    <input id="opCompanyId" name="st.opCompanyId" showtext="st.opCompanyName" validate="rules:['required']" />
+				</td>
+				<td class="label">客户：</td>
+				<td class="field">
+				    <input id="customerId" name="st.customerId" showtext="st.customerName" validate="rules:['required']" />
+				</td>
+			</tr>
+			<tr>
+				<td class="label">结算类型：</td>
+				<td class="field">
+                    <input id="type" name="st.type" validate="rules:['required']"  editable='false' width='120' />
+				</td>                				
+				<td class="label">币种：</td>
+				<td class="field">
+                     <input id="currency" name="st.currency" validate="rules:['required']"  editable='false' width='120' />
+				</td>                		
+			</tr>
+			<tr>
+				<td class="label">收款方：</td>
+				<td class="field">
+				    <input id="payeeId" name="st.payeeId" validate="rules:['required']"  pattern="combo" editable='false' width="200"
+					remote='Payee' />
+				<!-- </td>                				
+				<td class="label">是否作为一般贸易杂费：</td>
+				<td class="field"><input id="ifTradeMixFee" name="st.ifTradeMixFee" validate="rules:['required']"  
+				editable='false' width='120' />
+				 -->
+				</td>
+				<td class="label">时间：</td>
+				<td class="field">
+				    <input id="opTime" name="st.opTime" validate="rules:['required']"  pattern="datetime" editable='false' 
+					defaultDate="now" />
+				</td>  
+			</tr>			
+		</table>
+		</form>	
+</div>
+<div id="buttonbar"></div>	
+</body>
+</html>

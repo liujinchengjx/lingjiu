@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>元和津领酒系统</title>
+<link href="/css/login.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/common.js"></script>
+<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+<script type="text/javascript">
+/************************* 页面js运行入口 ****************************/
+$(document).ready(function() {	
+	refreshimg();	   
+});
+
+/********************************************** 登录函数 ***************************************************/
+function submitLoginForm(formData, jqForm, options){
+	var loginName=$.trim($("#loginName").val());
+	var password=$.trim($("#password").val());
+	var validateCode=$.trim($("#validateCode").val());
+	var errorMsg = $("#errorMsg");
+
+	errorMsg.html("正在登录，请稍后...");
+	if(!loginName){
+		errorMsg.html("请输入用户名");
+		return;
+	}
+	if(!password){
+		errorMsg.html("请输入密码!");
+		return;
+	}
+	if(!validateCode){
+		errorMsg.html("请输入验证码!");
+		return;
+	}
+	
+	var param=[];
+	param.push('loginName='+loginName);
+	param.push('password='+password);
+	param.push('validateCode='+validateCode);
+	param.push('autologin=0');
+	param.push('loginType=1');
+	$.ajax({
+		url: baseUrl + 'userlogin/UserLogin/0/login',
+		type: "POST",
+		data:param.join('&'),
+		dataType:'json',//非必须.默认text
+		async:false,//非必须.默认true
+		cache:false,//非必须.默认false
+		timeout:30000,//非必须.默认30秒
+		error:submitLoginFormError, //非必须
+		success:submitLoginFormSuccess//非必须
+	});
+}
+
+function submitLoginFormSuccess(data){
+	var errorMsg = $("#errorMsg");
+	var errorCode = data.msg;
+	var someCode=data.entity;
+	if(data.msgCode=="1"){
+		errorMsg.html("登录成功");
+		locationHref('/main.html');
+	}else if(data.msgCode=="2"){
+		errorMsg.html(errorCode);
+	}
+	$("#validateCode").val("");
+	refreshimg();
+	
+}
+function submitLoginFormError(data){}
+
+/*验证码上刷新 */
+function refreshimg(){
+	var img = document.getElementById("imgValidatecode");
+	img.src = baseUrl+"userlogin/Validatecode/0/index?t=" + new Date();
+}
+</script>
+</head>
+<body>
+	<div class="login_all">
+    <h1 class="logo"></h1>
+		<div class="login_main">
+				<div class="login_form">
+					<form id="loginForm" name="loginForm" onSubmit="submitLoginForm();return false">						
+						<dl>
+							<dt>
+								<label for="loginName">用户名：</label>
+							</dt>
+							<dd>
+								<input type="text" id="loginName" name="loginName"
+									class="txt_user" maxlength="32" />
+							</dd>
+						</dl>
+						<dl>
+							<dt>
+								<label for="password">密&nbsp;&nbsp;&nbsp;&nbsp;码：</label>
+							</dt>
+							<dd>
+								<input type="password" name="password" id="password"
+									class="txt_pwd" maxlength="32" />
+							</dd>
+						</dl>
+						<dl>
+							<dt>
+								<label for="validateCode">验证码：</label>
+							</dt>
+							<dd>
+								<input type="text" id="validateCode" name="validateCode"
+									maxlength="4" />&nbsp;&nbsp;<img id="imgValidatecode" width="65" height="22" alt="验证码" onclick="refreshimg();"/>
+								<a href="javascript:void(0);" onclick="refreshimg();">换一个</a>
+							</dd>
+						</dl>
+						<p class="login_btn">
+							<input type="submit" 
+								value="登 录" class="btn_login" /> <span
+								id="errorMsg" class="tishi"></span>
+						</p>
+					</form>
+				</div>
+			</div>
+	</div>
+</body>
+</html>

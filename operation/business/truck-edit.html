@@ -1,0 +1,160 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var tranParams={
+                title :'货运公司列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource : "business/TransportCompany/0/searchTranCompany?searchValue=",
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+         };			  
+	$(function() {	
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("truck");
+		var truckId=getIframeParm("truckId");
+		if (truckId !=""){ //编辑状态
+		     var url="business/Truck/0/get?truckId="+truckId;
+		     $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					$("#truck").initializeInput({"vo":json.entity}); //初始化
+					$("#tranId").attr("disabled", "disabled"); 																						
+				}			
+			 });
+ 		 }else{
+			$("#truck").initializeInput(); //初始化
+			$("#tranId").initGridDropList(tranParams);								
+		 }
+		
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveTruck
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }		
+		 ]
+        });         
+		 
+		 var driverParams={
+                title :'司机公司列表',
+				text:"name",
+				onRowClick:null,
+                dataSource : "business/Driver/0/searchDriver?searchValue=",			
+                colModel: [
+ 							 {header : '名称', name : 'name', width : 250, align : 'left'},
+							 {header : '编码', name : 'driverNo', width : 200, align : 'left'}
+						 ]
+         };			   
+		$("#driverId").initGridDropList(driverParams);
+	});
+	
+	function saveTruck(){	
+	    if(validateForm("truck")==false)return false;  
+		var vo=	$("#truck").getVo(); 
+		var url = $("#id").val()=="" ? "business/Truck/0/add" : "business/Truck/0/edit";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $("#btnSave").attr("disabled", "disabled");
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			}
+		 });
+	}	
+	
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>
+<div id="nav_truck" title="新增卡车">
+        <form id="truck">	
+		<input id="id" name="truck.id" type="hidden" />
+		<input type="hidden" id="lastModifyTime" name="truck.lastModifyTime" />
+	 	<input type="hidden" id="createTime" name="truck.createTime" />		
+		<input type="hidden" id="lastModifyBy" name="truck.lastModifyBy" />
+ 		<input type="hidden" id="createTime" name="truck.createBy" />
+		<table class="edit-table">		
+			<tr>
+			    <td class="label">吨位：</td>
+				<td class="field">
+				<input id="tonnage" name="truck.tonnage" validate="rules:['required']"
+				 pattern='combo' editable='false' remote='Tonnage'/></td>							
+				<td class="label">汽车状态：</td>
+				<td class="field" ><input id="status" name="truck.status" pattern='combo' editable='false' remote='TruckStatus' /></td>				
+			</tr>
+			<tr>
+				<td class="label">所属运输公司：</td>
+				<td class="field">
+				<input id="tranId" name="truck.tranId" showtext="truck.tranName" validate="rules:['required']" /></td>
+				<td class="label">配送司机：</td>
+				<td class="field"><input id="driverId" name="truck.driverId" showtext="truck.driverName" validate="rules:['required']"/></td>
+			</tr>
+			<tr>
+   			    <td class="label">车重：</td>
+				<td class="field" ><input id="selfWeight" name="truck.selfWeight"  /></td>
+				<td class="label">实际载重：</td>
+				<td class="field" >
+				<input id="actualLoadWeight" name="truck.actualLoadWeight"  validate="rules:['required']" pattern='float' />公斤</td>				
+			</tr>
+			<tr>
+   			    <td class="label">外形尺寸：</td>
+				<td class="field" ><input id="overAllSize" name="truck.overAllSize"  /></td>
+				<td class="label">容积：</td>
+				<td class="field" ><input id="volume" name="truck.volume"  /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">海关编码：</td>
+				<td class="field">
+				<input id="hsCode" name="truck.hsCode" validate="rules:['required']" /></td>	
+   			    <td class="label">车辆类型：</td>
+				<td class="field" >
+				<input id="type" name="truck.type" validate="rules:['required']" pattern='combo' 
+				editable='false' remote='TruckType'  /></td>				
+			</tr>
+			<tr>
+			    <td class="label">车牌号码(香港)：</td>
+				<td class="field" ><input id="carnoHk" name="truck.carnoHk"  validate="rules:['required']"/></td>				
+				<td class="label">车牌号码(内地)：</td>
+				<td class="field" >
+				<input id="carnoCh" name="truck.carnoCh" validate="rules:['required']" /></td>							    
+			</tr>	
+			<tr>
+   			    <td class="label">备注：</td>
+				<td class="field" colspan="3" ><input id="remark" name="truck.remark"  /></td>				
+			</tr>
+		</table>
+		</form>	
+</div>
+<div id="buttonbar"></div>	
+</body>
+</html>

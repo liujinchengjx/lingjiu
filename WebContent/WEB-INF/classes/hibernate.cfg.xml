@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+  <session-factory>
+   <!--  
+   <property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+    <property name="hibernate.connection.url">jdbc:mysql://127.0.0.1/qinziyou?characterEncoding\=UTF-8</property>
+    <property name="hibernate.connection.username">root</property>
+    <property name="hibernate.connection.password">123</property>
+    <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+    -->
+    <property name="hibernate.show_sql">true</property>
+    <property name="hibernate.hbm2ddl.auto">update</property>
+    <property name="hibernate.cache.provider_class">org.hibernate.cache.HashtableCacheProvider</property>
+ 
+	<!-- 系统框架管理systemmanager  -->
+	<mapping class="com.liu.qinziyou.entity.systemmanager.Department"/>
+   	<mapping class="com.liu.qinziyou.entity.systemmanager.User"/>
+   	<mapping class="com.liu.qinziyou.entity.systemmanager.Role"/>
+   	<mapping class="com.liu.qinziyou.entity.systemmanager.Popedom"/>  
+   	<mapping class="com.liu.qinziyou.entity.systemmanager.FrameworkSystems"/>
+   	<mapping class="com.liu.qinziyou.entity.systemmanager.FrameworkSubsystems"/>
+   	<mapping class="com.liu.qinziyou.entity.systemmanager.FrameworkModules"/>
+   	<mapping class="com.liu.qinziyou.entity.systemmanager.FrameworkButtons"/>
+   	<mapping class="com.liu.qinziyou.entity.systemmanager.PopedomInRole"/>
+   	<mapping class="com.liu.qinziyou.entity.systemmanager.UserInRole"/>
+	<mapping class="com.liu.qinziyou.entity.systemmanager.PopedomInUser"/>
+	
+
+   
+   <!-- 基础信息管理 baseinfo  -->
+
+   <mapping class="com.liu.qinziyou.entity.baseinfo.SystemDict"/>      
+   <mapping class="com.liu.qinziyou.entity.baseinfo.AreaDict"/>
+   <mapping class="com.liu.qinziyou.entity.business.Company" />
+   <!-- 业务管理 business   -->
+   <mapping class="com.liu.qinziyou.entity.qinziyou.ActivityTopic" />
+   <mapping class="com.liu.qinziyou.entity.qinziyou.ActivityRegistrator" />
+   <mapping class="com.liu.qinziyou.entity.qinziyou.ActivityImg" />
+   
+   <!-- lingjiu -->
+   <mapping class="com.liu.qinziyou.entity.lingju.CoollarGoods" />
+   <mapping class="com.liu.qinziyou.entity.lingju.CoollarMember" />
+   <mapping class="com.liu.qinziyou.entity.lingju.CoollarRecord" />
+  
+    <mapping class="com.liu.qinziyou.entity.log.LogLogin"/>
+  </session-factory>
+</hibernate-configuration>

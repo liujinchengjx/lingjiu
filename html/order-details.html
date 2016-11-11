@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <title>订单详情</title>
+    <link rel="stylesheet" href="css/reset.css"/>
+    <link rel="stylesheet" href="css/layout.css"/>
+    <style>
+        .order-details{background: #f23030;color: #fff770;font-size: 1.4rem;padding: 2rem 1rem}
+        .order-details .fs12{font-size: 1rem;line-height: 2rem}
+    </style>
+</head>
+<body style="background: #f0f2f5;">
+<div class="page-wrap">
+    <div class="order-details">
+        <p>订单查询成功</p>
+        <p class="fs12">祝您生活愉快！</p>
+    </div>
+    <div class="order-item" id="orderinfo">
+        <dl class="order-list">
+            <dt>产品</dt>
+            <dd><img class="btn-default" src="images/btn-default.png" alt=""/><input class="goods-name" type="text" value=" " readonly="readonly" id="goodsName"/></dd>
+        </dl>
+        <dl class="order-list">
+            <dt>付款方式</dt>
+            <dd><img class="btn-default" src="images/btn-default.png" alt=""/><input class="goods-name" type="text" value="货到付款" readonly="readonly"/></dd>
+        </dl>
+        <dl class="order-list mb">
+            <dt>数量</dt>
+            <dd><input class="cost"  type="text" value="" readonly="readonly" id="coollarQty"/></dd>
+        </dl>
+        <dl class="order-list mb">
+            <dt>快递费用</dt>
+            <dd><input class="cost"  type="text" value="" readonly="readonly" id="totalFee"/></dd>
+        </dl>
+        <dl class="order-list">
+            <dt>订单号</dt>
+            <dd><input type="text" value="" readonly="readonly" id="orderCode"/></dd>
+        </dl>
+        
+        <dl class="order-list">
+            <dt>收货人</dt>
+            <dd><input type="text" value="" readonly="readonly" id="receiverName"/></dd>
+        </dl>
+        <dl class="order-list">
+            <dt>联系电话</dt>
+            <dd><input type="text" value="" readonly="readonly" id="receiverMobile"/></dd>
+        </dl>
+        <dl class="order-list">
+            <dt>详细地址</dt>
+            <dd><input type="text" value="" readonly="readonly" id="fullAddress"/></dd>
+        </dl>
+        <dl class="order-list">
+            <dt>订单状态</dt>
+            <dd><input type="text" value="" readonly="readonly" id="state"/></dd>
+        </dl>
+        <dl class="order-list">
+            <dt>物流状态</dt>
+            <dd><input type="text" value="" readonly="readonly" id="fleightState"/></dd>
+        </dl>
+    </div>
+</div>
+<script src="/js/zepto.min.js"></script>
+<script src="/js/common.js"></script>
+<script>
+ 
+var id = getUrlParam("id");
+$.ajax({
+	  type: 'GET',
+	  url: '/jsonrest/lingjiu/CoollarRecord/0/getById',
+	  dataType: 'json',
+	  data:{searchValue:id},
+	  timeout: 3000,
+	  success: function(data){
+		  if(data.msgCode==1){
+             	$("#goodsName").val(data.entity.goodsName);
+             	$("#totalFee").val("￥"+data.entity.totalFee/100+"");
+             	$("#coollarQty").val(data.entity.coollarQty);
+             	
+             	$("#orderCode").val(data.entity.orderCode);
+             	$("#receiverName").val(data.entity.receiverName);
+             	$("#receiverMobile").val(data.entity.receiverMobile);
+             	$("#fullAddress").val(data.entity.fullAddress);
+             	
+             	var state = data.entity.state;
+             	if(state==10){
+             		$("#state").val("等待客服确认");
+             	}else if(state==20){
+             		$("#state").val("客服已确认");
+             	}
+             	
+             	var fleightState = data.entity.fleightState;
+             	if(fleightState==10){
+             		$("#fleightState").val("等待发货");
+             	}else if(fleightState==20){
+             		$("#fleightState").val("已经发货");
+             	}
+             	if(fleightState==20){
+             		var sHtml = '<dl class="order-list"><dt>物流公司</dt><dd><input type="text" value="'+data.entity.fleightCompany+'" readonly="readonly" id="fleightCompany"/></dd></dl>';
+             		sHtml = sHtml +  '<dl class="order-list"><dt>物流单号</dt><dd><input type="text" value="'+data.entity.fleightNumber+'" readonly="readonly" id="fleightNumber"/></dd></dl>';
+             		$("#orderinfo").append(sHtml);
+             	}
+         	}else{
+         		 alert("获取失败");
+         	}
+	  },
+	  error: function(xhr, type){
+		  alert("获取失败");
+	  }
+	})
+</script>
+</body>
+</html>

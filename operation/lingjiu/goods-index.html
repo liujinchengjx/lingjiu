@@ -1,0 +1,176 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>益童行管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<script type="text/javascript" src="/js/jquery.js"></script>	
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null,typeName="";	
+	$(document).ready(function() {
+		initValidateForm("systemdict");
+	    $("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$('#status').omCombo({
+                dataSource : [ {text : '暂存', value : '10'}, 
+                               {text : '已发布', value : '20'}, 
+                               {text : '已下架', value : '30'} ]
+            });
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});		
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({				
+				width:'100%',
+				limit:20,
+				autoFit:true,
+                title : '活动列表',
+                dataSource : "lingjiu/coollarGoods/0/search",
+                colModel : [
+                             {header : '商品名称', name : 'goodsName', width : 50, align : 'left'}, 
+ 							 {header : '商品描述', name : 'goodsDesc', width : 120, align : 'left'},
+							 {header : '库存数量', name : 'stockCnt', width : 50, align : 'left'},
+							 {header : '市场价', name : 'marketPrice', width : 50, align : 'left'}, 
+							 {header : '领用价', name : 'coollarPrice', width : 50, align : 'left'},
+							 {header : '物流费用', name : 'logisticsFee', width : 50, align : 'left'}
+
+
+                        
+						 ],
+				onRowClick:function(rowIndex,rowData,event){
+				    if (rowData.flag==0){
+					     $('#btn13').omButton('enable');
+						 $('#btn13').omButton('changeLabel','关闭');
+					 }else if(rowData.flag==1){
+						 $('#btn13').omButton('enable');
+					     $('#btn13').omButton('changeLabel','开启');
+					 }
+     			}	            
+            });	
+			
+	});
+	function searchData(){
+	   var vo=$("#search-panel").getVo();
+	   var params=convertParamToUrl(vo);
+	   $('#grid').omGrid('setData', "qinziyou/ActivityTopic/0/search?"+encodeURI(params));
+	}	
+
+	function addTopic(){		    
+	   var paras={tabId:"addTopic001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	     addNewTab("新增活动","/activity/topic-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });      	       	     
+	}	
+	
+	function editTopic(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',content : '请选择要上传图片的活动！'});
+			return;
+		}
+		var paras={tabId:"editTopic001"}; //tabId用方法名加001命名而成，这样就不会重复
+		var topicId = rowDatas[0].id;
+ 	     addNewTab("编辑活动","/activity/topic-edit.html?topicId="+topicId,paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   }); 
+	}
+
+
+	function publishTopic(){
+		 var rowDatas = $('#grid').omGrid('getSelections',true);
+      	 if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',content : '请选择行！'});
+           		return;
+      	 }
+      	 var topicId= rowDatas[0].id;
+	   	 var datas={status:20};
+	     var url = "qinziyou/ActivityTopic/"+topicId+"/changeActivityStatus";
+	     $.ajaxPost({url:url,data:datas,msg:false,success:function(json,textStatus){
+	     			if(json.msgCode==1){
+	     				$('#grid').omGrid('reload');//刷新grid
+	     				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+	     			}else{
+	     				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'error'});
+	     			}
+			
+	    		}
+	  	 });
+	}
+	
+	//图片上传
+	function uploadImg(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',content : '请选择要上传图片的活动！'});
+			return;
+		}	
+	   	var paras={tabId:"uploadimgTopic001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	    addNewTab("上传图片 - "+rowDatas[0].topicName,"/activity/topic-img.html?topicId="+rowDatas[0].id,paras,function(){
+ 	    	
+	   	});      	       	     
+	}
+
+	function offTopic(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+      	 if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',content : '请选择行！'});
+           		return;
+      	 }
+      	 var topicId= rowDatas[0].id;
+	   	 var datas={status:30};
+	     var url = "qinziyou/ActivityTopic/"+topicId+"/changeActivityStatus";
+	     $.ajaxPost({url:url,data:datas,msg:false,success:function(json,textStatus){
+	     			if(json.msgCode==1){
+	     				$('#grid').omGrid('reload');//刷新grid
+	     				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+	     			}else{
+	     				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'error'});
+	     			}
+			
+	    		}
+	  	 });
+	}
+
+
+	</script>	
+</head>
+<body class="dfbody">
+<div id="search-panel">
+ <table class="edit-panel">		
+	<tr>
+		<td>关键字：</td>   	
+		<td><input type="text" id="searchValue" name="searchValue" /></td>
+		<td>状态：</td>   	
+		<td ><input id="status" name="status"  /></td>
+		<td ><span id="button-search">搜索</span></td>						
+	</tr>	
+ </table> 	 
+</div>	
+   
+	<div id="buttonbar"></div>
+	<div id="grid"></div>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+	<bean id="baseService" class="com.liu.qinziyou.services.AbstractBaseService" abstract="true">
+		<property name="baseDAO">
+			<ref bean="baseDAO"/>
+		</property>
+	</bean>
+
+	<!-- 系统框架管理  (系统框架管理的模块Service请写在这里)systemmanager  -->
+	<bean id="menuService" class="com.liu.qinziyou.services.systemmanager.impl.MenuServiceImpl" parent="baseService">		
+		<property name="frameworkSubsystemsDao">
+			<ref bean="frameworkSubsystemsDao" />
+		</property>	
+		<property name="frameworkModulesDao">
+			<ref bean="frameworkModulesDao" />
+		</property>		
+	</bean>
+	<bean id="departmentService" class="com.liu.qinziyou.services.systemmanager.impl.DepartmentServiceImpl" parent="baseService">		
+		<property name="departmentDao">
+			<ref bean="departmentDao" />
+		</property>
+	</bean>
+	
+	<bean id="userService" class="com.liu.qinziyou.services.systemmanager.impl.UserServiceImpl" parent="baseService">		
+		<property name="userDao">
+			<ref bean="userDao" />
+		</property>
+		<property name="companyDao">
+			<ref bean="companyDao" />
+		</property>
+		<property name="departmentDao">
+			<ref bean="departmentDao" />
+		</property>
+	</bean>
+	
+	<bean id="roleService" class="com.liu.qinziyou.services.systemmanager.impl.RoleServiceImpl" parent="baseService">		
+		<property name="roleDao">
+			<ref bean="roleDao" />
+		</property>
+	</bean>
+	
+	<bean id="popedomService" class="com.liu.qinziyou.services.systemmanager.impl.PopedomServiceImpl" parent="baseService">		
+		<property name="popedomDao">
+			<ref bean="popedomDao" />
+		</property>
+		<property name="frameworkSubsystemsDao">
+			<ref bean="frameworkSubsystemsDao" />
+		</property>
+		<property name="frameworkModulesDao">
+			<ref bean="frameworkModulesDao" />
+		</property>
+	</bean>
+	
+	<bean id="frameworkSubsystemsService" class="com.liu.qinziyou.services.systemmanager.impl.FrameworkSubsystemsServiceImpl" parent="baseService">		
+		<property name="frameworkSubsystemsDao">
+			<ref bean="frameworkSubsystemsDao" />
+		</property>			
+	</bean>
+	
+	<bean id="frameworkModulesService" class="com.liu.qinziyou.services.systemmanager.impl.FrameworkModulesServiceImpl" parent="baseService">		
+		<property name="frameworkModulesDao">
+			<ref bean="frameworkModulesDao" />
+		</property>		
+	</bean>
+	
+	<bean id="frameworkButtonsService" class="com.liu.qinziyou.services.systemmanager.impl.FrameworkButtonsServiceImpl" parent="baseService">		
+		<property name="frameworkButtonsDao">
+			<ref bean="frameworkButtonsDao" />
+		</property>		
+	</bean>
+	
+	<bean id="popedomInRoleService" class="com.liu.qinziyou.services.systemmanager.impl.PopedomInRoleServiceImpl" parent="baseService">		
+		<property name="popedomInRoleDao">
+			<ref bean="popedomInRoleDao" />
+		</property>		
+	</bean>
+	
+	<bean id="userInRoleService" class="com.liu.qinziyou.services.systemmanager.impl.UserInRoleServiceImpl" parent="baseService">		
+		<property name="userInRoleDao">
+			<ref bean="userInRoleDao" />
+		</property>		
+	</bean>
+	
+	<bean id="popedomInUserService" class="com.liu.qinziyou.services.systemmanager.impl.PopedomInUserServiceImpl" parent="baseService">		
+		<property name="popedomInUserDao">
+			<ref bean="popedomInUserDao" />
+		</property>		
+	</bean>
+
+<!-- 基础信息管理类  (基础信息模块的Service请写在这里)baseinfo  -->
+
+	<bean id="systemDictService" class="com.liu.qinziyou.services.baseinfo.impl.SystemDictServiceImpl" parent="baseService">		 
+		<property name="systemDictDao">
+			<ref bean="systemDictDao" />
+		</property>		
+	</bean>	
+
+	<bean id="areaDictService" class="com.liu.qinziyou.services.baseinfo.impl.AreaDictServiceImpl" parent="baseService">		 
+		<property name="areaDictDao">
+			<ref bean="areaDictDao" />
+		</property>		
+	</bean>	
+
+	<!-- 日志管理 -->
+	<bean id="logService" class="com.liu.qinziyou.services.log.impl.LogServiceImpl" parent="baseService">
+		<property name="logDao">
+			<ref bean="logDao" />
+		</property>
+	</bean>
+	
+	<!-- 活动管理 -->
+	<bean id="activityService" class="com.liu.qinziyou.services.qinziyou.impl.ActivityServiceImpl" parent="baseService">
+		<property name="activityRegistratorDao">
+			<ref bean="activityRegistratorDao" />
+		</property>
+		<property name="activityTopicDao">
+			<ref bean="activityTopicDao" />
+		</property>
+		<property name="activityImgDao">
+			<ref bean="activityImgDao" />
+		</property>
+	</bean>
+	
+	<bean id="coollarService" class="com.liu.qinziyou.services.lingjiu.impl.CoollarServiceImpl" parent="baseService">
+		<property name="coollarGoodsDao">
+			<ref bean="coollarGoodsDao" />
+		</property>
+		<property name="coollarMemberDao">
+			<ref bean="coollarMemberDao" />
+		</property>
+		<property name="coollarRecordDao">
+			<ref bean="coollarRecordDao" />
+		</property>
+	</bean>
+	
+</beans>

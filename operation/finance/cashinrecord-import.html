@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-fileupload.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(document).ready(function(){
+	$("#search-panel").omPanel({title : "",collapsed:true});	
+		$('#abtnfileupload').omButton({width : 60,
+		      onClick : function(event){					 
+			     	$('#attachfileid').omFileUpload({'actionData':{'ulf.fileType':'CASHIN'}});
+			     	$('#attachfileid').omFileUpload('upload');
+			  }
+		 });	
+		 
+		 $('#buttonbar').omButtonbar({
+			 width : "100%",
+			 btns : [
+					{label:"关闭",id:"button2", 
+					  icons : {left : '/images/icon/close.png'},
+					  onClick:function(){
+						  closeCurrActivateTabs(1000);
+					  }
+					 }				
+			 ]
+        });
+		  
+		 $('#attachfileid').omFileUpload({
+				action : baseUrl+ 'attachment/UpLoadFile/0/importCashIn',
+				swf : '/plugins/ui/om-fileupload.swf',
+				multi  :false, //不能批量上传
+				method   : 'GET',
+				fileExt : '*.xls;*.XLS',
+				fileDesc : '只能上传图片文档类型',
+				onComplete : function(ID,fileObj,response,data,event){
+                    var msgBean=$.parseJSON(response); //JSON.parse
+					if (msgBean.msgCode==1){
+					    $('#abtnfileupload').omButton('disable');//禁用该按钮
+						$('#response').append('<p>文件ID：' + ID + '</p>')	    				 
+	    				  .append('<p>附件上传返回信息：'+msgBean.msg+'</p>')
+						  .append('<p>已上传文件至此：<a target="_blank" href="/'+msgBean.entity.filePath+'">附件预览</a></p>');
+					}else{
+					    $('#response').append('<p>发生异常：' +msgBean.msg+ '</p>');
+					};
+				}
+		  });		 
+
+	});
+	
+	</script>
+</head>
+<body class="dfbody">
+<div id="search-panel"></div>
+<div id="nav_cashinrecord" title="上传来款记录">
+	<form id="cashinrecord">
+		<table class="edit-table">	
+			<tr id="trattachfileid">
+				<td class="label">上传附件：</td>
+				<td class="field">
+					<input id="attachfileid" name="attachfileid" type="file" />	
+					<div id="response" style="font-weight: bold;color: red;"></div>
+				</td>
+				<td class="label"><a id="abtnfileupload" href="javascript:void(0)">上传</a></td>
+				<td class="field"> </td>						
+			</tr>		
+		</table>
+	</form>	
+</div>
+<div id="buttonbar"></div>	
+</body>
+</html>

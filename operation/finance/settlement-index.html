@@ -1,0 +1,319 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource : "business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});		
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#customerId").initGridDropList(cusParams);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});				
+		$('#buttonbar').initToolBar();		
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '结算列表',
+                dataSource :"finance/Settlement/0/searchSettlement",
+                colModel : [
+			 				 {header : '结算编码', name : 'settlementNo', width : 60, align : 'left'},
+							 {header : '客户', name : 'customerName', width : 120, align : 'left'},								 
+							 {header : '结算类型', name : 'type', width : 80, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									if (colValue==1){
+								       return Dictionary.getDictName(Dictionary.SettlementType,rowData.opType);
+									}else {
+									   return Dictionary.getDictName(Dictionary.SettlementType,colValue);
+									}
+								}
+							 },
+							 {header : '订单号', name : 'referOrderNo', width : 80, align : 'left'}, 
+							 {header : '委托单号', name : 'entruckNo', width : 80, align : 'left'}, 
+							 {header : '状态', name : 'status', width : 40, align : 'left',
+							      renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.SettlementStatus,colValue);
+								}
+							 },
+							 {header : '结算金额', name : 'actualTotalAmt', width : 50, align : 'left'},
+							 {header : '收款币种', name : 'currency', width : 50, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.Currency,colValue);
+								}
+							 },
+							 {header : '报关币种', name : 'customCurrency', width : 50, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.Currency,colValue);
+								}
+							 },
+							 {header : '报关金额', name : 'customAmt', width : 50, align : 'left'},
+							 {header : '制单人', name : 'createBy', width : 60, align : 'center'},
+							 {header : '操作时间', name : 'opTime', width : 100, align : 'left'}
+ 							]
+				
+            });
+	});
+    function searchData(){
+	    var vo=$("#search-panel").getVo();
+		var params=convertParamToUrl(vo);
+		$('#grid').omGrid('setData',"finance/Settlement/0/searchSettlement?"+params);
+	}
+	function addSettlement(){
+		var paras={tabId:"addEntrucking001"}; //tabId用方法名加001命名而成，这样就不会重复
+		addNewTab("新增结算","/finance/settlement-add.html",paras,function(){
+			$('#grid').omGrid('reload');//刷新grid
+		});      
+	}
+	
+	function editSettlement(){
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择编辑行！'});
+			 return;
+		}	
+	   var paras={settlementId:rowDatas[0].id,customerId:rowDatas[0].customerId,tabId:"editSettlement001"}; 
+ 	   addNewTab("编辑结算","/finance/settlement-edit.html",paras,function(){
+		   $('#grid').omGrid('reload');
+	   });       		
+	}
+	function setSettlement(){ //设置应收信息
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择结算！'});
+			 return;
+		}		
+	    var paras={settlementId:rowDatas[0].id,customerId:rowDatas[0].customerId,customerName:rowDatas[0].customerName,
+		opCompanyName:rowDatas[0].opCompanyName,type:rowDatas[0].type,opType:rowDatas[0].opType,currency:rowDatas[0].currency,
+	    referOrderId:rowDatas[0].referOrderId,referOrderNo:rowDatas[0].referOrderNo,
+		opTime:rowDatas[0].opTime,tabId:"aReceiveSettlement001"};
+		if (rowDatas[0].type==1){//一般贸易
+			paras.tabId="finance_settlement_001";
+			addNewTab("结算费用","/finance/settlement-areceive-trade.html",paras,function(){
+				$('#grid').omGrid('reload');//刷新grid
+			});  
+		}else if (rowDatas[0].type==2){//委托单 或发货单
+		     	 
+		}else if (rowDatas[0].type==3){//委托单 或发货单
+		    addNewTab("结算费用","/finance/settlement-areceive-addvalue.html",paras,function(){
+				$('#grid').omGrid('reload');//刷新grid
+			});       	 
+		}else if (rowDatas[0].type==4){//仓储
+			//addNewTab("结算费用","/finance/settlement-set-3.html",paras,function(){
+			//	$('#grid').omGrid('reload');//刷新grid
+			//});       	 
+		}
+	}	
+	function auditSettlement(){ //审核
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		if(rowDatas[0].status >=20 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '该结算已审核！',type:'error'});
+			 return false;
+		}
+		$.omMessageBox.confirm({title:'结算单审核',content:'审核通过之后，审核状态（不可恢复），你确定要这样做吗？',onClose:function(v){
+		if(v){
+			var url = "finance/Settlement/0/audit?settlementId="+rowDatas[0].id;
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   $('#grid').omGrid('reload');//刷新grid
+				   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+			   }
+			});   	
+		}
+       }});	
+	}
+	function backSettlement(){ //结算返回
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		}
+		if(rowDatas[0].status >=30 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起！结算单已收款不能返回！',type:'error'});
+			 return false;
+		}
+		$.omMessageBox.confirm({title:'结算单返回',content:'返回之后，结算单返回之后数据将被清楚，你确定要这样做吗？',onClose:function(v){
+		if(v){
+			var url = "finance/Settlement/0/back?settlementId="+rowDatas[0].id;
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   $('#grid').omGrid('reload');//刷新grid
+				   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+				}
+			});   	
+		}
+       }});	
+	}
+	function payNoticeSettlement(){// 付款通知
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+		   $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+		   return;
+		}		
+		var paras=[];
+		paras.push("settlementId="+rowDatas[0].id);
+		paras.push("customerId="+rowDatas[0].customerId);
+		paras.push("type="+rowDatas[0].type);
+		paras.push("referOrderId="+rowDatas[0].referOrderId);
+		paras.push("opTime="+rowDatas[0].opTime);
+		paras.push("opCompanyId="+rowDatas[0].opCompanyId);
+		paras.push("payeeId="+rowDatas[0].payeeId);
+		var url="";
+		if (rowDatas[0].type==1){ //一般贸易
+		    url="/finance/settlement-payment-trading.html?"+paras.join("&");
+		}else if ((rowDatas[0].type==2) || (rowDatas[0].type==3) ){ //委托单 发货
+		    url="/finance/settlement-payment-wt.html?"+paras.join("&");
+		}else if(rowDatas[0].type==4){ //仓储
+		    
+		}
+	    showFullScreen(url);
+	}
+	function countSettlement(){ //账单统计信息 此统计账单只统计委托单 发货单涉及到的费用 一般贸易的则不涉及
+		var vo=$("#search-panel").getVo();
+		if (vo.customerId<=0){
+		   $.omMessageTip.show({content : "请选择客户！",timeout : 2000,type : 'error'}) 
+		   return false;
+		}
+		if (vo.payeeId<=0){
+		   $.omMessageTip.show({content : "请选择收款方！",timeout : 2000,type : 'error'}) 
+		   return false;
+		}
+		if (vo.startTime==""){
+		   $.omMessageTip.show({content : "请选择开始时间！",timeout : 2000,type : 'error'}) 
+		   return false;
+		}
+		if (vo.endTime==""){
+		   $.omMessageTip.show({content : "请选择截止时间！",timeout : 2000,type : 'error'}) 
+		   return false;
+		}
+		var params=convertParamToUrl(vo);
+		var url="/finance/settlement-payment-count.html?"+params;
+	    showFullScreen(url); 
+	}
+	function viewSettlement(){
+	}
+	//导出月结
+	function toExcle(){
+		var vo=$("#search-panel").getVo();
+		if (vo.customerId<=0){
+		   $.omMessageTip.show({content : "请选择客户！",timeout : 2000,type : 'error'}) 
+		   return false;
+		}
+		if (vo.startTime==""){
+		   $.omMessageTip.show({content : "请选择开始时间！",timeout : 2000,type : 'error'}) 
+		   return false;
+		}
+		if (vo.endTime==""){
+		   $.omMessageTip.show({content : "请选择截止时间！",timeout : 2000,type : 'error'}) 
+		   return false;
+		}
+	    //封装请求数据
+	    var params=convertParamToUrl(vo);
+		var url="/finance/settlement-payment-month.html?"+params;
+		showFullScreen(url);
+	}
+	//子状态获取
+	function getStatus(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+	   }
+	   var paras={ids:rowDatas[0].id,eoOrderNo:rowDatas[0].settlementNo,tabId:"orgStatus001"};
+ 	   addNewTab("订单状态列表","/order/orderSatePage.html", paras,function(){
+	   });       
+	}
+	
+	//导出Invoice
+	function toInvoice(){
+		var vo=$("#search-panel").getVo();
+		if (vo.customerId<=0){
+		   $.omMessageTip.show({content : "请选择客户！",timeout : 2000,type : 'error'}) 
+		   return false;
+		}
+		if (vo.startTime==""){
+		   $.omMessageTip.show({content : "请选择开始时间！",timeout : 2000,type : 'error'}) 
+		   return false;
+		}
+		if (vo.endTime==""){
+		   $.omMessageTip.show({content : "请选择截止时间！",timeout : 2000,type : 'error'}) 
+		   return false;
+		}
+	    //封装请求数据
+	    var params=convertParamToUrl(vo);
+		var url="/finance/settlement-payment-month-invoice.html?"+params;
+		showFullScreen(url);
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">		
+	<tr>
+		<td>结算编码：</td>    
+		<td><input id="settlementNo" name="settlementNo"  onfocus="myFocus(this,'#f4eaf1')" 
+				      onblur="myblur(this,'white')"  />
+		</td>
+		<td>客户：</td>
+		<td><input id="customerId" name="customerId"  onfocus="myFocus(this,'#f4eaf1')" 
+		   onblur="myblur(this,'white')" tip="选择客户" showtext="" />
+		</td>
+		<td>结算类型：</td>
+        <td ><input id="type" name="type" pattern='combo'  editable='false' remote="SettlementType" width="140"/></td>
+		<td>收款方：</td>
+        <td><input id="payeeId" name="payeeId" pattern='combo' editable='false' width="200"
+					remote='Payee'/></td>
+	</tr>	
+	<tr>
+		<td>合同号：</td>    
+	    <td><input id="referOrderNo" name="referOrderNo" /></td>
+		<td>订单状态：</td>    
+	    <td><input id="orderStatus" name="orderStatus" pattern='combo' editable='false'  width="120" remote="SettlementStatus"
+		 emptyText="请选择状态"/></td>
+		<td>时间：</td>    
+		<td><input id="startTime" name="startTime" pattern='date' editable='false' /></td>
+		<td>到：</td>    
+		<td><input id="endTime" name="endTime" pattern='date' editable='false' /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>
+  </table> 	 
+</div>			
+<div id="buttonbar"></div>	
+<div id="grid"></div>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource : "business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化
+		$("#customerId").initGridDropList(cusParams);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+				     searchData();
+			   }
+		});		
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '开票通知列表',
+                dataSource : "finance/InvoiceNotice/0/searchInvoiceNotice",
+                colModel : [ 
+							 {header : '申请日期', name : 'createTime', width : 70, align : 'left'},
+							 {header : '合同号', name : 'orderNo', width : 70, align : 'left'},
+							 {header : '开票客户', name : 'customerName', width : 80, align : 'left'},
+							 {header : '状态', name : 'status', width : 60, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.InvoiceNoticeStatus,colValue);
+								  }
+							 },
+							 {header : '发票类型', name : 'type', width : 60, align : 'left',
+							      renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.InvoicenoticeType,colValue);
+								  }
+							 },
+							 {header : '发票号码', name : 'invoiceNo', width : 60, align : 'left'},
+							 {header : '开票金额', name : 'actualAmt', width : 60, align : 'left'},
+							 {header : '开票日期', name : 'invoiceDate', width : 70, align : 'left'},
+							 {header : '申请人', name : 'noticeUserName', width : 60, align : 'left'},
+ 							 {header : '备注', name : 'remark', width : 120, align : 'left'}
+ 							]
+            });
+	});
+	function searchData(){
+	    var vo=$("#search-panel").getVo();
+		var params=convertParamToUrl(vo);
+		$('#grid').omGrid('setData',"finance/InvoiceNotice/0/searchInvoiceNotice?"+params);
+	}
+	function saveInvoiceNotice(){	 
+		var url = $("#id").val()=="" ? "finance/InvoiceNotice/0/add" : "finance/InvoiceNotice/0/edit";
+		var vo=$("#rate").getVo();
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   $('#grid').omGrid('reload');
+			}
+		 });
+		 dialog.omDialog("close");         	            
+	}
+	function addInvoiceNotice(){
+		  var paras={tabId:"addInvoiceNotice001"}; //tabId用方法名加001命名而成，这样就不会重复
+		  addNewTab("新增开票通知","/finance/invoicenotice-add.html",paras,function(){
+				$('#grid').omGrid('reload');//刷新grid
+		  });    
+	}	
+	function editInvoiceNotice(){
+		  var rowDatas = $('#grid').omGrid('getSelections',true);
+		  if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		  }		
+		  var paras={invoiceNoticeId:rowDatas[0].id,settlementIds:rowDatas[0].settlementIds,
+		  tabId:"editInvoiceNotice001"}; //tabId用方法名加001命名而成，这样就不会重复
+		  if(rowDatas[0].status==30){
+		     $.omMessageTip.show({title : '提示',timeout : 4000,content : '对不起，该发票 已确认！',type : 'error'});
+			 return;
+		  }
+		  var url = "";
+		  
+		  if(rowDatas[0].isSettlement != null && rowDatas[0].isSettlement == 2){
+		  	url = "/finance/invoicenotice-editno.html";
+		  } else {
+		  	url = "/finance/invoicenotice-edit.html";
+		  }
+		  addNewTab("编辑开票通知",url,paras,function(){
+			   $('#grid').omGrid('reload');//刷新grid
+		  });    
+	}
+	function confirmInvoiceNotice(){ //确认开票
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			 return;
+		}		
+		if (rowDatas[0].status>10){
+		     $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起！该记录已经确认过，或者作废！',type:"error"});
+			 return false;
+		}
+		var url = "finance/InvoiceNotice/0/audit?orderStatus=20&invoiceNoticeId="+rowDatas[0].id;
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){	
+			   $('#grid').omGrid('reload');//刷新grid
+			   $.omMessageTip.show({content : json.msg,timeout : 4000,type : 'success'});				
+			 }
+		});
+	}
+	function okInvoiceNotice(){ //已开票
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			 return;
+		}		
+		if (rowDatas[0].status!=20){
+		     $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起！必须是已确认过才可以！',type:"error"});
+			 return false;
+		}
+		var url = "finance/InvoiceNotice/0/audit?orderStatus=30&invoiceNoticeId="+rowDatas[0].id;
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   $('#grid').omGrid('reload');//刷新grid
+			   $.omMessageTip.show({content : json.msg,timeout : 4000,type : 'success'});				
+			}
+		});
+	}
+	function cancelInvoiceNotice(){ //作废
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if( rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+		}	
+	    if (rowDatas[0].status==40){
+		     $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起！已经作废了！',type:"error"});
+			 return false;
+		}
+		var url = "finance/InvoiceNotice/0/audit?orderStatus=40&invoiceNoticeId="+rowDatas[0].id;
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   $('#grid').omGrid('reload');//刷新grid
+			   $.omMessageTip.show({content : json.msg,timeout : 4000,type : 'success'});				
+			}
+		});
+	}
+	function backInvoiceNotice(){ //返回
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+		if( rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+		}	
+	    if (rowDatas[0].status==10){
+		     $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起！不能返回！',type:"error"});
+			 return false;
+		}
+		var url = "finance/InvoiceNotice/0/audit?orderStatus=50&invoiceNoticeId="+rowDatas[0].id;
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			   $('#grid').omGrid('reload');//刷新grid
+			   $.omMessageTip.show({content : json.msg,timeout : 4000,type : 'success'});				
+			}
+		});	
+	}
+	function exportInvoiceNotice(){ //导出
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+	    if(rowDatas.length <= 0 ){
+		   $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+		   return;
+	    }	
+       	var url=baseUrl+"finance/InvoiceNotice/0/exportInvoiceNotice?invoiceNoticeId="+rowDatas[0].id;
+		showFullScreen(url);
+ 	}
+	function viewInvoiceNotice(){
+	   
+	}
+	//子状态获取
+	function getStatus(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+			return;
+	   }
+	   var paras={ids:rowDatas[0].id,eoOrderNo:rowDatas[0].orderNo,tabId:"orgStatus001"};
+ 	   addNewTab("订单状态列表","/order/orderSatePage.html", paras,function(){
+	   });       
+	}
+	//查看相关信息
+	function viewInvoiceNotice(){
+		 var rowDatas = $('#grid').omGrid('getSelections',true);
+		var paras={invoiceNoticeId:rowDatas[0].id,settlementIds:rowDatas[0].settlementIds,
+		  tabId:"editInvoiceNotice002"}; //tabId用方法名加001命名而成，这样就不会重复
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录！'});
+			 return;
+		 }
+		 url = "/finance/invoicenotice-view.html";
+		 addNewTab("查看开票信息",url,paras,function(){
+			   $('#grid').omGrid('reload');//刷新grid
+		 });
+		 	
+	}
+	</script>
+</head>
+<body class="dfbody">	
+	<div id="search-panel">
+	 <table class="edit-panel">		
+		<tr>   	
+			<td>客户：</td>    
+			<td><input id="customerId" name="customerId"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" 
+			showtext=""  /></td>
+			<td>合同号：</td>    
+			<td><input id="orderNo" name="orderNo"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" /></td>
+			<td>开票类型：</td>    
+			<td><input id="type" name="type"  pattern='combo' editable='false' width="130" remote="InvoicenoticeType" /></td>
+			<td>订单状态：</td>    
+	   		<td><input id="orderStatus" name="orderStatus" pattern='combo' editable='false'  width="120" remote="InvoiceNoticeStatus"
+		 emptyText="请选择开票状态"/></td>
+		    <td>时间：</td>
+		    <td><input id="startTime" name="startTime" pattern='date' editable='false' /></td>
+		    <td>到：</td>
+		    <td><input id="endTime" name="endTime" pattern='date' editable='false' /></td>
+			<td><span id="button-search">搜索</span></td>
+		</tr>	
+	 </table> 	 
+	</div>	
+	<div id="buttonbar"></div>	
+	<div id="grid"></div>
+	<div id="viewInfo">
+		<table></table>
+	</div>
+</body>
+</html>

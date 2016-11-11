@@ -1,0 +1,589 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>	
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tabs.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">						
+	$(function() {
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});
+		$('#make-tab').omTabs({height: 300,closable : false,tabHeight:22});
+		$('#btncusbar').initToolBar(1);
+		$('#btnsupbar').initToolBar(2);	
+		$('#btnrecbar').initToolBar(3);	
+		$('#btnfeebar').initToolBar(4);
+		$('#btnassociatedbar').initToolBar(5);		
+	    $("#stockFee").initializeInput(); //初始化	
+		
+		$('#cusgrid').omGrid({
+				autoFit:true,
+				height:280,
+				limit:10,
+                title : '客户列表',
+                dataSource : "business/Customer/0/searchCustomer",
+                colModel : [
+                             {header : '档案编号', name : 'company.ccode', width : 50, align : 'left'}, 
+							 {header : '法人代表', name : 'company.legalName', width : 60, align : 'left'}, 
+ 							 {header : '公司名', name : 'company.cname', width : 120, align : 'left'},
+  							 {header : '联系电话', name : 'company.tel', width : 50, align : 'left'}, 
+							 {header : '业务类型', name : 'businessType', width : 120, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getMulDictName(Dictionary.BusinessType,colValue);
+								 }
+							 }, 
+							 {header : '客户类型', name : 'cusType', width : 60, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getDictName(Dictionary.CustomerType,colValue);
+								 }
+							 },
+							 {header : '申报级别', name : 'grade', width : 50, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.CustomsGrade,colValue);
+								}
+							 },
+							 {header : '合作模式', name : 'opType', width : 50, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getDictName(Dictionary.OpType,colValue);
+								  }
+							 },
+							 {header : '审核状态', name : 'company.status', width : 50, align : 'left',
+							        renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getDictName(Dictionary.CompanyStatus,colValue);
+								    }
+							 },							 
+							 {header : '客服负责人', name : 'serviceMan', width : 60, align : 'left'},							 
+                             {header : '描述', name : 'company.remark', align : 'left', width : 100} ],
+				onRowSelect:function(rowIndex,rowData,event){
+         			$('#supgrid').omGrid('setData',"business/Supplier/0/searchCusSuppler?customerCompanyId="+rowData.company.id);
+					$('#recgrid').omGrid('setData', "business/Receiver/0/searchReCompany?customerCompanyId="+rowData.company.id);
+					$('#linkmangrid').omGrid('setData',"business/LinkMan/0/searchLinkMan?companyId="+rowData.company.id);
+					$('#associatedgrid').omGrid('setData',"business/Supplier/0/searchAssociated?customerCompanyId="+rowData.company.id);
+					if (rowData.businessType.indexOf("3")>=0){
+					   $("#stockFee").show();
+					   $("#discountShow").html(rowData.company.cname+" 费用折扣率审核状态："+(rowData.discountRateStatus==20?"已审核":"未审核"));
+					   $("#stockFee").initializeInput({"vo":rowData}); //初始化	
+					}else{
+					   $("#discountShow").html("");
+					   $("#stockFee").hide();
+					}
+     			}
+         });
+		 				
+		 $('#supgrid').omGrid({
+				autoFit:true,
+				height:220,	
+				limit:10,
+                title : '客户供应商列表',
+                dataSource :"",
+                colModel : [ {header : '编码', name : 'ccode', width : 70, align : 'left'}, 
+							 {header : '名称', name : 'cname', width : 100, align : 'left'},
+							 {header : '客户', name : 'company.cname', width : 120, align : 'left'}, 
+							 {header : '审核状态', name :'status', width : 50, align : 'left',
+							        renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getDictName(Dictionary.CompanyStatus,colValue);
+								    }
+							 },	 
+							 {header : '法人代表', name : 'legalName', width : 100, align : 'left'},
+							 {header : '联系人', name : 'linkMan', width : 100, align : 'left'},
+ 							 {header : '联系电话', name : 'tel', width : 80, align : 'left'},
+  							 {header : '手机', name : 'phone', width : 100, align : 'left'}, 
+                             {header : '公司地址', name : 'companyAddress', align : 'left', width : 'autoExpand'} ]
+          });
+          
+          $('#associatedgrid').omGrid({
+				autoFit:true,
+				height:220,
+				limit:10,
+                title : '关联公司列表',
+                dataSource :"",
+                colModel : [ {header : '编码', name : 'ccode', width : 70, align : 'left'}, 
+							 {header : '名称', name : 'cname', width : 100, align : 'left'},
+							 {header : '客户', name : 'company.cname', width : 120, align : 'left'}, 
+							 {header : '审核状态', name :'status', width : 50, align : 'left',
+							        renderer : function(colValue, rowData, rowIndex) {
+										return Dictionary.getDictName(Dictionary.CompanyStatus,colValue);
+								    }
+							 },	 
+							 {header : '法人代表', name : 'legalName', width : 100, align : 'left'},
+							 {header : '联系人', name : 'linkMan', width : 100, align : 'left'},
+ 							 {header : '联系电话', name : 'tel', width : 80, align : 'left'},
+  							 {header : '手机', name : 'phone', width : 100, align : 'left'}, 
+                             {header : '公司地址', name : 'companyAddress', align : 'left', width : 'autoExpand'} ]
+          });
+		$('#recgrid').omGrid({
+				autoFit:true,
+			    height:220,						
+				limit:10,
+                title : '收货公司列表',
+                dataSource :"",
+                colModel : [
+                             {header : '编码', name : 'ccode', width : 70, align : 'left'}, 
+							 {header : '名称', name : 'cname', width : 100, align : 'left'},
+							 {header : '审核状态', name :'status', width : 50, align : 'left',
+							      renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.CompanyStatus,colValue);
+								  }
+							 },	 
+							// {header : '联系人', name : 'linkMan', width : 80, align : 'left'},
+ 							// {header : '联系电话', name : 'tel', width : 80, align : 'left'},
+  							 {header : '手机', name : 'phone', width : 100, align : 'left'}, 
+							 {header : '传真', name : 'fax', width : 80, align : 'left'}, 												 
+                             {header : '联系地址', name : 'address', align : 'left', width : 150} 
+							 ]
+            });	
+			
+		$('#linkmangrid').omGrid({
+				autoFit:true,
+				height:220,					
+				limit:10,
+                title : '联系人列表',
+                dataSource :"",
+                colModel : [							  
+							 {header : '类型', name : 'type', width : 100, align : 'left',
+								 renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.LinkManType,colValue);
+								 }
+							 },							
+							 {header : '名称', name : 'name', width : 100, align : 'left'},
+ 							 {header : '电话', name : 'tel', width : 100, align : 'left'},
+  							 {header : '手机', name : 'phone', width : 60, align : 'left'},							 
+                             {header : '邮箱', name : 'email', align : 'left', width : 200} ]
+        });	
+	});
+	function searchData(){
+	   var vo=$("#search-panel").getVo();
+		var params=convertParamToUrl(vo);
+		var url= "business/Customer/0/searchCustomer?"+params;
+		url=encodeURI(url);
+		$('#cusgrid').omGrid('setData',url);
+	}
+	//添加客户
+	function addCustomer(){
+	   var paras={tabId:"addcus001"}; //tabId用方法名加001命名而成，这样就不会重复
+	   addNewTab("新加客户","/business/customer-edit.html",paras,function(){
+		    $('#cusgrid').omGrid('reload');//刷新grid
+	   });
+	}
+	//编辑客户
+	function editCustomer(){
+		 var rowDatas = $('#cusgrid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		  }		
+		 var paras={customerId:rowDatas[0].id,status:rowDatas[0].company.status,tabId:"editcus001"}; //tabId用方法名加001命名而成，这样就不会重复
+	   	 addNewTab("编辑客户","/business/customer-edit.html",paras,function(){
+		    $('#cusgrid').omGrid('reload');//刷新grid
+			
+	   });       	     
+	}
+	//业务审核客户
+	function auditCustomerBus(){
+		 var rowDatas = $('#cusgrid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		 }
+		 if(rowDatas[0].company.status >= 15){
+		 	$.omMessageTip.show({title : '提示',timeout : 2000,content : '该记录已经审核',type:'error'});
+			 return;
+		 }
+		 var paras={customerId:rowDatas[0].id,status:rowDatas[0].company.status,tabId:"editcus001"}; //tabId用方法名加001命名而成，这样就不会重复
+	   	 addNewTab("客户","/business/customer-audit.html",paras,function(){
+		    $('#cusgrid').omGrid('reload');//刷新grid
+	   });
+	}
+	//审核客户
+	function auditCustomer(){
+	     var rowDatas = $('#cusgrid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		 }
+		 if(rowDatas[0].company.status < 15){
+		 	$.omMessageTip.show({title : '提示',timeout : 2000,content : '该记录业务还没审核',type:'error'});
+			 return;
+		 }
+		 if(rowDatas[0].company.status >= 16){
+		 	$.omMessageTip.show({title : '提示',timeout : 2000,content : '该记录已经审核',type:'error'});
+			 return;
+		 }
+		 var paras={customerId:rowDatas[0].id,status:rowDatas[0].company.status,tabId:"editcus001"}; //tabId用方法名加001命名而成，这样就不会重复
+	   	 addNewTab("客户","/business/customer-audit.html",paras,function(){
+		    $('#cusgrid').omGrid('reload');//刷新grid
+	   });
+	}
+	function backCustomer(){ //返回
+	     var rowDatas = $('#cusgrid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		 }
+		 if(rowDatas[0].company.status != 20 ){
+			 $.omMessageTip.show({content :"对不起，客户必须是在已审核状态才可以返回！",timeout : 2000,type : 'error'});
+			 return;
+		 } 
+		 var url = "business/Customer/0/audit?customerId="+rowDatas[0].company.id+"&status=30";	
+		 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){	
+		   $('#cusgrid').omGrid('reload');//刷新grid
+		   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});					  
+		 }});		
+	}
+	function viewCustomer(){
+	    var rowDatas = $('#cusgrid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		  }		
+		 var paras={customerId:rowDatas[0].id,tabId:"viewcus001"}; //tabId用方法名加001命名而成，这样就不会重复
+	   	 addNewTab("查看客户","/business/customer-preview.html",paras,function(){
+			
+	   });  
+	}
+	function addSupplier(){
+	     var rowDatas = $('#cusgrid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择客户！'});
+			 return;
+		 }		
+	     var paras={customerId:rowDatas[0].company.id,cname:rowDatas[0].company.cname,tabId:"addSupplier001"}; 
+ 	     addNewTab("新加供应商","/business/supplier-edit.html",paras,function(){
+		    $('#supgrid').omGrid('reload');//刷新grid
+	   });     	     
+	}
+	function editSupplier(){	
+		 var rowDatas = $('#supgrid').omGrid('getSelections',true); //供应商
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		  }		
+	     var paras={supplierId:rowDatas[0].id,customerId:rowDatas[0].company.id,cname:rowDatas[0].company.cname,
+		 status:rowDatas[0].status,tabId:"editSupplier001"};
+ 	     addNewTab("编辑供应商","/business/supplier-edit.html",paras,function(){
+		      $('#supgrid').omGrid('reload');//刷新grid
+	     });       	     
+	}
+	function copySupplier(){
+	    var cusRowDatas = $('#cusgrid').omGrid('getSelections',true);		 
+		if(cusRowDatas.length <= 0 ){
+		   $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择客户！'});
+		   return false;
+		}
+		cusRowDatas[0].company.companyType=4;
+		var cusVo=cusRowDatas[0].company;
+		var vo={};
+		vo["customerCompanyId"]=cusRowDatas[0].company.id;
+		cusRowDatas[0].company.id="";
+		for (prop in cusVo){
+		     if (prop!="company"){ //派生属性不能加
+			    vo["sup."+prop]=cusVo[prop];
+			 }
+		}
+		var url = "business/Supplier/0/add";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		   $('#cusgrid').omGrid('reload');//刷新grid
+		   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+		}});		 	
+	}
+	function deleteSupplier(){ //删除收货公司
+	    var rowSupDatas = $('#supgrid').omGrid('getSelections',true);
+		if(rowSupDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择供应商公司！'});
+			return;
+		}
+		var rowCusDatas = $('#cusgrid').omGrid('getSelections',true);
+		if(rowCusDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择客户！'});
+			return;
+		}		
+		$.omMessageBox.confirm({title:'确认删除供应商公司',content:'删除供应商之后数据将不可恢复！你确定要这样做吗？',onClose:function(v){
+		if(v){
+		   var url="business/Supplier/0/del?customerCompanyId="+rowCusDatas[0].company.id+"&supplierId="+rowSupDatas[0].id;
+		   $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			  $('#supgrid').omGrid('reload');//刷新grid
+			  $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+		   }});
+	    }
+       }});
+	}
+	function viewSupplier(){
+		
+	}
+	function addReceiver(){	
+	    var rowDatas = $('#cusgrid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择客户！'});
+			 return;
+		}		
+	    var paras={cusid:rowDatas[0].company.id,tabId:"addReceiver001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	    addNewTab("新加收货公司","/business/receiver-edit.html",paras,function(){
+		    $('#recgrid').omGrid('reload');//刷新grid
+	   });
+	}
+	function editReceiver(){
+	     var rowDatas = $('#recgrid').omGrid('getSelections',true);	
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		  }	
+		var paras={receiverId:rowDatas[0].id,customerId:rowDatas[0].company.id,
+		status:rowDatas[0].status,tabId:"editReceiver001"}; 
+ 	    addNewTab("编辑收货公司","/business/receiver-edit.html",paras,function(){
+		    $('#recgrid').omGrid('reload');//刷新grid
+	   });
+	}
+	function copyReceiver(){
+	    var cusRowDatas = $('#cusgrid').omGrid('getSelections',true);		 
+		if(cusRowDatas.length <= 0 ){
+		   $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择客户！'});
+		   return false;
+		}
+		cusRowDatas[0].company.companyType=3;
+		var cusVo=cusRowDatas[0].company;
+		var vo={};
+		vo["customerCompanyId"]=cusRowDatas[0].company.id;
+		cusRowDatas[0].company.id="";
+		for(prop in cusVo){
+		   if (prop!="company"){ //派生属性不能加
+			  vo["rec."+prop]=cusVo[prop];
+		   }
+		}
+		var url = "business/Receiver/0/add?type=1";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		   $('#cusgrid').omGrid('reload');//刷新grid
+		   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		}});
+	}
+	function deleteReceiver(){ //删除收货公司
+	    var rowRecDatas = $('#recgrid').omGrid('getSelections',true);
+		if(rowRecDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择收货公司！'});
+			return;
+		}
+		var rowCusDatas = $('#cusgrid').omGrid('getSelections',true);
+		if(rowCusDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择客户！'});
+			return;
+		}		
+		$.omMessageBox.confirm({title:'确认删除收货公司',content:'删除收货公司之后数据将不可恢复！你确定要这样做吗？',onClose:function(v){
+		if(v){
+			   var url="business/Receiver/0/del?customerCompanyId="+rowCusDatas[0].company.id+"&receiverId="+rowRecDatas[0].id;
+			   $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				  $('#recgrid').omGrid('reload');//刷新grid
+				  $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+			   }});
+	    }
+       }});
+	}
+    function viewReceiver(){
+	    var rowDatas = $('#recgrid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录行！'});
+			 return;
+		  }		
+		 var paras={receiverId:rowDatas[0].id,tabId:"viewReceiver001"}; 
+	   	 addNewTab("预览收货公司","/business/receiver-view.html",paras,function(){
+	    });       
+	}
+	function saveDiscountRate(){
+	     var rowDatas = $('#cusgrid').omGrid('getSelections',true);
+		 if (rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择客户！'});
+			return;
+		 }
+		 if (rowDatas[0].businessType.indexOf("3")<0){
+		    $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起！非仓储客户没有仓储费用的折扣率！',type:"error"});
+			return;
+		 }
+		 var vo=$("#stockFee").getVo();
+		 vo["cus.company.id"]=rowDatas[0].company.id;
+		 if ( parseFloat(vo["cus.rentDiscountRate"])<=0 || parseFloat(vo["cus.rentDiscountRate"])>1 ||
+		      parseFloat(vo["cus.dnDiscountRate"])  <=0 || parseFloat(vo["cus.dnDiscountRate"])>1   ||
+			  parseFloat(vo["cus.addDiscountRate"]) <=0 || parseFloat(vo["cus.addDiscountRate"])<=0 ||
+			  parseFloat(vo["cus.mixDiscountRate"]) <=0 || parseFloat(vo["cus.mixDiscountRate"])<=0  ){
+		    $.omMessageTip.show({title : '错误',timeout : 2000,content : '对不起！折扣率的设置范围必须是0到1的范围！',type:"error"});
+		    return ;
+		 }
+		 var url="business/Customer/0/saveDiscountRate";
+	     $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		      $('#cusgrid').omGrid('reload');//刷新grid
+			  $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+	     }});
+	}
+	function auditDiscountRate(){//
+	     var rowDatas = $('#cusgrid').omGrid('getSelections',true);
+		 if (rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择客户！'});
+			return;
+		 }
+		 if (rowDatas[0].businessType.indexOf("3")<0){
+		    $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起！非仓储客户没有仓储费用的折扣率！',type:"error"});
+			return;
+		 }
+		 if (rowDatas[0].discountRateStatus==20){
+		    $.omMessageTip.show({title : '提示',timeout : 2000,content : '对不起！费用折扣率已审核，不能修改！',type:"error"});
+		    return ;
+		 }
+		 vo={};
+		 vo["companyId"]=rowDatas[0].company.id;
+		 vo["discountRateStatus"]=20;
+		 var url="business/Customer/0/auditDiscountRate";
+	     $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		      $('#cusgrid').omGrid('reload');//刷新grid
+			  $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+	     }});
+	}
+	
+	function assignPosition(){ //分配职位
+	    var rowDatas = $('#cusgrid').omGrid('getSelections',true);
+		if (rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录行！'});
+			return;
+		}	
+		var paras={customerId:rowDatas[0].company.id,positionCode:rowDatas[0].positionCode,tabId:"assignPosition001"}; 
+ 	    addNewTab("分配职位","/business/assign-customer-position.html",paras,function(){
+		   $('#cusgrid').omGrid('reload');//刷新grid
+	    });     	    
+	}
+	
+	function addAssociated(){
+	     var rowDatas = $('#cusgrid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择客户！'});
+			 return;
+		 }		
+	     var paras={customerId:rowDatas[0].company.id,cname:rowDatas[0].company.cname,tabId:"addSupplier001"}; 
+ 	     addNewTab("新加关联公司","/business/associatedgrid-edit.html",paras,function(){
+		    $('#associatedgrid').omGrid('reload');//刷新grid
+	   });     	     
+	}
+	function deleteAssociated(){ //删除关联公司
+	    var rowSupDatas = $('#associatedgrid').omGrid('getSelections',true);
+		if(rowSupDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择关联公司！'});
+			return;
+		}
+		var rowCusDatas = $('#cusgrid').omGrid('getSelections',true);
+		if(rowCusDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择客户！'});
+			return;
+		}
+		$.omMessageBox.confirm({title:'确认删除供应商公司',content:'删除关联公司之后数据将不可恢复！你确定要这样做吗？',onClose:function(v){
+		if(v){
+		   var url="business/Supplier/0/deleteAssociated?customerCompanyId="+rowCusDatas[0].company.id+"&associatedId="+rowSupDatas[0].id;
+		   $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			  $('#associatedgrid').omGrid('reload');//刷新grid
+			  $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+		   }});
+	    }
+       }});
+	}
+	</script>
+</head>
+<body class="dfbody">
+<div id="search-panel">
+   <table class="edit-panel">
+	<tr>
+		<td>中文全称：</td>    
+		<td><input id="cname" name="cname"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>英文名称：</td>   
+		<td><input id="ename" name="ename"   onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>责任人：</td>    
+		<td><input id="respPerson" name="respPerson" onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" /></td>
+		<td>审核状态：</td>    
+		<td><input id="status" name="status" pattern='combo' editable='false' remote="CompanyStatus" /> </td>
+		<td>业务类型：</td>    
+		<td>
+		    <input id="businessType" name="businessType"  editable='false' width="100" pattern='combo' remote='BusinessType'/>
+		</td>
+		<td>合作模式：</td>    
+		<td><input id="opType" name="opType" pattern='combo' remote="OpType" /></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>
+  </table> 	 
+</div>			
+<div id="nav_customer">	 
+		<div id="btncusbar"></div>	
+		<div id="cusgrid"></div> 
+</div>
+<div id="make-tab" >
+        <ul>
+            <li><a href="#tab1">客户供应商</a></li>
+            <li><a href="#tab2">客户收货公司</a></li>			
+			<li><a href="#tab3">联系人</a></li>     
+			<li><a href="#tab4">仓储折扣率</a></li> 
+			<li><a href="#tab5">关联公司</a></li>
+        </ul>
+        <div id="tab1">
+			<div id="btnsupbar"></div>
+            <div id="supgrid"></div>
+        </div>
+        <div id="tab2">
+	   	   <div id="btnrecbar"></div>
+           <div id="recgrid"></div>
+        </div>
+		<div id="tab3">
+		   <div id="btnlinkmanbar"></div>
+		   <div id="linkmangrid"></div>
+		</div>
+		<div id="tab5">
+		   <div id="btnassociatedbar"></div>
+		   <div id="associatedgrid"></div>
+		</div>
+		<div id="tab4">
+		   <div id="stockFee" style="display:none;">
+		     <span id="discountShow" style="color:blue;"></span>
+			 <div id="btnfeebar"></div>
+		     <table class="edit-table">		
+		        <tr>   			    
+				   <td class="label">仓库租赁及库存管理费用折扣率：</td>
+				   <td class="field" >
+				       <input id="rentDiscountRate" name="cus.rentDiscountRate" pattern="float" validate="rules:['required']" />
+				   </td>
+				   <td class="label" >提货/送货费用折扣率</td>
+				   <td class="field" ><input id="dnDiscountRate" name="cus.dnDiscountRate" pattern="float" validate="rules:['required']" /></td>
+			    </tr>	
+                <tr>   			    
+				   <td class="label">增值服务费用折扣率：</td>
+				   <td class="field" >
+				       <input id="addDiscountRate" name="cus.addDiscountRate" pattern="float" validate="rules:['required']" />
+				   </td>
+				   <td class="label" >杂费（隧道、停车、转单、入场）费用折扣率</td>
+				   <td class="field" >
+				      <input id="mixDiscountRate" name="cus.mixDiscountRate"  pattern="float" validate="rules:['required']" />
+				   </td>
+			    </tr>	
+		    </table>
+			<div>			
+		</div>		
+    </div>
+
+
+</body>
+</html>

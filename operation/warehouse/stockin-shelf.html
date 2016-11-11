@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统-储位</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+	<script type="text/javascript" src="/js/jquery.js"></script>	
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-ajaxsubmit.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var stockInNo="",wh=getIframeParm("wh");
+	var storagedialog=null;
+	$(document).ready(function() {	
+		$("#search-panel").omPanel({title : "储位分配",collapsed:true});
+		$('#buttonbar').omButtonbar({
+            	 width : "100%",
+            	 btns : [{label:"分配储位",
+            		     id:"btnBatchAdd" ,
+            		     icons : {left : '/images/icon/add.png'},
+            	 		 onClick:assignStorage
+            			},
+						{separtor:true},
+						{label:"关闭",id:"button2", 
+						  icons : {left : '/images/icon/close.png'},
+						  onClick:function(){
+							  closeCurrActivateTabs(1000);
+						  }
+						}		
+            	 ]
+         });
+		 storagedialog=$("#nav_storagelocation").omDialog({autoOpen:false,draggable:false,resizable:false,height:500,width:700,modal:true,
+			buttons: [{
+                text : "确定", 
+                click : saveStorageLocation
+            }, {
+                text : "取消", 
+                click : function () {                   
+                    storagedialog.omDialog("close");
+                }
+            }]
+		});
+        var url="warehouse/StockIn/0/getStockInCartonList?stockInId="+getIframeParm("stockInId")+"&manageModel="+getIframeParm("manageModel");
+		$('#grid').omGrid({
+				width:'100%',
+				limit:0,
+				autoFit:true,
+				showIndex : true,
+				singleSelect : false,
+                title : getIframeParm("stockInNo")+" 的箱子列表,仓库是："+
+				Dictionary.getDictName(Dictionary.Warehouse,getIframeParm("wh")),  
+                dataSource : url,
+                colModel : [
+                             {header : '箱号', name : 'cartonNo', width : 50, align : 'left'}, 
+                             {header : '品名|型号|原产地|进货数量', name : 'stockInPackings', width : 120, align : 'left',
+                             	renderer : function(colValue, rowData, rowIndex) {                              		                            			
+                             		  var content = "";
+                             		  if(colValue == null || colValue.length == 0){
+                             		  	return content;
+                             		  }
+                             		  for ( var i = 0; i < colValue.length; i++) {
+                             		  	 if(colValue[i].product == null){
+                             		  	 	break;
+                             		  	 }
+										 content = content + colValue[i].product.productName + '|' + colValue[i].product.pn + '|' + colValue[i].product.origin + '|' +colValue[i].inQty;
+									  	 if(colValue.length != 1 && i != (colValue.length-1)){
+									  	 	content = content + "<br/>";
+									  	 }
+									  }
+									  return content;
+								}                             
+                             },                              
+ 							 {header : '客户箱号', name : 'orgCartonNo', width : 50, align : 'left'},
+							 {header : '净重', name : 'nw', width : 50, align : 'left'},
+							 {header : '毛重', name : 'gw', width : 50, align : 'left'},
+							 {header : '储位', name : 'slno', width : 80, align : 'left'}
+						 ]
+            });
+			
+			$('#storageGrid').omGrid({
+				limit:15,
+				width:'95%',
+				height:290,
+				autoFit:true,
+                title : '储位列表',
+                dataSource : "warehouse/StorageLocation/0/searchStorageLocation",
+                colModel : [
+                             {header : '储位号', name : 'slno', width : 80, align : 'left'}, 
+							 {header : '仓储', name : 'wh', width : 80, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.Warehouse,colValue);
+								 }
+							 },							
+							 {header : '类型', name : 'type', width : 80, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.StoragelocationType,colValue);
+								 }
+							 },
+ 							 {header : '使用类型', name : 'useType', width : 80, align : 'left',
+								 renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.StoragelocationUserType,colValue);
+								 }
+							 },
+							 {header : '客户', name : 'customerName', width : 130, align : 'left'},
+							 {header : '状态', name : 'status', width : 80, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.StoragelocationStatus,colValue);
+								 }
+							 },
+							 {header : '创建时间', name : 'createTime', width : 120, align : 'left'}
+ 							]
+            });			          
+			storagedialog.initializeInput(); //初始化
+			$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+				   onClick : function(event){
+						 var vo=$(".edit-panel").getVo();
+						 vo["customerId"]=getIframeParm("customerId");
+						 vo["use"]=1;
+						 var params=convertParamToUrl(vo);
+						 $('#storageGrid').omGrid('setData', "warehouse/StorageLocation/0/searchStorageLocation?"+params);
+				   }
+			});	
+	});
+	
+	function  assignStorage(){
+	    var rowDatas = $('#grid').omGrid('getSelections',true);
+        if(rowDatas.length <= 0 ){
+        	$.omMessageTip.show({title:'提示',content:'请选择记录行！',timeout:2000});
+        	return false;
+        }
+		storagedialog.omDialog("option", "title", '分配储位');
+		storagedialog.omDialog("open");//显示dialog	
+	}
+	function saveStorageLocation(){
+		var rowDatas = $('#grid').omGrid('getSelections',true);
+		var storageRowDatas = $('#storageGrid').omGrid('getSelections',true);
+        if(storageRowDatas.length <= 0 ){
+        	$.omMessageTip.show({title : '提示',content : '请选择储位！',timeout : 2000});
+        	return false;
+        }
+	    var stockInCartonIds=[];
+		for(var i=0;i<rowDatas.length;i++){
+		    stockInCartonIds.push(rowDatas[i].id);
+        }
+	  //if((customerId!=vo.customerId) && (vo.useType==2)){ //不是同一个客户，但该储位又是私用
+	  //    $.omMessageTip.show({content:"对不起，该储位已被占用！",timeout : 2000,type : 'error'}); 
+	  //    return ;
+	  //}
+	  var vo={};
+	  vo["stockInId"]=getIframeParm("stockInId");
+	  vo["stockInCartonIds"]=stockInCartonIds.join(",");
+	  vo["storageLocationId"]=storageRowDatas[0].id;
+	  vo["slno"]=storageRowDatas[0].slno;
+	  //添加仓库ID
+	  vo["wh"]=storageRowDatas[0].wh;
+	  var url="warehouse/StorageLocation/0/allocationSlno";
+	  $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+		$('#grid').omGrid('reload');//刷新grid
+		storagedialog.omDialog("close");  
+		$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+	  }
+	  });
+	}
+	</script>	
+</head>
+<body class="dfbody">
+	<div id="search-panel"></div>
+	<div id="buttonbar"></div>
+	<div id="grid"></div>
+	<div id="nav_storagelocation" title="分配储位" style="display:none;">
+	<div>
+		 <table class="edit-panel">		
+			<tr>   	
+				<td>储位号：</td>
+				<td><input id="slno" name="slno" onfocus="myFocus(this,'#f4eaf1')" 
+							  onblur="myblur(this,'white')" /></td>
+				<td>仓库：</td>
+				<td><input id="wh" name="wh" pattern='combo' editable='false' remote="Warehouse" emptyText="请选择仓库"/></td>
+				<td><span id="button-search">搜索</span></td>
+			</tr>	
+		 </table> 	 
+		</div>	
+		<div id="storageGrid"></div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>后台管理系统---购销合同</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<style type="text/css">
+	    .listContent{
+		    border-collapse:collapse;
+			border:none;
+			mso-border-alt:solid black .75pt;
+			mso-yfti-tbllook:31;
+			mso-padding-alt:0cm 5.4pt 0cm 5.4pt;
+			mso-border-insideh:.75pt solid black;
+			mso-border-insidev:.75pt solid black;
+		}
+	</style>
+	<script type="text/javascript">
+	$(function() {
+	    var customOrderId=getQueryString("customOrderId");
+		if (customOrderId !=""){
+		     var url="order/CustomOrder/0/purchaseContract?customOrderId="+customOrderId;
+		  	 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){	
+				   json.entity.currency = Dictionary.getDictName(Dictionary.Currency,142);
+				   $("#customorder").initializeInput({"vo":json.entity}); //初始化	
+				   var val=json.entity.items;
+				   var trHtml="";
+				   for(var i=0;i<val.length;i++){
+					  trHtml=trHtml+"<tr height='16'>";
+					  trHtml=trHtml+"<td valign='center' align='center' style='border:solid black 1.0pt;'>";
+					  trHtml=trHtml+"<span style='font-size:10pt;font-family:宋体;'>"+val[i].cartonNo+"</span></td>";
+					  
+					  trHtml=trHtml+"<td colspan='1' valign='center' align='left' style='border:solid windowtext 1.0pt;'>";
+					  trHtml=trHtml+"<span style='font-size:10pt;font-family:宋体;'>"+val[i].productName+"</span></td>";
+					  
+					  trHtml=trHtml+"<td colspan='1' valign='center' align='left'"; 
+					  trHtml=trHtml+" style='border:solid windowtext 1.0pt;word-wrap: break-word;word-break:break-all; width: 280;'>";
+					  trHtml=trHtml+" <span style='font-size:10pt;font-family:宋体;'> "+val[i].pn+" <br />";
+					  //trHtml=trHtml+" "+val[i].declareElements+"</span></td>";
+					  
+					  trHtml=trHtml+"<td nowrap='' valign='top' align='center' style='border:solid windowtext 1.0pt;'>"; 
+					  trHtml=trHtml+"<span style='font-size:10pt;font-family:宋体;'>"+val[i].unit+"</span></td>";	
+					  
+					  trHtml=trHtml+"<td colspan='1' valign='center' align='right' style='border:solid windowtext 1.0pt;'>";
+					  trHtml=trHtml+" <span style='font-size:10pt;font-family:宋体;'>"+val[i].qty+" <br />";
+					  trHtml=trHtml+" </span></td>";
+					  
+					  trHtml=trHtml+"<td colspan='3' valign='center' align='right' style='border:solid windowtext 1.0pt;'>"; 
+					  trHtml=trHtml+"<span style='font-size:10pt;font-family:宋体;'>"+val[i].price+"</span></td>";
+					  
+					  trHtml=trHtml+"<td colspan='3' valign='center' align='right' style='border:solid windowtext 1.0pt;'>"; 
+					  trHtml=trHtml+"<span style='font-size:10pt;font-family:宋体;'>"+val[i].amt+"<br></span></td>";
+					  trHtml=trHtml+"</tr>";
+					}
+					$("#tbItems").append(trHtml);
+				}			
+			 });
+ 		 }
+	});	
+</script>
+</head>
+<body style="tab-interval:21.0pt;text-justify-trim:punctuation" >
+<form id="customorder" ><center>
+    <table align="center" border="1" cellspacing="0" cellpadding="0" width="98%" class="listContent" > 
+      <tbody>
+        <tr style="mso-yfti-irow:0;mso-yfti-firstrow:yes;height:18pt">
+          <td colspan="14" valign="top" style="border:solid black 0pt;">
+		  	<p align="center"><span style="font-size:16.5pt;mso-bidi-font-size:13.0pt;font-family:黑体;mso-ascii-font-family:&quot;Times New Roman&quot;;mso-hansi-font-family:宋体;mso-bidi-font-family:宋体;mso-font-kerning:0pt;mso-bidi-font-weight:bold">购销合同</span>
+			</p>
+            
+		   </td>
+        </tr>
+        
+        <tr style="mso-yfti-irow:0;mso-yfti-firstrow:yes;height:18pt">
+          <td colspan="6" valign="top" style="border:solid black 0pt;">
+          	 <p style="margin-bottom:-10px;">签定日期：<span name="contractDate"></span></p>
+		  	 <p style="margin-bottom:-10px;">供方：<span name="sellerCompany"></span></p>
+             <p style="margin-bottom:-10px;">需方：<span name="buyerCompany"></span></p>
+		   </td>
+           <td colspan="4" valign="top" style="border:solid black 0pt;">
+		  	<p style="margin-bottom:-10px;">合同编号：<span name="contractNo" style=" width:220px;word-break:break-all;display:block;"></span></p>
+		   </td>
+		   <td colspan="4" valign="top" style="border:solid black 0pt;">
+		  	<p style="margin-bottom:-10px;">币种：<span name="currency"></span></p>
+		   </td>
+        </tr>
+        <tr style="mso-yfti-irow:0;mso-yfti-firstrow:yes;height:18pt">
+           <td colspan="14" valign="top" style="border:solid black 0pt;">
+           <br />
+            <p style="margin-bottom:-10px;">
+            	兹因需方向供方订购下列货品，经双方议妥条款如下，以资共同遵守：
+            </p>
+            <p>
+                一、 供货明细：
+            </p>
+		   </td>
+        </tr>
+	  </tbody>
+   </table>
+   <table align="center" border="1" cellspacing="0" cellpadding="0" width="98%" class="listContent">
+	   <tbody>
+         <tr style="height:16pt">
+          <td align="center" style="border:solid black 1.0pt;width: 5%;"><span style="font-size:10pt;">序号</span></td>
+          <td align="center" style="border:solid black 1.0pt;width: 15%;"><span style="font-size:10pt;" >品名</span></td>
+          <td align="center" style="border:solid black 1.0pt;width: 28%;"><span style="font-size:10pt;">规格型号</span></td>
+          <td align="center" style="border:solid black 1.0pt;width: 5%;"><span style="font-size:10pt;">单位</span></td>
+          <td nowrap="" colspan="1" align="center" style="border:solid black 1.0pt;width: 5%;"><span style="font-size:10pt;">数量</span></td>
+          <td colspan="3" align="center" style="border:solid black 1.0pt;width: 8%;"><span style="font-size:10pt;">单价</span></td>
+          <td colspan="3" align="center" style="border:solid black 1.0pt;width: 12%;"><span style="font-size:10pt;">总价</span></td>
+        </tr>
+      </tbody>
+      <tbody id="tbItems" style="text-align:center"> </tbody>
+     
+        <tr style="mso-yfti-irow:14;hei ght:116.7pt">
+          <td align="center" style="border:solid black 1.0pt;"><span style="font-size:10pt;"></span></td>
+          <td align="center" style="border:solid black 1.0pt;"><span style="font-size:10pt;" >Total Amount</span></td>
+          <td align="center" style="border:solid black 1.0pt;"><span style="font-size:10pt;"></span></td>
+           <td align="center" style="border:solid black 1.0pt;"><span style="font-size:10pt;"></span></td>
+          <td nowrap="" colspan="1" align="right" style="border:solid black 1.0pt;"><span name="sumQty"></span></td>
+          <td colspan="3" align="right" style="border:solid black 1.0pt;"><span style="font-size:10pt;"></span></td>
+          <td colspan="3" align="right" style="border:solid black 1.0pt;"><span name="sumAmount"></span></td>
+        </tr>
+	</table>
+	<table align="center" border="1" cellspacing="0" cellpadding="0" width="98%" class="listContent">
+        <tr style="mso-yfti-irow:0;mso-yfti-firstrow:yes;height:18pt">
+           <td colspan="14" valign="top" style="border:solid black 0pt;">
+            <p style="margin-bottom:-10px;margin-top:30px;">二、质量标准：按所供产品生产商相应质量标准。</p>
+            <p style="margin-bottom:-10px;">三、验收方法：按所供产品生产商相应质量标准验收。</p>
+            <p style="margin-bottom:-10px;">四、包装方法及费用负担：出厂标准原包装,包装费由供方负担。</p>
+            <p style="margin-bottom:-10px;">五、交货方法,地点：按照需方要求送货到指定地点。</p>
+            <p style="margin-bottom:-10px;">六、结款方式：依照双方协议方式执行。</p>
+            <p style="margin-bottom:-10px;">七、本合同签定后,双方必须全面履行,任何一方不得擅自修改或终止,如需修改或终止时,经双方协商同意后方可修改或终止。</p>
+            <p style="margin-bottom:-10px;">八、本合同传真件、扫描件均具有法律效力。</p>
+            <p style="margin-bottom:-10px;">九、开票方式：增值税发票</p>
+            <p style="margin-bottom:-10px;">十、违约责任：如有违约，双方共同友好协商解决；协商不成时，依国家有关法规办理。</p>
+            <p style="margin-bottom:-10px;">十一、解决合同纠纷的方式：双方协商解决。协商不成时，在供方所在地管辖内提起诉讼。</p>
+		   </td>
+        </tr>
+        <tr style="mso-yfti-irow:0;mso-yfti-firstrow:yes;height:18pt">
+          <td colspan="6" valign="top" style="border:solid black 0pt;padding-left:20px;">
+          	<br />
+            <p style="margin-bottom:-10px;">供方：<span name="sellerCompany"></span></p>
+            <p style="margin-bottom:-10px;">地址：<span name="sellerAddress"></span></p>
+            <p>电话：<span name="sellerTel"></span></p>
+		   </td>
+           <td colspan="8" valign="top" style="border:solid black 0pt;">
+           <br />
+            <p style="margin-bottom:-10px;">需方：<span name="buyerCompany"></span></p>
+            <p style="margin-bottom:-10px;">地址：<span name="buyerAddress"></span></p>
+            <p>电话：<span name="buyerTel"></span></p>          
+		   </td>
+        </tr>
+      </tbody>
+    </table>
+</center></form>
+</body>
+</html>

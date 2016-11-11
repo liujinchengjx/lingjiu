@@ -1,0 +1,331 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<script type="text/javascript" src="/js/jquery.js"></script>	
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	 <script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tabs.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null;
+
+	var data = 
+		[{
+			"text": "全国",
+			"id":-1,
+			"hasChildren":true,
+			"level":"-1",
+			"parentId":""			
+		}];	
+	$(document).ready(function() {	
+	      var element = $('#nav_areadict').omBorderLayout({
+            	   panels:[{id:"center-panel",header:true,title:"地区信息",region:"center",width:"100%",height:700},
+            	    {id:"west-panel",resizable:true,collapsible:true,title:"地区列表",region:"west",width:300,height:700}
+            	    ]
+          });
+		 initValidateForm("transfeesetting");
+		 $("#areaTree").omTree({
+				dataSource : data,
+				simpleDataModel: true,
+				onBeforeExpand : function(node){				  
+					var nodeDom = $("#"+node.nid);
+					if(nodeDom.hasClass("hasChildren")){
+						nodeDom.removeClass("hasChildren");
+						var level;
+						if (node.level=="-1"){
+							level=1;
+						}else{ 
+						    level=(parseInt(node.level)+1)
+						}						
+						var url= "baseinfo/AreaDict/"+node.id+"/getAreaByPLevel?ad.level="+level;
+						$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+							   $("#areaTree").omTree("insert", json.entity, node);								  
+						  }	
+						});					
+					 }
+					 return true;
+				},
+				onSelect: function(node){	
+				    var activeId=$("#activeId").val();
+					if(activeId=='fromAreaName'){
+						 $("#fromAreaId").val(node.id);
+					    $("#fromAreaName").val(node.text);
+					}else if(activeId=='toAreaName'){
+					  $("#toAreaId").val(node.id);
+					  $("#toAreaName").val(node.text);			
+					}
+				}				
+			}); 
+		$('#areaTree').omTree('expandAll'); 
+		
+		dialog=$( "#nav_transfeesettingdetail").omDialog({
+			autoOpen: false,
+			draggable : false,
+			resizable : false,
+			height: 200,
+			width:800,			
+			modal: true,
+			buttons: [{
+                text : "确定", 
+                click : saveTfeeSettingDetail
+            	},{            	
+					text : "取消", 
+					click : function () {                   
+						dialog.omDialog("close");
+				  }
+				}
+			]
+		});	
+		$('#btnbar').omButtonbar({
+			 width : "100%",
+			 btns : [{label:"保存",
+					 id:"button1" ,
+					 icons : {left : '/images/icon/add.png'},
+					 onClick:  saveTfeeSetting
+					},
+					{label:"新增首（续）重",
+					 id:"button2" ,
+					 icons : {left : '/images/icon/add.png'},
+					 onClick:  addTfeeSettingDetail
+					},
+					{label:"编辑首（续）重",
+					 id:"button2" ,
+					 icons : {left : '/images/icon/add.png'},
+					 onClick:  editTfeeSettingDetail
+					},
+					{separtor:true},
+					{label:"关闭",id:"button3", 
+					  icons : {left : '/images/icon/close.png'},
+					  onClick:function(){
+						  closeCurrActivateTabs(1000);
+					  }
+					 }		
+				  ]
+        });
+		 
+		 var tfSettingId=getIframeParm("transFeeSettingId");
+		 var transCompanyId=getIframeParm("transCompanyId");
+		 if (tfSettingId!=""){
+			 var url =  "finance/TransFeeSetting/0/get?tfs.id="+tfSettingId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				  $("#transfeesetting").initializeInput({"vo":json.entity}); //初始化				   
+ 			    }
+			 });	
+		 }else{		 
+		     $("#transfeesetting").initializeInput(); //初始化    
+		 }
+		 $('#transCompanyId').omCombo({dataSource :
+		 "business/TransportCompany/0/searchTranCompany?outRows=true&limit=100000&searchValue=",
+		 			width:'300',editable:false,optionField:'cname',valueField : "id",value:transCompanyId});
+					
+		$('#endWeight').omCombo({dataSource :[{text:'以上',value:'100000000'}],width:'120',editable:true});
+					
+		$('#grid').omGrid({
+				limit:20,
+                title : '首（续）重费用设置列表（说明：第一条记录将被视为首重费用,从第二条记录开始是续重费用,请按照顺序建立）',
+                dataSource :"finance/TransFeeSetting/0/getTransFeeSettingDetailList?transFeeSettingId="+tfSettingId,
+                colModel : [
+							 {header : '起始重量', name : 'beginWeight', width : 120, align : 'left'},
+							 {header : '截止重量', name : 'endWeight', width : 100, align : 'left',
+							 	renderer : function(colValue, rowData, rowIndex) {
+								    if (colValue=="100000000"){
+									   return "以上";  
+									}else{
+									   return colValue;
+									} 
+								}
+							 },
+							 {header : '费用（成本）', name : 'payFee', width : 100, align : 'left'},
+							 {header : '费用（收入）', name : 'receiveFee', width : 100, align : 'left'},
+							 {header : '备注', name : 'remark', width : 100, align : 'left'}
+							 ],
+				onRowClick:function(rowIndex,rowData,event){
+				}
+            });				
+		
+	});
+		
+	function saveTfeeSetting(){	
+		if(validateForm("transfeesetting")==false)return false; 
+		var url = $("#id").val()=="" ? "finance/TransFeeSetting/0/add" : "finance/TransFeeSetting/0/edit";
+		var vo=	$("#transfeesetting").getVo();
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){ 
+			   $('#id').val(json.id);				   
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+			}
+		});	
+	}	
+	function editAreaDict(){		    	    		
+		var areaTree=$('#areaTree').omTree('getSelected');	
+		var name = $('#name').val();
+	}	
+	function delAreaDict(){
+	
+	}
+	function setFocus(o){
+	    $("#activeId").val(o.id);
+		o.style.backgroundColor='#f4eaf1';
+		if (o.id=='fromAreaName'){
+			$("#toAreaName").css("background","");
+		}else{
+		    $("#fromAreaName").css("background","");
+		}		
+	}
+	
+	function addTfeeSettingDetail(){
+	    var vo={};
+		var store = $('#grid').omGrid('getData');
+		rowDatas=store.rows;
+		if (rowDatas.length > 0){
+		    if (rowDatas[rowDatas.length-1].endWeight==100000000){
+			   $.omMessageTip.show({content : "不能再添加！",timeout : 2000,type : 'error'});
+			   return false;
+			}
+			vo["beginWeight"]=rowDatas[rowDatas.length-1].endWeight+0.1;
+		}else{
+		    vo["beginWeight"]=0;
+		}		
+		dialog.initializeInput({"vo":vo}); //初始化
+		dialog.omDialog("option", "title", '新增');
+		dialog.omDialog("open");//显示dialog
+		$("#beginWeight").attr("disabled", "disabled");
+	}
+	
+	function editTfeeSettingDetail(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+		   $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择记录行！'});
+		   return;
+	   }		
+	   dialog.initializeInput({"vo":rowDatas});		
+	   $("#endWeight").omCombo('value',rowDatas[0].endWeight); 
+	   dialog.omDialog('open'); 
+	}
+	function saveTfeeSettingDetail(){
+	     if(validateForm("transfeesettingdetail")==false)return false;
+		 var url = "finance/TransFeeSetting/0/saveDetail";		  
+		 var vo=$("#transfeesettingdetail").getVo();
+		 var transFeeSettingId=$("#id").val();
+		 if ((typeof(transFeeSettingId) =="undefined") || (transFeeSettingId<=0) ){
+		    $.omMessageTip.show({content : "请先保存货运公司起止地点！",timeout : 2000,type : 'error'});
+		    return false;
+		 }
+         var beginWeight=$("#beginWeight").val();
+		 var endWeight= $("#endWeight").omCombo('value');
+		 if(isNaN(endWeight)){
+		    $.omMessageTip.show({content : "截止重量必须是数字！",timeout : 2000,type : 'error'});
+			return false;
+		 }
+		 beginWeight=parseFloat(beginWeight);
+		 endWeight=parseFloat(endWeight);
+		 if (endWeight<=beginWeight){
+		    $.omMessageTip.show({content : "对不起！截止重量必须大于起始重量",timeout : 2000,type : 'error'})
+		    return false;
+		 }
+		 if (endWeight>100000000){
+			 $.omMessageTip.show({content : "对不起！请不要填写大于100000000截止重量",timeout : 2000,type : 'error'})
+		     return false;
+		 }
+		 var receiveFee = vo["tfsd.receiveFee"];
+ 		 var payFee = vo["tfsd.payFee"];
+		 if(parseFloat(receiveFee)<parseFloat(payFee)){
+			  $.omMessageTip.show({content : "对不起！收入不能小于成本",timeout : 2000,type : 'error'})
+		     return false;
+		  }
+		 vo["tfsd.transFeeSettingId"]=transFeeSettingId;
+		 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			$('#grid').omGrid('reload');
+			dialog.omDialog("close"); 
+		 }});
+	}
+	</script>	
+</head>
+<body class="dfbody">
+<div id="nav_transfeesettingdetail" title="新增首（续）重" style="display:none;">
+     	<form id="transfeesettingdetail">
+		<input  type="hidden" id="tfsdId" name="tfsd.id"  />
+		<table class="edit-table">
+			<tr>
+  			    <td class="label">起始重量：</td>
+				<td class="field" ><input id="beginWeight" name="tfsd.beginWeight" pattern="float" validate="rules:['required']" /></td>
+				<td class="label">截止重量：</td>
+				<td class="field"><span><input id="endWeight" name="tfsd.endWeight"  validate="rules:['required']"  /></td>
+			</tr>
+			<tr>   			   
+				<td class="label">费用(成本)：</td>
+				<td class="field" ><input id="payFee" name="tfsd.payFee" pattern="float" validate="rules:['required']" /></td>
+				<td class="label">费用(收入)：</td>
+				<td class="field" ><input id="receiveFee" name="tfsd.receiveFee" pattern="float" validate="rules:['required']"/></td>
+			</tr>
+            <tr>   			   
+				<td class="label">备注：</td>
+				<td class="field" colspan="3"><input id="remark" name="tfsd.remark" /></td>
+			</tr>
+		</table>
+		</form>		
+</div>
+
+
+	
+<div id="nav_areadict" title="地区"  style="width:100%; height:95%;">
+	<div id="center-panel">	
+		<div >
+		    <form id="transfeesetting">
+			<input id="id" name="tfs.id" type="hidden" />
+			<input id="fromAreaId" name="tfs.fromAreaId" type="hidden" />
+			<input id="toAreaId" name="tfs.toAreaId" type="hidden" />
+			<input id="createTime" name="tfs.createTime" type="hidden" />
+			<input id="activeId" name="activeId" type="hidden" />
+		     <table class="edit-table" style="width:70%">		
+				<tr>
+					<td class="label">货运公司：</td>
+					<td class="field" >
+					 <input id="transCompanyId" name="tfs.transCompanyId" validate="rules:['required']" pattern="combo" />
+					 </td>							
+					<td class="label">币种：</td>
+					<td class="field" >
+					<input id="currency" name="tfs.currency" pattern="combo" editable='false' remote='Currency' value="142" /></td>
+				</tr>
+				<tr>
+					<td class="label">起始地点：</td>
+					<td class="field" >
+					<input id="fromAreaName" name="tfs.fromAreaName"  validate="rules:['required']" onclick="javascript:setFocus(this);" /></td>							
+					<td class="label" >截止地点：</td>
+					<td class="field" >
+					<input id="toAreaName" name="tfs.toAreaName" validate="rules:['required']" onclick="javascript:setFocus(this);" /></td>							
+				</tr>
+		     </table>
+		    </form>
+		</div>
+		<div id="btnbar"></div>
+		<div id="grid"></div>			    		
+	</div>
+	<div id="west-panel">
+		<ul id="areaTree"></ul>
+	</div>						
+</div>
+</body>
+</html>

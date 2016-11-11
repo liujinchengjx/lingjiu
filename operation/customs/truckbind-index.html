@@ -1,0 +1,146 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var truckParams={
+                title :'车辆列表',
+				text:"carnoCh",
+				onRowClick:null,
+                dataSource : "business/Truck/0/searchTruck?carno=",              
+                colModel: [
+ 							 {header : '吨位', name : 'tonnageName', width : 50, align : 'left'},
+							 {header : '实际载重', name : 'actualLoadWeight', width : 50, align : 'left', sortable : true},
+							 {header : '车牌(香港)', name : 'carnoHk', width : 50, align : 'left'},
+							 {header : '车牌(内地)', name : 'carnoCh', width : 50, align : 'left'},
+							 {header : '车辆类型', name : 'typeName', width : 100, align : 'left'},
+						 ]
+    };
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#truckId").initGridDropList(truckParams);
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});
+		$('#buttonbar').initToolBar();
+		$('#grid').omGrid({				
+				limit:20,
+				autoFit:true,
+                title : '车辆绑定列表',
+                dataSource : "customs/TruckBind/0/searchTruckBind?bindStatus=30",
+                colModel : [
+                             {header : '绑定时间', name : 'bindDate', width : 120, align : 'left'}, 
+							 {header : '车牌(香港)', name : 'truck.carnoHk', width : 100, align : 'left'},							
+							 {header : '车牌(大陆)', name : 'truck.carnoCh', width : 100, align : 'left'},
+							 {header : '最新六联单', name : 'blNo', width : 100, align : 'left'},
+ 							 {header : '实际载重', name : 'truck.actualLoadWeight', width : 80, align : 'left'},
+							 {header : '配送司机', name : 'driverName', width : 80, align : 'left'},
+							 {header : '状态', name : 'status', width : 100, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									  return Dictionary.getDictName(Dictionary.TruckBindStatus,colValue);
+								 }
+							 },
+							 {header : '车次', name : 'type', width : 80, align : 'left',
+							      renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.TruckBindType,colValue);
+								  }
+							 }, 
+							 {header : '车辆性质', name : 'purpose', width : 60, align : 'left',
+								renderer : function(colValue, rowData, rowIndex) {
+									return Dictionary.getDictName(Dictionary.TruckBindPurpose,colValue);
+								}
+						     },
+							 {header : '车辆类型', name : 'truck.type', width : 100, align : 'left',
+									renderer : function(colValue, rowData, rowIndex) {
+										 return Dictionary.getDictName(Dictionary.TruckType,colValue);
+									}
+							 },
+							 {header : '创建时间', name : 'createTime', width : 100, align : 'left'}
+ 							],
+				rowDetailsProvider:function(rowData,rowIndex){
+                		return '';								
+	            }
+            });			          
+
+	});
+	function searchData(){
+	   var vo=$("#search-panel").getVo();
+	   var params=convertParamToUrl(vo);
+	   $('#grid').omGrid('setData',"customs/TruckBind/0/searchTruckBind?"+params);
+	}
+	function addTruckBind(){	 
+		var paras={tabId:"addTruckBind001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	        addNewTab("新加车辆绑定","/customs/truckbind-edit.html",paras,function(){
+		       $('#grid').omGrid('reload');//刷新grid
+	   });           	            
+	}	
+	function editTruckBind(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if (rowDatas.length <= 0 ){
+		   $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+		   return;
+	   }		
+	   var paras={truckBindId:rowDatas[0].id,tabId:"editTruckBind001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	   addNewTab("编辑车辆绑定","/customs/truckbind-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+	   });       		     
+	}	
+	function viewTruckbind(){
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">
+	<tr>
+		<td>提运单号：</td>    
+		<td><input id="blNo" name="blNo"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>车辆：</td>   
+		<td><input id="truckId" name="truckId"   showtext="" /></td>
+		<td>绑定状态：</td>    
+	    <td><input id="bindStatus" name="bindStatus" pattern='combo' editable='false'  width="120" remote="TruckBindStatus" />
+        </td>
+		<td>类型：</td>    
+		<td><input id="bindType" name="bindType" pattern='combo' editable='false' remote="TruckBindType" /></td>
+		
+	</tr>
+	<tr>
+		<td>绑定时间：</td>    
+		<td><input id="bindDate" name="bindDate" pattern='date' editable='false' /></td>
+		<td>创建时间：</td>    
+		<td><input id="startTime" name="startTime" pattern='date' editable='false' /></td>
+		<td>到：</td>    
+		<td><input id="endTime" name="endTime" pattern='date' editable='false' /></td>
+		<td colspan="2"><span id="button-search">搜索</span></td>
+	</tr>
+  </table> 	 
+</div>			
+
+<div id="buttonbar"></div>	
+<div id="grid"></div>
+</body>
+</html>

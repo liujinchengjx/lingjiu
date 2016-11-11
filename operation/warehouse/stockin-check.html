@@ -1,0 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统-验核</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(document).ready(function(){
+		$("#search-panel").omPanel({title:"<b style='color:blue;' id='tips'></b>",collapsed:true});
+		$("#panel").omPanel({title : "",collapsible:true, collapsed: false,collapsible: true, closable: false,height:'450'});		
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnAddSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveCheckStandards
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });
+        var url = "warehouse/StockInCheckStandardsRalation/0/load";
+		var param = "stockInId="+getIframeParm("stockInId");
+		$.ajaxPost({data:param,url:url,msg:false,success:function(json,textStatus){			
+			if(json.msgCode == 1 && json.entity != null && json.entity != "null"){
+				$("#status"+json.entity.status).attr("checked","checked");
+				$("#remark").val(json.entity.remark);
+				$("#checkId").val(json.entity.id);
+			}
+		  }
+		}); 	
+	});
+	
+	function saveCheckStandards(){
+		var stockInId=getIframeParm("stockInId");
+		if (stockInId<=0){
+		   $.omMessageTip.show({content :"对不起！,入库单ID未找到！",timeout : 2000,type : 'error'});
+		   return ;
+		}
+		var status = $('input:radio:checked').val();
+		var remark = $('#remark').val();
+		if (status == 2 ) {
+			if(remark == null || remark == ""){				
+				$.omMessageTip.show({content :"异常情况必须输入备注信息!",timeout : 2000,type : 'error'});
+				return ;
+			}
+		}
+		var url = "warehouse/StockInCheckStandardsRalation/0/save";
+		var param = "stockInCheck.id="+$('#checkId').val()+"&stockInCheck.stockInId="+stockInId+"&stockInCheck.status="+status+"&stockInCheck.remark="+remark;
+		$.ajaxPost({data:param,url:url,msg:false,success:function(json,textStatus){
+			$("#checkId").val(json.entity);
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type:'success'});
+		  }
+		}); 
+	}	
+	</script>
+</head>
+<body class="dfbody">	
+	<div id="search-panel"></div>
+	<div id="buttonbar"></div>
+	<div id="panel" >
+		<div style="font-size:18px;padding-top:10px;padding-left:10px;">
+			<input id="checkId" type="hidden" name="stockInCheck.id" /> 
+			<span style="font-size:18px;">是否正常:</span>			
+			<label><input id="status1" type="radio" value="1" name="stockInCheck.status" checked="checked"/> 正常</label>
+			<label><input id="status2" type="radio" value="2" name="stockInCheck.status"/> 异常</label>
+			<div style="font-size:18px;padding-top:10px;">
+			<span style="font-size:18px;" >备注信息:</span>
+			<span><textarea id="remark" rows="4" cols="100" name="stockInCheck.remark"></textarea></span>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

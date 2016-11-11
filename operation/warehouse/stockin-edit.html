@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(document).ready(function(){	
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("stockin");		
+		var stockInId=getIframeParm("stockInId");
+		if (stockInId !=""){ //编辑状态
+		     var url="warehouse/StockIn/0/get?stockInId="+stockInId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				 $("#stockin").initializeInput({"vo":json.entity}); //初始化
+			 }});
+ 		 }else{
+			$("#stockin").initializeInput(); //初始化								
+		 }		
+		 
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"button1" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveStockIn
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });
+	});
+	
+	function saveStockIn(){	 
+	    if(validateForm("stockin")==false)return false;	
+		var vo=	$("#stockin").getVo();			
+		var url = "warehouse/StockIn/0/edit";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			  $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});				
+		   }
+		});
+	
+	}	
+	function loadValueAddService(){
+	    var url= "business/ValueAddedServices/0/loadValueAddedServicesTree";
+		$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+		   var addValueTree=$("#addValueTree").omTree({
+				dataSource : json.rows,
+				showCheckbox:true,
+				simpleDataModel: true,
+				onCheck : function(nodeData){
+				   if (nodeData.pid!=""){
+					   var $input = $("#"+nodeData.nid).find("span[name="+nodeData.id+"]");
+					   var isCheck=$('#addValueTree').omTree('isCheck',nodeData);
+					   if(isCheck){
+						   if ($input.length<=0){
+							   var $this = $("#"+nodeData.nid).find("a");
+							   var input="<span name='"+nodeData.id+"' ><input name='"+nodeData.id+"'"; 
+							   input=input+"  style='width:80px;margin-left:10px;text-align: right;' />"+nodeData.feeUnit+"</span>";
+							   $(input).insertAfter($this);
+							   $("#"+nodeData.nid).find("input[name="+nodeData.id+"]").omNumberField({allowDecimals:true,
+							   decimalPrecision:2});
+						   }
+					   }else{
+						  $input.remove();
+					   }
+				   }
+				}
+			}); 
+		 }
+		});
+	 }
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"> </div>	
+	<div id="nav_stockin" title="新增订单">
+        <form id="stockin">	
+		<input id="id" name="sIn.id" type="hidden" />
+		<input id="etOrderId" name="sIn.etOrderId" type="hidden" />
+		<input id="wh" name="sIn.wh" type="hidden" />
+		<input id="status" name="sIn.status" type="hidden" />
+		<input id="refOrderId" name="sIn.refOrderId" type="hidden" />
+		<input id="shelfStatus" name="sIn.shelfStatus" type="hidden" />
+		<input id="businessType" name="sIn.businessType" type="hidden" />
+		<input id="manageModel" name="sIn.manageModel" type="hidden" />
+		<input type="hidden" id="lastModifyTime" name="sIn.lastModifyTime" />
+	    <input type="hidden" id="createTime" name="sIn.createTime" />
+	    <input type="hidden" id="lastModifyBy" name="sIn.lastModifyBy" />
+		<input type="hidden" id="createBy" name="sIn.createBy" />
+		<table class="edit-table">		
+			<tr>
+				<td class="label">订单编号(只读)：</td>
+				<td class="field"><input  id="stockInNo" name="sIn.stockInNo" disabled="" /></td>				
+  			    <td class="label">客户：</td>
+				<td class="field" ><input id="customerId" name="sIn.customerId" showtext="sIn.customerName"/></td>
+			</tr>
+			<tr>
+  			    <td class="label">入库时间：</td>
+				<td class="field" ><input id="inTime" name="sIn.inTime"  pattern="datetime"/></td>
+				<td class="label"></td>
+				<td class="field" ></td>
+			</tr>
+			<tr>
+				<td class="label">IPPC木卡板数：</td>
+				<td class="field"><input id="ippcBoardCount" name="sIn.ippcBoardCount"  pattern='int' /></td>				
+				<td class="label">IPPC木箱数：</td>
+				<td class="field"><input id="ippcBoxCount" name="sIn.ippcBoxCount" pattern='int' /></td>
+			</tr>
+			<tr>
+				<td class="label">备注：</td>
+				<td class="field" colspan="3" ><textarea id="remark" name="sIn.remark" style="height:50px;" ></textarea></td>
+			</tr>
+		</table>
+		</form>	
+	</div>
+	<div id="buttonbar"></div>	
+</body>
+</html>

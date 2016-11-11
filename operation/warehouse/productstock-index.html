@@ -1,0 +1,217 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null;
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+				onRowClick:null,
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$("#customerId").initGridDropList(cusParams);
+		$('#buttonbar').initToolBar();	
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		    onClick : function(event){
+				searchData();
+			}
+		});	
+		dialog=$("#nav_slno").omDialog({
+			autoOpen: false,
+			draggable : false,
+			resizable : false,
+			height: 200,
+			width:750,
+			modal: true,
+			buttons: [{
+                text : "确定",
+                click : saveMoveSlno
+            }, {
+                text : "取消",
+                click : function() {
+                    dialog.omDialog("close");
+                }
+            }]
+		});
+		$('#grid').omGrid({
+				limit:40,
+				autoFit:true,
+                title : '库存列表',
+                dataSource : "warehouse/ProductStock/0/searchProductStock",
+                colModel : [
+							 {header : '客户', name : 'customerName', width : 120, align : 'left'},
+							 {header : '仓库', name : 'whName', width : 50, align : 'center'},
+							 {header : '储位号', name : 'slno', width : 40, align : 'center'},
+							 {header : '入仓号',name : 'stockInNo', width : 100, align : 'center'},
+							 {header : '箱号', name : 'cartonNo', width : 30, align : 'center'},
+							 {header : '原箱号',name : 'orgCartonNo',width:80, align : 'center'},
+							 {header : '品名', name : 'product.productName', width : 100, align : 'left'},
+							 {header : '型号', name : 'product.pn', width : 100, align : 'left'},
+ 							 {header : '库存数量', name : 'stockQty', width : 80, align : 'right'},
+							 {header : '品牌', name : 'product.brand', width : 60, align : 'left'},
+							 {header : '原产地', name : 'product.origin', width : 60, align : 'left'},
+							 {header : 'DateCode', name : 'dateCode', width : 60, align : 'center'},
+							 {header : 'Lot Num', name : 'lotNum', width : 60, align : 'center'},
+							 {header : '最小包装', name : 'mpq', width : 60, align : 'center'},
+							 {header : '入库时间', name : 'inTime', width : 100, align : 'center'}
+							 ],
+				onRowClick:function(rowIndex,rowData,event){
+				}
+         });			
+	});
+	function searchData(){
+	    var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#grid').omGrid('setData',"warehouse/ProductStock/0/searchProductStock?"+params);
+	}
+	function goodsStatistics(){
+	    var vo=$("#search-panel").getVo();
+	    var params=convertParamToUrl(vo);
+		$('#grid').omGrid('setData',"warehouse/ProductStock/0/searchProductStock?"+params);
+	}
+	function exportGoods(){ //
+		var vo=$("#search-panel").getVo();
+		vo["limit"]=100000000;
+	    var params=convertParamToUrl(vo);
+	    var url=baseUrl+"warehouse/ProductStock/0/exportGoods?";
+		url=url+params;
+		window.location.href=url;
+		//showFullScreen(url);
+	}
+	function viewProductStock(){
+	   var rowDatas = $('#grid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+		  $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择行！'});
+		  return;
+	   }		
+	   var paras={qty:rowDatas[0].stockQty,productId:rowDatas[0].productId,
+	   wh:rowDatas[0].wh,customerName:rowDatas[0].customerName,pn:rowDatas[0].product.pn,
+	   customerId:rowDatas[0].customerId,tabId:"viewProductStock001"}; 
+	   var params=convertParamToUrl(paras);
+	   var url="/warehouse/productstock-view.html?"+params;
+	   showFullScreen(url); 	 
+	}
+	
+	function saveMoveSlno(){
+		 var slno = $("#oldSlno").val();
+		 var newSlno = $("#newSlno").val();
+		 var wh = $("#rwh").val();
+		 if (slno == "") {
+			 $.omMessageTip.show({content : "旧储位不能为空",timeout : 2000});
+			 return;
+		 }
+		 if (newSlno == "") {
+			 $.omMessageTip.show({content : "新储位不能为空",timeout : 2000});
+			 return;
+		 }
+		 if (wh == "") {
+			 $.omMessageTip.show({content : "请选择仓库",timeout : 2000});
+			 return;
+		 }
+		 $.omMessageBox.confirm({title:'移库确定',content:'你确定要移库吗？',onClose:function(v){
+		 if (v){
+				var url = "warehouse/ProductStock/0/updateMoveSlno?slno="+slno+"&newSlno="+newSlno+"&wh="+wh;
+				$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					  $('#grid').omGrid('reload');//刷新grid
+					  $.omMessageTip.show({content : json.msg,timeout : 2000,type:'success'});
+					   dialog.omDialog("close");
+					   $("#oldSlno").val("");
+					   $("#newSlno").val("")
+					   $("#rwh").val("")
+				   }
+				});
+			}
+		  }});
+		 
+	}
+	function updateMoveSlno(){
+		dialog.initializeInput(); //初始化
+	    dialog.omDialog("option", "title", '移库');
+		dialog.omDialog("open");//显示dialog
+	}
+	</script>
+</head>
+<body class="dfbody">	
+	<div id="search-panel">
+	   <table class="edit-panel">		
+		<tr>
+			<td>客户：</td>
+			<td><input id="customerId" name="customerId"  onfocus="myFocus(this,'#f4eaf1')" 
+			   onblur="myblur(this,'white')" tip="选择客户" showtext="" />
+			</td>
+			<td>仓库：</td>
+			<td><input id="wh" name="wh" pattern='combo' editable='false' remote="Warehouse" emptyText="请选择仓库"/></td>
+			<td>储位号：</td>
+			<td><input id="slno" name="slno" /></td>
+			<td>gsinNo：</td>
+			<td><input id="stockInNo" name="stockInNo"/></td>
+			<td>型号：</td>
+			<td><input id="pn" name="pn"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" /></td>
+		</tr>
+		<tr>
+			<td>品名：</td>
+			<td><input id="productName" name="productName"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" /></td>
+			<td>品牌：</td>
+			<td><input id="brand" name="brand"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')" /></td>
+			<td>时间：</td>    
+			<td><input id="startTime" name="startTime" pattern='date' editable='false' /></td>
+			<td>到：</td>    
+			<td><input id="endTime" name="endTime" pattern='date' editable='false' /></td>
+			<td><span id="button-search">搜索</span></td>
+		</tr>
+	  </table> 	 
+	</div>			
+	<div id="nav_productstock" title="">
+		<div id="buttonbar"></div>	
+		<div id="grid"></div>
+	</div>	
+	<div id="nav_slno" title="移动储位" style="display:none;">
+	    <form id="slno">		
+		<table class="edit-table">
+			<tr>
+				<td class="label">旧储位：</td>
+				<td class="field"><input id="oldSlno" name="oldSlno" validate="rules:['required']"/></td>			
+			</tr>
+			<tr>
+				<td class="label">新储位：</td>
+				<td class="field"><input id="newSlno" name="newSlno" validate="rules:['required']"/></td>				
+			</tr>
+			<tr>
+				<td class="label">仓库：</td>
+				<td class="field"><input id="rwh" name="wh" pattern='combo' editable='false' remote="Warehouse" emptyText="请选择仓库" validate="rules:['required']"/></td>				
+			</tr>			
+		</table>		
+		</form>	
+	</div>
+</body>
+</html>

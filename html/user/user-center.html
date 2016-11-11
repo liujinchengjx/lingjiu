@@ -1,0 +1,173 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>元和津  用户中心</title>
+<meta content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
+<meta content="元和津" name="description">
+<meta content="元和津" name="keywords">
+<link href="/css/style.css" rel="stylesheet">
+<script src="/js/zepto.min.js"></script>
+<script src="/js/common.js"></script>
+<style type="text/css">
+.welcome{ height:16em; position:relative; background:url(../images/detail/login_welcome.jpg) center center no-repeat;background-size:100% 100%;}
+.not_logged{ background:none #eaebeb;}
+.welcome a{ display:block; height:100%; color:#fff;}
+.not_logged a{ color:#000;}
+.welcome .logout_txt{ position:absolute; width:100%; top:10em; text-align:center; color:#fff;}
+.welcome .logout_txt h3,.welcome .logout_txt p{ font-size:1.5em;}
+.welcome .login_txt{position:absolute; width:100%; top:3em;text-align:center; color:#000;}
+.welcome .login_txt h3{ font-size:2em; margin-bottom:0.6em;}
+.welcome .login_txt p{ font-size:1.3em;}
+.user_nav{ border-bottom:4px solid #c9c9c9;}
+.user_nav .item01{background:url(/images/module/icon_04.png) 0 50% no-repeat;}
+.user_nav .item02{background:url(/images/module/icon_05.png) 0 50% no-repeat;}
+.user_nav .item03{background:url(/images/module/icon_06.png) 0 50% no-repeat;}
+.user_nav .item04{background:url(/images/module/icon_22.png) 0 50% no-repeat;}
+.user_nav .item05{background:url(/images/module/icon_09.png) 0 50% no-repeat;}
+.user_nav .item06{background:url(/images/module/icon_25.png) 0 50% no-repeat;}
+.user_nav .item07{background:url(/images/module/icon_30.png) 0 50% no-repeat;}
+.user_nav .item{font-size: 1.5em;padding: 1.26667em 0 1.26667em 2.33333em;background-size:1.6em 1.6em;-webkit-background-size:1.6em 1.6em;-moz-background-size:1.6em 1.6em;-o-background-size:1.6em 1.6em;}
+</style>
+</head>
+
+<body>
+<input type="hidden" name="mcode" id="mcode"/>
+<div class="header">
+	<div class="back"><a href="/user/user-center.html><span class="icon-23"></span></a></div>
+	<div class="tit">
+		<h3>我的帐户</h3>
+	</div>
+	<div class="right">
+		<ul>
+			<!-- <li class="cart"><a title="" href="#"><span class="icon-2"></span><span class="tip hide" id="ShoppingCartNum"></span></a></li> -->
+		</ul>
+	</div>
+</div>
+<div class="viewport">
+	<div class="welcome" id="welcome_box">
+		<a onclick="exitLogin()" href="javascript:;">
+			<div class="logout_txt">
+				<h3 id="telephone"></h3>
+				<p>点击退出登录</p>
+			</div>
+		</a>
+	</div>
+	<div class="nav_box">
+		<ul class="list user_nav">
+			<li>
+				<a href="/order/order-list.html?orderType=1"><div class="item01 item">我邀请的订单</div></a>
+			</li>
+			<li> 
+				<a onclick="toTuiguang();" href="javascript:void(0);"><div class="item01 item">我推广的商品</div></a>
+			</li>
+			<li>
+				<a href="#"><div class="item02 item">我的奖励</div></a>
+			</li>
+			
+		</ul>
+		<ul class="list user_nav">
+			<!--
+			<li>
+				<a href="/user/user-jiamoney.html"><div class="item04 item">加币账户</div></a>
+			</li>
+			-->
+		
+			<li>
+				<a href="/user/user-repw.html"><div class="item06 item">修改密码</div></a>
+			</li>
+			<li>
+				<a onclick="exitLogin()" href="javascript:;"><div class="item06 item">退出登录</div></a>
+			</li>
+		</ul>
+	</div>
+</div>
+<div class="footer">
+	<div class="links">
+		<p><a href="/user/login.html" id="footer_login"><span>登录</span></a><a href="javascript:window.scrollTo(0,0);"><span>返回顶部</span></a></p>
+	</div>
+</div>
+<script type="text/javascript">
+
+function exitLogin(){
+ 
+	    var url="/jsonrest/userlogin/UserLogin/0/exitLogin"
+		$.ajax({
+			type: "get",
+			dataType: "json",
+			url:url,
+			async:false,//非必须.默认true
+			cache:false,//非必须.默认false
+			success: function(data){
+				if(data.msgCode == 1){
+					  deleteCookie("gscm_user");
+					  deleteCookie("gscm_ln");
+				      var href = window.location.href;
+				      window.location=href;
+				   
+				}else{
+					alert(data.msg);
+				}
+			}
+		});
+
+}
+
+function toTuiguang(){
+    var mcode=$("#mcode").val();
+	window.location.href="/order/tuiguang-list.html?mcode="+mcode;
+}
+
+function getCookie(name){
+	var start=document.cookie.indexOf(name+"=");
+	if(start==-1) return null;
+	var len=start + name.length + 1;
+	var end = document.cookie.indexOf(';',len);
+	if (end==-1) end=document.cookie.length;
+	return unescape(document.cookie.substring(len, end));
+}
+
+function getPersonInfo(){
+	$.ajax({
+		url:"/jsonrest/userlogin/UserLogin/0/getUserInfo",//必须,不能为空
+		type:'post',//非必须.默认get
+		dataType:'json',//非必须.默认text
+		timeout:30000,//非必须.默认30秒
+		error:function(){showTips("加载数据有误");}, //非必须
+		success:function(data){
+			if(data.msgCode==3){
+				$(".viewport a").attr("href",'/user/login.html');
+				var html = '<a href="/user/login.html?tourl='+encodeURIComponent(window.location.href)+'"><div class="not_logged"><div class="login_txt"><h3>立即登录</h3><p>享受更多服务</p><div></div></a>';
+				$("#welcome_box").html(html).addClass("not_logged");
+			}
+			if(data.msgCode!=1) return;	
+			var name = data.entity.userName;
+		    $("#mcode").val(name);
+		    //alert($("#mcode").val());
+		
+			var html = '<div class="logout_txt"><h3 id="telephone">我的专属推广码<p>'+name+'</p></h3></div>';
+			$("#welcome_box").html(html);
+		}//非必须
+	});
+}
+(function(){
+	if(isUserLogin()){
+		getPersonInfo();
+	}else{
+		$(".viewport a").attr("href",'/user/login.html');
+		$("#serviceQuery").attr('href','/service/query.html')
+		var html = '<a href="/user/login.html?tourl='+encodeURIComponent(window.location.href)+'"><div class="not_logged"><div class="login_txt"><h3>立即登录</h3><p>享受更多服务</p><div></div></a>';
+		$("#welcome_box").html(html).addClass("not_logged");
+	}
+	loginHide();
+})();
+</script>
+
+<form id="dataForm" name="dataForm" method="POST">
+	<input type="hidden" id="accessToken" name="accessToken"/>
+</form>
+</body>
+</html>

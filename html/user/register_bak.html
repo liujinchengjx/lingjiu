@@ -1,0 +1,354 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>百加商城 用户注册</title>
+<meta content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
+<meta content="手机版百加商城客户端可以随时随地参与预约抢购百加手机，轻松下单购买，实时查询订单信息掌握物流状态，百加商城app手机客户端还有新品信息通知推送功能，所有商品信息随身掌握。" name="description">
+<meta content="百加商城,百加V6手机,百加V6,百加手机,百加商城app,百加商城app下载" name="keywords">
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+<link href="/css/style.css" rel="stylesheet">
+<script type="text/javascript" src="/js/jquery.min.js"></script>
+<script type="text/javascript" src="/js/common.js"></script>
+<script type="text/javascript" src="/js/jquery.form.js"></script>
+<style type="text/css">
+.login_view{padding:1em 3em;}
+.login_view .login_container{overflow:hidden; margin:auto;}
+.login_container h2{font-size:18px; margin:1em 0; font-weight:normal;}
+.input_container{margin-bottom:0.6em;}
+.input_container input{border:none; border-bottom:1px solid #6c6c6c; height:40px; line-height:20px; padding:10px 10px 10px 0; display:block; font-size:14px; width:100%; display:block;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box;}
+.input_box{position:relative; margin:1em 0;}
+.input_container .phoneCode{ width:50%; display:inline-block;}
+.input_container .parentSpan{ font-size:1.2em;}
+.input_container .parentSpan a{ color:#2695fd;}
+.tips_login {color:#999999;font-size:1.2em;line-height: 1.5;margin: 20px 0;vertical-align:middle}
+.tips_login a{ color:#2695fd;}
+.tips_login input[type="checkbox"]{ }
+.login_btn{border:none; width:100%; font-size:14px;display:block;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box;}
+.error_ico{position:absolute; width:19px; height:19px; background:url(/images/module/icon_14.png) -16px -16px no-repeat; right:0; top:12px;}
+.error_tips{ position:absolute;right:10px;bottom:35px;color:#fff;font-size:1em;}
+.et_con{ position:relative;}
+.et_con p{padding:6px 10px;min-height:16px;line-height:1.5;background:#fb6f7d;border-radius:3px;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;-o-box-sizing:border-box;box-sizing:border-box;}
+.et_con em{position:absolute;bottom:-6px;right:3px;width:9px;height:7px;background:url(/images/module/icon_15.png) no-repeat;}
+.login_reg{ padding:1em 0;line-height:1; font-size:1em;}
+.login_reg a{ color:#2695FD;}
+</style>
+</head>
+  
+<body>
+<div class="header">
+	<div class="back"><a href="/"><span class="icon-23"></span></a></div>
+	<div class="tit">
+		<h3>注册</h3>
+	</div>
+</div>
+<div class="login_view">
+	<form method="POST" name="registerForm" id="registerForm">
+		<div class="login_container">
+			<h2>欢迎注册百加账户</h2>
+		</div>
+		<div class="input_container">
+			<div class="input_box">
+				<input type="text"  placeholder="输入您的手机号" name="userVO.mobile" onFocus="claerTips('mobile')" onblur="validate('username',this.value);" id="phone"> 
+			    <div id="mobile">
+					<em class="error_ico"></em>
+					<div class="error_tips">
+						<div class="et_con">
+							<p id="errorMsg"></p>
+							<em></em>
+						</div>
+					</div>
+			   </div>	
+			</div>
+		   <div class="input_box">
+			   <input type="password"  placeholder="输入密码" name="userVO.password" onblur="validate('password',this.value)">
+			   <div id="password">
+				<em class="error_ico"></em>
+				<div class="error_tips">
+					<div class="et_con">
+						<p id="passworderrorMsg"></p>
+						<em></em>
+					</div>
+				</div>
+			   </div> 	
+		    </div>
+		    <div class="input_box">
+			   <input type="password"  placeholder="再次输入密码" name="confirmpassword" onblur="equal();">
+			  <div id="confirmpassword">
+			   <em class="error_ico"></em>
+				<div class="error_tips">
+					<div class="et_con">
+						<p id="confirmpassworderrorMsg"></p>
+						<em></em>
+					</div>
+				</div>
+			  </div>	
+			</div>
+			<div class="input_box">
+				<input type="text" class="phoneCode"  placeholder="输入验证码" name="phoneCode">
+			   <span id="parentSpan" class="parentSpan"><a href="javascript:void(0);" onclick="sendSMS();">点击获取手机验证码</a></span>
+			   <div id="phoneCode">
+			    <em class="error_ico"></em>
+				<div class="error_tips">
+					<div class="et_con">
+						<p id="phoneCodeerrorMsg"></p>
+						<em></em>
+					</div>
+				</div>
+			  </div>	
+		   </div>
+		    <input type="hidden" name="userVO.userType" value="2"/>
+		    <input type="hidden" name="registtype" value="1"/>
+		    <input type="hidden" name="userVO.userLevel" value="0">
+		</div>
+		<a onclick="btnSubmit();" href="javascript:;" id="regnowPhone" class="button active_button login_btn">立即注册</a> 
+		<input type="reset" class="hide" id="reset">
+	</form>
+</div>
+<script type="text/javascript">
+var maxtime;
+function submitRegisterForm(){
+    var mobile = $("input[name='userVO.mobile']").val(); 
+    var password = $("input[name='userVO.password']").val(); 
+    var confirmpassword = $("input[name='confirmpassword']").val();
+    var phoneCode = $("input[name='phoneCode']").val();
+    var flag = true;
+    if(mobile==null||mobile==""){
+       $("#mobile").show();
+       $("#errorMsg").html("手机号码不能为空");
+       flag = false;
+    }else{
+        var regx =	/^1[0-9]{10}$/i;
+		if(!regx.test(mobile)) {
+		  $("#mobile").show();
+          $("#errorMsg").html("手机号码格式不正确");
+		  flag = false;
+		}
+    }
+    if(password==null||password==""){
+       $("#password").show();
+       $("#passworderrorMsg").html("密码不能为空");
+       flag = false;
+    }
+    if(password!=confirmpassword){
+       $("#confirmpassword").show();
+       $("#confirmpassworderrorMsg").html("两次密码不一致");
+       flag = false;
+    }
+    if(phoneCode==null||phoneCode==""){
+       $("#phoneCode").show();
+       $("#phoneCodeerrorMsg").html("验证码不能为空");
+       flag = false;
+    }
+	   return flag;
+}
+//发送短信验证码
+function sendSMS(){
+	var pbone=$("#phone").val();
+	if(pbone==""){
+	    $("#mobile").show();
+        $('#errorMsg').html("手机号码不能为空");
+		return false;
+	}
+	if(pbone!=""){
+		var regx =	/^1[0-9]{10}$/i;
+		if(!regx.test(pbone)) {
+			$("#mobile").show();
+			$("#errorMsg").html("手机号码格式不对!");
+			return false;
+	   }
+    }
+    if(!checkUserInfo('mobile',pbone)){
+		$("#mobile").show();
+		$("#errorMsg").html("手机号码已经被注册!");
+		return false;
+    }
+    var param=[];
+	param.push('userVO.mobile='+pbone);
+	$.ajax({
+		url:TERMINAL_URL+'/jsonrest/mobile/user/Register/0/sendSmsCode',
+		type:'post',//非必须.默认get
+		data:param.join('&'),
+		dataType:'json',//非必须.默认text
+		async:true,//非必须.默认true
+		cache:false,//非必须.默认false
+		timeout:30000,//非必须.默认30秒
+		success:sendSMSSuccess//非必须	
+	});
+}
+function sendSMSSuccess(data){
+    if(data.msgCode!=1){
+	   showTips('短信发送失败，请稍后重试！')
+	   return;
+	}
+	if(data.msgCode==1){
+		showTips(data.msg)
+		stopSend();
+		return false;
+	}
+}
+function stopSend(){
+	if(window.name==''){
+		maxtime = 60;
+	}else{
+		maxtime = window.name;
+	}
+	timer = setInterval("countDown()",1000);
+}
+function countDown(){
+	if(maxtime>=0){
+		aHtml="<span style=\"color:#DF4E5B\"> 重新获取:"+maxtime+"秒</span>";
+		$("#parentSpan").html(aHtml);
+		--maxtime;
+		window.name = maxtime;
+	}else{
+		clearInterval(timer);
+		window.name='';
+		msg1="<a id=\"disclick\" href=\"javascript:void(0)\" onclick=\"sendSMS();\" class=\"f14 ablue\">点击获取手机验证码</a>";
+		$("#parentSpan").html(msg1);
+	} 
+}
+
+//密码校验一致性
+function equal(){
+    var phonepwd=$("input[name='userVO.password']").val();
+    var phoneconfirmpwd=$("input[name='confirmpassword']").val();
+    if(phonepwd!=phoneconfirmpwd){
+       $("#confirmpassword").show();
+       $("#confirmpassworderrorMsg").html("两次密码不一致");
+       return false;
+    }	
+       $("#confirmpassword").hide();
+       $("#confirmpassworderrorMsg").html("");
+}
+//校验验证码的一致性
+function codePhoneEqual(){
+    var phoneCode=$("#phoneCode").val();
+    if(phoneCode.length!=6){
+      return "请输入手机获得的六位验证码！" ;
+	 }
+	 return '';
+}
+function validate(name,value){
+   if(value==null||value==""){
+     if(name=="username"){
+       $("#mobile").show();
+       $("#errorMsg").html("手机号码不能为空");
+       return;
+     }
+     if(name=="password"){
+      $("#password").show();
+      $("#passworderrorMsg").html("密码不能为空");
+      return;
+     }
+     if(name=="phoneCode"){
+      $("#phoneCode").show();
+      $("#phoneCodeerrorMsg").html("验证码不能为空");
+      return;
+     }
+   }else{
+      if(name=="username"){
+        var regx =	/^1[0-9]{10}$/i;
+		if(!regx.test(value)) {
+		  $("#mobile").show();
+          $("#errorMsg").html("手机号码格式不正确");
+          return;
+          }
+      }
+	  if(name=="password"){
+		if(value.length <6 || value.length>16){
+				$("#password").show();
+				$("#passworderrorMsg").html("请输入长度为6-16位的密码");
+				return;
+			}
+		
+     }
+   }
+    $("#mobile,#password,#confirmpassword,#phoneCode").hide();
+}
+function claerTips(id){
+	$('#'+id).hide();
+}
+//提交按钮事件置灰和显示
+function agreena(id){
+ 	if($("input[type='checkbox']:checked").length<1){
+		$("#"+id).addClass("button disable_button login_btn");
+		$("#"+id).attr("disabled","disabled")
+	}else{
+		$("#"+id).removeClass("button disable_button login_btn");
+		$("#"+id).addClass("button active_button login_btn");
+		$("#"+id).removeAttr("disabled");
+	}
+}
+function checkUserInfo(stringName,value){
+   var url;
+   var flag;
+   if(stringName=='mobile'){
+        url='userVO.userType=2&userVO.mobile='+value;
+   }
+	$.ajax({
+		url:TERMINAL_URL+'/jsonrest/mobile/user/User/0/checkUserInfo?'+url,
+		type:'get',
+		dataType: 'json',
+		async:false,
+		error: function(){},
+		success: function(data){
+		  if(data.msgCode != 1){
+		      flag=false;
+		    }else{
+		      flag=true;
+		    }
+		  }
+	    });
+	 return flag;   
+}
+function btnSubmit(){
+	$('#registerForm').ajaxSubmit({
+		url:TERMINAL_URL+'/jsonrest/mobile/user/Register/0/register',
+		type : 'post',
+		dataType : 'json',
+		error : function(){return;},
+		beforeSubmit:submitRegisterForm,
+		success: function(data) {
+			if(data.msgCode!=1){
+				$("#phoneCode").show();
+				$('#phoneCodeerrorMsg').html(data.msg);
+			}else{
+				if(window.localStorage.getItem('loginBefore')){
+					var refer = window.localStorage.getItem('loginBefore');
+					window.localStorage.removeItem('loginBefore');
+					window.location.href=refer;
+					return;
+				}
+				//window.location.href='/user/user-center.html';
+				var referrer=$.trim(document.referrer);
+				var url=decodeURIComponent(getUrlParam('tourl')); 
+				if(url==""&&referrer.indexOf('userinfo-login.html')==-1)url=referrer;
+				if(url=="")url="/";
+				locationHref(url);
+			}
+		}
+	});
+}
+(function(){
+	$("#reset").click();
+	if(window.name!=''){
+		maxtime = window.name;
+	}
+	timer = setInterval("countDown()",1000);
+	$("#mobile,#password,#confirmpassword,#phoneCode").hide(); 
+
+})();
+</script>
+<p class="hide">
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F27a6edda23c8cced290e66d76fc16a71' type='text/javascript'%3E%3C/script%3E"));
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-55764976-1', 'auto');ga('send', 'pageview');
+</script>
+</p>
+</body>
+</html>

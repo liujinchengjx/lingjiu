@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统-客户账本</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+    var params={
+                title :'客户列表',
+				text:"cname",
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+     };
+	$(function() {	
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("useraccount");
+		var userAccountId=getIframeParm("userAccountId");
+		if (userAccountId !=""){ //编辑状态
+		     var url="finance/UserAccount/0/get?userAccountId="+userAccountId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					$("#useraccount").initializeInput({"vo":json.entity}); //初始化
+					$("#customerId").attr("disabled", "disabled"); 											
+				}			
+			 });
+ 		 }else{
+			$("#useraccount").initializeInput(); //初始化								
+			$("#customerId").initGridDropList(params);
+		 } 
+		 $('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"button1" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveUserAccount
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        }); 
+	});
+	
+	function saveUserAccount(){	
+		if(validateForm("useraccount")==false)return false;  
+		var url = $("#id").val()=="" ? "finance/UserAccount/0/add": "finance/UserAccount/0/edit";
+		var vo=	$("#useraccount").getVo(); 
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			   $('#userGrid').omGrid('reload');
+			}
+		 });    	            
+	}	
+	
+	function viewUserAccount(){
+	}
+	</script>
+</head>
+<body class="dfbody">			
+<div id="search-panel"></div>
+
+<div id="nav_useraccount" title="新增客户账户">
+	<form id="useraccount">	
+	<input id="id" name="ua.id" type="hidden" />
+	<input id="createTime" name="ua.createTime" type="hidden" />
+	<input id="lastModifyTime" name="ua.lastModifyTime" type="hidden" />
+		<input id="createTime" name="ua.createTime" type="hidden" />
+	<table class="edit-table" >		
+		<tr>
+			<td class="label">客户：</td>
+			<td class="field">
+			<input id="customerId" name="ua.customerId" showtext="ua.customerName" validate="rules:['required']" /></td>
+			<td class="label">币种：</td>
+			<td class="field">
+			<input id="currency" name="ua.currency" validate="rules:['required']" pattern='combo' editable='false' 
+			remote='Currency'/></td>
+		</tr>
+		<tr>
+			<td class="label">余额：</td>
+			<td class="field"><input id="balance" name="ua.balance" /></td>
+			<td class="label"></td>
+			<td class="field"></td>
+		</tr>			
+	</table>
+	</form>	
+</div>
+<div id="buttonbar"></div>
+</body>
+</html>

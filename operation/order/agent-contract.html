@@ -1,0 +1,199 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>后台管理系统---代理进口合同</title>
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+	<style type="text/css">
+	  html, body{width: 100%; height: 100%; 
+	      padding: 0; margin: 0;font-family:"宋体", "";
+	  }
+	  td{font-size: 12px;color: #000000;text-decoration: none;line-height: 18px;td-layout:fixed;word-break:break-all;}
+	  .listContent{
+		       background-color: #FFFFFF;
+		       border-collapse:collapse;
+			   font-family: verdana, helvetica, arial, sans-serif;
+			   font-size: 12px;
+			   border: #000000 1px solid;
+	  }
+	  .listContent td{background-color: #ffffff;border:1px solid #000000;;height:23px;padding:1px 0px 0px 5px}
+	  .tempTable{
+	     border-collapse:collapse;
+		 border:none;
+		 mso-border-alt:solid black .75pt;
+		 mso-yfti-tbllook:31;
+		 mso-padding-alt:0cm 5.4pt 0cm 5.4pt;
+		 mso-border-insideh:.75pt solid black;
+		 mso-border-insidev:.75pt solid black;
+	  }
+    </style>
+	<script type="text/javascript">
+	$(function() {
+	    var customFormId=getQueryString("customFormId");
+		if (customFormId !=""){
+		     var url="customs/CustomForm/0/agentContract?customFormId="+customFormId;
+		  	 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   var val=json.entity.items;
+				   var html="";
+				   var totalAmt=0.0,amt=0.0,totalQty=0;
+				   for(var i=0;i<val.length;i++){
+				      var it=val[i];
+				      amt=it.qty.mul(it.price);
+					  amt=amt.toFixed(2);
+					  totalAmt=totalAmt.add(amt);
+					  totalQty=totalQty.add(it.qty);
+					  html=html+"<tr height='16'>";
+					  html=html+"<td colspan='1' valign='center' align='center' style='border:solid black 1.0pt;width:30;'>";
+					  html=html+"<span style='font-size:10pt;font-family:宋体;'>"+it.cartonNo+"</span></td>";
+					  
+					  html=html+"<td colspan='1' valign='top' align='left' style='border:solid windowtext 1.0pt;width:150;'>";
+					  html=html+"<span style='font-size:10pt;font-family:宋体;'>"+it.productName+"</span></td>";
+					  
+					  html=html+"<td colspan='1' valign='top' align='left'"; 
+					  html=html+" style='border:solid windowtext 1.0pt;word-wrap: break-word;word-break:break-all;width:210;'>";
+					  html=html+" <span style='font-size:10pt;font-family:宋体;'> "+it.pn+"</span></td>";
+					  
+					  html=html+"<td colspan='1' valign='top' align='right' style='border:solid windowtext 1.0pt;width:100;'>";
+					  html=html+" <span style='font-size:10pt;font-family:宋体;'>"+toThousands(parseFloat(it.qty).toFixed(2));
+					  html=html+" </span></td>";
+					  
+					  html=html+"<td colspan='1' valign='top' align='right' style='border:solid windowtext 1.0pt;width: 130;'>"; 
+					  html=html+"<span style='font-size:10pt;font-family:宋体;'>"+it.price+"</span></td>";
+					  
+					  html=html+"<td colspan='1' valign='top' align='right' style='border:solid windowtext 1.0pt;width:120;'>"; 
+					  html=html+"<span style='font-size:10pt;font-family:宋体;'>"+amt+"<br></span></td>";
+					  
+					  html=html+"<td colspan='1' valign='top' align='center' style='border:solid windowtext 1.0pt;width:80;'>"; 
+					  html=html+"<span style='font-size:10pt;font-family:宋体;'>";
+					  html=html+""+Dictionary.getDictName(Dictionary.Currency,it.currency)+"<br></span></td>";					  
+					  
+					  html=html+"<td colspan='1' valign='top' align='center' style='border:solid windowtext 1.0pt;width:80;'>"; 
+					  html=html+"<span style='font-size:10pt;font-family:宋体;'>"+it.remark+"</span></td>";	
+					  html=html+"</tr>";
+					}
+					$("#tbItems").append(html);
+					json.entity["totalAmt"]=toThousands(totalAmt.toFixed(2));
+					json.entity["totalQty"]=toThousands(totalQty.toFixed(2));
+					$("#customorder").initializeInput({"vo":json.entity}); //初始化	
+				}			
+			 });
+ 		 }
+	});	
+</script>
+</head>
+<body style="tab-interval:21.0pt;text-justify-trim:punctuation;width:95%;" >
+<div id="customorder" style="width:98%;text-align:left;padding-top:20px; padding-left:20px;">
+<center>
+    <table align="center" border="1" cellspacing="0" cellpadding="0" width="98%" class="tempTable"> 
+      <tbody>
+        <tr style="mso-yfti-irow:0;mso-yfti-firstrow:yes;height:18pt">
+          <td colspan="14" valign="top" style="border:solid black 0pt;">
+		  	<p align="center"><span style="font-size:16.5pt;mso-bidi-font-size:13.0pt;font-family:黑体;mso-ascii-font-family:&quot;Times New Roman&quot;;mso-hansi-font-family:宋体;mso-bidi-font-family:宋体;mso-font-kerning:0pt;mso-bidi-font-weight:bold">代理进口合同</span>
+			</p>
+            
+		   </td>
+        </tr>
+        
+        <tr style="mso-yfti-irow:0;mso-yfti-firstrow:yes;height:18pt">
+          <td colspan="8" valign="top" style="border:solid black 0pt;">
+		  	<p style="margin-bottom:-10px;">委托方：<span name="buyerCompany"></span></p>
+            <p style="padding-bottom:10px;">电话：<span name="buyerTel"></span>&nbsp;&nbsp;传真：<span name="buyerFax"></span></p>
+            
+            <p style="margin-bottom:-10px;">代理方：<span name="sellerCompany"></span></p>
+            <p>电话：<span name="sellerTel"></span>&nbsp;&nbsp;传真：<span name="sellerFax"></span></p>
+		   </td>
+           <td colspan="6" valign="top" style="border:solid black 0pt;">
+		  	<p style="margin-bottom:-10px;">合同编号：<span name="contractNo"></span></p>
+            <p style="margin-bottom:-10px;">签定日期：<span name="contractDate"></span></p>
+            <p style="margin-bottom:10px;">签定地点：<span name="contractAddress"></span></p>
+			<p style="margin-bottom:10px;">客户号码：<span name="refNo" style=" width:220px;word-break:break-all;display:block;"></span></p>
+		   </td>
+        </tr>
+        <tr style="mso-yfti-irow:0;mso-yfti-firstrow:yes;height:18pt">
+           <td colspan="14" valign="top" style="border:solid black 0pt;">
+            <p style="margin-bottom:-10px;">
+            	兹经委托方和代理方双方同意由代理方代理进口如下货物，并按下列条款签订本合同。 
+            </p>
+            <p>
+                一、产品名称、商标、型号、数量、金额
+            </p>
+		   </td>
+        </tr>
+    </tbody>
+	</table>
+	<table align="center" border="1" cellspacing="0" cellpadding="0" width="98%" class="tempTable"> 
+	  <tbody>    
+        <tr style="height:16pt">
+          <td colspan="1" align="center" style="border:solid black 1.0pt;"><span style="font-size:10pt;">序号</span></td>
+          <td colspan="1" align="center" style="border:solid black 1.0pt;"><span style="font-size:10pt;" >品名</span></td>
+          <td colspan="1" style="border:solid black 1.0pt;"><span style="font-size:10pt;">规格型号</span></td>
+          <td colspan="1" align="center" style="border:solid black 1.0pt;"><span style="font-size:10pt;">数量</span></td>
+          <td colspan="1" align="center" style="border:solid black 1.0pt;"><span style="font-size:10pt;">单价</span></td>
+          <td colspan="1" align="center" style="border:solid black 1.0pt;"><span style="font-size:10pt;">总价</span></td>
+		  <td colspan="1" align="center" style="border:solid black 1.0pt;"><span style="font-size:10pt;">币种</span></td>
+          <td colspan="1" style="border:solid black 1.0pt;"><span style="font-size:10pt;">备注</span></td>
+        </tr>
+      </tbody>
+      <tbody id="tbItems" style="text-align:center">        
+      </tbody>
+      <tbody>
+        <tr style="mso-yfti-irow:14;hei ght:116.7pt">
+          <td colspan='1' align="center" style="border:solid black 1.0pt;"><span style="font-size:10pt;"></span></td>
+          <td colspan='1' align="center" style="border:solid black 1.0pt;"><span style="font-size:10pt;" >Total Amount</span></td>
+          <td colspan="1" style="border:solid black 1.0pt;"><span style="font-size:10pt;"></span></td>
+          <td colspan="1" align="right" style="border:solid black 1.0pt;"><span name="totalQty"></span></td>
+          <td colspan="1" align="right" style="border:solid black 1.0pt;"><span style="font-size:10pt;"></span></td>
+          <td colspan="1" align="right" style="border:solid black 1.0pt;"><span name="totalAmt"></span></td>
+          <td colspan="2" align="center" style="border:solid black 1.0pt;"></td> 
+        </tr>
+	  </tbody>
+	</table>
+	<table align="center" border="1" cellspacing="0" cellpadding="0" width="98%" class="tempTable"> 
+	   <tbody>
+        <tr style="mso-yfti-irow:0;mso-yfti-firstrow:yes;height:18pt">
+           <td colspan="14" valign="top" style="border:solid black 0pt;">
+            <p style="margin-bottom:-10px;margin-top:30px;">二、质量要求技术标准：原厂质量标准。</p>
+            <p style="margin-bottom:-10px;">三、包装标准：保持原厂/供货商的包装完整(海关或/和检验检疫查货除外)。</p>
+            <p style="margin-bottom:-10px;">四、资料提供：委托方或其供应商送货前需提供送货INVOICE及PACKING给代理方，并保证所提供的资料与实物相符。如有不符，由此产生的责任由委托方负责</p>
+            <p style="margin-bottom:-10px;">五、付款方式：预付货款</p>
+            <p style="margin-bottom:-10px;">六、运输方式：国内运输方式由代理方指定，费用由代理方承担，交委托方指定地点。</p>
+            <p style="margin-bottom:-10px;">七、票据：代理方确保货物均正当，提供海关进口增值税专用缴款书和服务费发票，同时保证其真实性。</p>
+            <p style="margin-bottom:-10px;">八、责任及其它条款：详见双方签订的进口代理协议。</p>
+            <p style="margin-bottom:-10px;">九、合同纠纷的解决方式：协商解决；协商不能解决，送交人民法院诉讼解决。</p>
+            <p style="margin-bottom:-10px;">十、本合同一式两份，双方各执一份，自协议签订之日起生效(传真件有效)。</p>
+            <p style="margin-bottom:-10px;">十一、其他约定事项：</p>
+		   </td>
+        </tr>
+        <tr style="mso-yfti-irow:0;mso-yfti-firstrow:yes;height:18pt">
+          <td colspan="6" valign="top" style="border:solid black 0pt;padding-left:20px;">
+          	<br />
+		  	<p style="margin-bottom:-10px;">委托方：</p>
+            <p style="margin-bottom:-10px;">单位名称：<span name="buyerCompany"></span></p>
+            <p style="margin-bottom:-10px;">地址：<span name="buyerAddress"></span></p>
+            <p>委托代理人：<span name="buyerLegalName"></span></p>
+		   </td>
+           <td colspan="8" valign="top" style="border:solid black 0pt;">
+           <br />
+		  	<p style="margin-bottom:-10px;">代理方：</p>
+            <p style="margin-bottom:-10px;">单位名称：<span name="sellerCompany"></span></p>
+            <p style="margin-bottom:-10px;">地址：<span name="sellerAddress"></span></p>
+            <p>委托代理人：<span name="sellerLegalName"></span></p>          
+		   </td>
+        </tr>
+      </tbody>
+    </table>
+</center>
+</div>
+</body>
+</html>

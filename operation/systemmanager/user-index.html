@@ -1,0 +1,275 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">	
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-grid-sort.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var roles=[],roledialog={};
+	$(function() {
+	    $("#search-panel").omPanel({title : "搜索",collapsible:true});
+		initValidateForm("user");
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+					 searchData();
+			   }
+		});	
+		roledialog=$("#nav_assignRoles").omDialog({autoOpen:false,draggable:false,resizable:false,height:480,width:700,modal:true,
+			buttons: [{
+                text : "确定", 
+                click : saveRoles
+            }, {
+                text : "取消", 
+                click : function () {                   
+                    roledialog.omDialog("close");
+                }
+            }]
+		});
+		$('#buttonbar').initToolBar();
+		
+		$('#usergrid').omGrid({
+				limit:15,
+				autoFit:true,
+                title : '用户(会员)列表',
+                dataSource :"systemmanager/User/0/searchUser",
+                colModel : [
+                             {header : '登录账户（会员编码）', name : 'userName', width : 100, align : 'left'}, 
+							 {header : '性别', name : 'sex', width : 30, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.Sex,colValue);
+								}
+							 }, 
+							 {header : '用户类型', name : 'userType', width : 100, align : 'left',
+							     renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.UserType,colValue);
+								}
+							 }, 
+ 							 {header : '联系电话', name : 'tel', width : 120, align : 'left'},
+  							 {header : '英文名', name : 'ename', width : 80, align : 'left'}, 
+							 {header : '真实姓名', name : 'realName', width : 80, align : 'left'},
+							 {header : '激活', name : 'flag', width : 50, align : 'left',
+							      renderer : function(colValue, rowData, rowIndex) {
+									 return Dictionary.getDictName(Dictionary.IsValid,colValue);
+								 }
+							 }, 
+							 {header : '邮箱', name : 'email', width : 100, align : 'left'},
+							 {header : '创建时间', name : 'createTime', width : 100, align : 'left'},							 
+                             {header : '描述', name : 'remark', align : 'left', width : 'autoExpand'} ],
+				onRowClick:function(rowIndex,rowData,event){
+				    if (rowData.flag==0){
+					     $('#btn13').omButton('enable');
+						 $('#btn13').omButton('changeLabel','关闭');
+					 }else if(rowData.flag==1){
+						 $('#btn13').omButton('enable');
+					     $('#btn13').omButton('changeLabel','激活');
+					 }
+     			}
+            });	
+			
+			$('#rolegrid').omGrid({
+				autoFit:true,
+				height:300,
+				limit:0,
+				title : '角色列表',
+				singleSelect : false,
+                dataSource :"systemmanager/Role/0/searchRole",
+                colModel : [  
+                             {header : '角色名称', name : 'roleName', width : 120, align : 'left'},
+                             {header : '描述', name : 'description', align : 'left', width :300}
+						  ],				
+				onRefresh : function(nowpage, records){//还原过去选中的记录				    
+					var len = roles.length;					
+					var indexs = [];
+					currUserInRole=[];
+					for(var i=0; i<len; i++){
+					   $.each(records, function(n,item){
+						   if(item.id == roles[i].roleId){
+								indexs.push(n);
+								currUserInRole.push(item.id);
+						   }
+					   });
+					}							
+					$('#rolegrid').omGrid("setSelections", indexs);
+				}			
+            });
+		
+	});
+	function searchData(){
+	     var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#usergrid').omGrid('setData',"systemmanager/User/0/searchUser?"+params);
+	}
+	function addUser(){ //添加
+	    var paras={tabId:"addUser001"}; 
+ 	    addNewTab("新加用户","/systemmanager/user-edit.html",paras,function(){
+		    $('#usergrid').omGrid('reload');//刷新grid
+	   });
+	}
+	function editUser(){
+	    var rowDatas = $('#usergrid').omGrid('getSelections',true);
+		if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',content : '请选择记录行！'});
+			 return;
+		}	
+		var paras={userId:rowDatas[0].id,tabId:"editUser001"}; //tabId用方法名加001命名而成，这样就不会重复
+ 	    addNewTab("编辑用户","/systemmanager/user-edit.html",paras,function(){
+		      $('#usergrid').omGrid('reload');//刷新grid
+	    });       	     
+	}
+		
+	function activeUser(){ //激活用户
+	   var rowDatas = $('#usergrid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+            $.omMessageTip.show({title : '提示',content : '请选择行！'});
+            return;
+      	}
+	   var url="systemmanager/User/0/active?userId="+rowDatas[0].id+"&flag="+(rowDatas[0].flag==0 ? 1:0);
+	   $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			$('#usergrid').omGrid('reload');//刷新grid
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+	   	 }
+	   });     	     
+	}
+	function assignRoles(){ //分配角色
+	   var selectedRecords = $('#usergrid').omGrid('getSelections',true);
+	   if (selectedRecords.length>0){
+       		roledialog.omDialog({title : "给用户【"+selectedRecords[0].userName+"】 分配角色"});
+			userId=	selectedRecords[0].id; 
+			var url="systemmanager/UserInRole/0/getRoles?userId="+userId;	
+			$.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				roles=json.rows;
+				$('#rolegrid').omGrid('refresh');	
+			  }
+			});	
+	   		roledialog.omDialog("open");//显示userdialog
+	   }else{
+	       $.omMessageTip.show({title : '提示',content : '请选择用户！'});
+	   }
+	}
+	
+	function saveRoles(){ //提交角色
+	     var selectedRecords = $('#rolegrid').omGrid('getSelections',true);
+		 selectedRecords=getSelectedRoleIdArr(selectedRecords);
+		 var rows=[];
+		 if(selectedRecords.length>0){
+			 for (var i=0;i<selectedRecords.length;i++){
+ 			     if (currUserInRole.in_array(selectedRecords[i])==false){
+					  var uRole={};
+					  uRole["userId"]=userId;
+					  uRole["roleId"]=selectedRecords[i];
+					  uRole["flag"]=2; //添加
+					  rows.push(uRole);
+				  }
+			  }	
+			  for (var i=0;i<currUserInRole.length;i++){
+ 			     if (selectedRecords.in_array(currUserInRole[i])==false){
+					  var uRole={};
+					  uRole["userId"]=userId;
+					  uRole["roleId"]=currUserInRole[i];
+					  uRole["flag"]=3;//删除
+					  rows.push(uRole);
+				  }
+			  }	
+			  if (rows.length<=0)	return false;
+			  var uRolelist= JSON.stringify(rows); 
+			  var url="systemmanager/UserInRole/0/edit";
+			  $.ajaxPost({data:{"userInRoles":uRolelist,"userId":userId},url:url,msg:false,success:function(json,textStatus){	
+					$.each(rows, function(i, obj){
+						 if (obj.flag==2){
+							currUserInRole.push(obj.roleId);
+						 }else if (obj.flag==3){
+							$.each(currUserInRole, function(key, val) {   
+								if (val==obj.roleId)	 {
+									currUserInRole.remove(key); 
+								}
+							}); 
+						 }
+					});
+					$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});					  
+				}
+			  });	
+		  }else{
+		     $.omMessageTip.show({title : '提示',content : '请选择角色！'});
+		  }
+		roledialog.omDialog("close");
+	}
+	function assignPosition(){//分配职位
+	    var rowDatas = $('#usergrid').omGrid('getSelections',true);
+		if (rowDatas.length <= 0 ){
+			$.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			return;
+		}	
+		var paras={userId:rowDatas[0].id,positionCode:rowDatas[0].positionCode,tabId:"assignPosition001"}; 
+ 	    addNewTab("分配职位","/systemmanager/assign-user-position.html",paras,function(){
+		   $('#usergrid').omGrid('reload');//刷新grid
+	    });     	     	 
+	}
+	function getSelectedRoleIdArr(selectedData){
+	    var tempArr=[];
+		for(var i=0;i<selectedData.length;i++){ //这个循环是检测新增的权限
+		   tempArr.push(selectedData[i].id);			  
+		}
+	    return tempArr;
+	}
+	function resetPwd(){ //重置密码
+	   var rowDatas = $('#usergrid').omGrid('getSelections',true);
+	   if(rowDatas.length <= 0 ){
+            $.omMessageTip.show({title : '提示',content : '请选择行！'});
+            return;
+       }
+	   var url="systemmanager/User/0/resetPwd?userId="+rowDatas[0].id;
+	   $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+	   	 }
+	   });     	   
+	}
+	function viewUser(){
+	   
+	}
+	</script>	
+</head>
+<body class="dfbody">
+	<div id="search-panel">
+	 <table class="edit-panel">		
+		<tr>  
+			<td>关键字：</td>		     	
+			<td><input type="text" id="searchValue" name="searchValue" /></td>
+			<td>用户类型：</td>	
+			<td><input type="text" id="userType" name="userType" pattern='combo' editable='false' width="100" remote="UserType" /></td>
+			<td>是否有效：</td>
+			<td ><input id="flag" name="flag"  pattern='combo' editable='false' width="100" remote="YesNot" /></td>
+			<td ><span id="button-search">搜索</span></td>						
+		</tr>	
+	 </table> 	 
+	</div>			
+	<div id="nav_assignRoles" title="给用户分配角色" style="display:none;">
+		<div id="rolegrid"></div>
+	</div>
+	<div id="buttonbar"></div>	
+	<div id="usergrid"></div>
+</body>
+</html>

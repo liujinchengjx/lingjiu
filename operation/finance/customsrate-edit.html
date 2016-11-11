@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">	
+	$(function() {	
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("customsrate");
+		var customsRateId=getIframeParm("customsRateId");
+		if (customsRateId !=""){ //编辑状态
+		     var url="finance/CustomsRate/0/get?customsRateId="+customsRateId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				  $("#customsrate").initializeInput({"vo":json.entity}); //初始化
+			  }			
+			 });
+ 		 }else{
+			$("#customsrate").initializeInput(); //初始化								
+			
+		 }
+		
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveCustomsRate
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });
+	});
+	
+	function saveCustomsRate(){	 
+	    if(validateForm("customsrate")==false)return false;
+		var url = $("#id").val()=="" ? "finance/CustomsRate/0/add" : "finance/CustomsRate/0/edit";
+		var vo=$("#customsrate").getVo();
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			}
+		 });
+	
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>
+<div id="nav_customsrate" title="新增汇率">
+	<form id="customsrate">	
+	<input id="id" name="cr.id" type="hidden" />
+	<input id="lastModifyTime" name="cr.lastModifyTime" type="hidden" />
+	<input id="createTime" name="cr.createTime" type="hidden" />
+	<input id="createBy" name="cr.createBy" type="hidden" />
+	<input id="lastModifyBy" name="cr.lastModifyBy" type="hidden" />
+	<table class="edit-table">		
+		<tr>
+			<td class="label">币种：</td>
+			<td class="field"><input id="currency" name="cr.currency" validate="rules:['required']" pattern='combo' editable='false' remote='Currency'/></td>
+			<td class="label">海关中间汇率：</td>
+			<td class="field"><input id="rate" name="cr.rate" validate="rules:['required']" pattern='float'/></td>
+		</tr>
+		<tr>
+			<td class="label">时间：</td>
+			<td class="field"><input id="opDate" name="cr.opDate" pattern='datetime' validate="rules:['required']" editable='false'/></td>
+			<td class="label"></td>
+			<td class="field"></td>
+		</tr>
+	</table>
+	</form>	
+</div>
+<div id="buttonbar"></div>	
+</body>
+</html>

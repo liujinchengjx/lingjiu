@@ -1,0 +1,194 @@
+﻿﻿﻿﻿﻿<!DOCTYPE html>
+<html>
+<head>
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="${STATIC_PAGE_CSS_SERVER_URL!}/js/html5.js"></script>
+    <![endif]-->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <!--
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">-->
+    <meta name="keywords" content="深圳亲子活动,深圳亲子游,深圳早教,深圳儿童旅游,深圳手工DIY,深圳亲子乐园,深圳儿童公益" />
+    <meta name="description" content="益童行网站提供全深圳亲子游、幼儿户外活动、儿童旅游、幼儿手工DIY、儿童启蒙、儿童早教 、亲子乐园等活动。并为众多早教机构提供网络推广平台，为宝宝父母们提供了参加各种亲子活动的信息。报名参加亲子活动，益童行绝对是您的首选" />
+    <title>${activity.topicName}_深圳亲子活动_深圳亲子游_深圳亲子活动方案</title>
+    <link rel="stylesheet" type="text/css" href="${STATIC_PAGE_CSS_SERVER_URL!}/css/reset.css">
+    <script type="text/javascript" src="${STATIC_PAGE_CSS_SERVER_URL!}/js/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="${STATIC_PAGE_CSS_SERVER_URL!}/css/basic.css">
+    <link rel="stylesheet" type="text/css" href="${STATIC_PAGE_CSS_SERVER_URL!}/css/style.css">
+    <link rel="stylesheet" type="text/css" href="${STATIC_PAGE_CSS_SERVER_URL!}/css/pages.css">
+    <script type="text/javascript" src="${STATIC_PAGE_CSS_SERVER_URL!}/js/base.js"></script>
+    <script type="text/javascript" src="${STATIC_PAGE_CSS_SERVER_URL!}/js/main.js"></script>
+    <!--plugin-->
+    <style>
+
+    </style>
+    <script>
+        $(function () {
+            $('.tc_box').height(window.innerHeight);
+            $('.tc_box').width(window.innerWidth);
+			$('.tc_box').hide();
+        });
+        function showRegInfo(){
+        	$('.tc_box').show();
+        }
+        function closeRegInfo(){
+        	$('.tc_box').hide();
+        }
+    </script>
+</head>
+<body>
+    <!-------------------------------------- 头部开始 -------------------------------------->
+    <div class="header">
+        <div class="wrap">
+            <div class="header_logo">
+                <a href="#"><img src="${STATIC_PAGE_IMG_SERVER_URL!}/img/header_logo.png" /></a>
+            </div>
+            <img src="${STATIC_PAGE_IMG_SERVER_URL!}/img/header_bg.jpg" />
+        </div>
+    </div>
+    <!-------------------------------------- 头部结束 -------------------------------------->
+    <!-------------------------------------- 内容开始 -------------------------------------->
+    <div class="mainer">
+        <div class="wrap">
+            <div class="detail">
+                <p class="page_t_dqwz">当前位置：<a class="in" href="/">首页</a> > <a href="#">活动详情</a> > <a href="#">${activity.topicName}</a></p>
+                <div class="det_kk">
+                    <img src="${STATICS_FILESERVER_DOMAIN!}${activity.mainImgUrl?replace('_360_270','_480_360')}">
+                    <div class="ht35"></div>
+                    <p><span>${activity.topicName}</span></p>
+                    <div class="ht15"></div>
+                    <p>时间：${activity.activityDate?string('yyyy-MM-dd')}  ${activity.fromTime}-${activity.endTime}</p>
+                    <p>地点： ${activity.address}</p>
+                    <p><!-- <i>报名数： </i><i>剩余：20</i><i>-->报名限额： ${activity.limitCnt}</i></p>
+                    <div class="ht25"></div>
+                    <a href="javascript:void(0)" onclick="showRegInfo();">报 名 ></a><i>￥${activity.priceAdult/100}元/人</i>
+                </div>
+                <div class="det_tit">
+                    <ul>
+                        <li class="dq">活动详情</li>
+                        <li>活动现场</li>
+                        <li>温馨提示</li>
+                    </ul>
+                    <div class="clear"></div>
+                </div>
+                <div class="det_con">
+                    <div class="deta_tit">
+                        <span>活动详情</span>
+                    </div>
+                    <div class="deta_con">
+                        <div class="lit_tit">
+                            <span>集合地点</span>
+                        </div>
+                        <p>${activity.gatherPlace}</p>
+                        <div class="ht20"></div>
+                    </div>
+                    <div class="deta_con">
+                        <div class="lit_tit">
+                            <span>活动对象</span>
+                        </div>
+                        <p>${activity.activityCrowd}</p>
+                        <div class="ht20"></div>
+                    </div>
+                    <div class="deta_con">
+                        <div class="lit_tit">
+                            <span>活动流程</span>
+                        </div>
+                        <p>${activity.activityFlow}</p>
+                        <div class="ht40"></div>
+                    </div>
+                </div>
+                <div class="det_con">
+                    <div class="deta_tit">
+                        <span>温馨提示</span>
+                    </div>
+                    <div class="hot_hint">
+                    	<p>${activity.tips}</p>
+                    </div>
+                </div>
+                <div class="det_con">
+                    <div class="deta_tit">
+                        <span>活动现场</span>
+                    </div>
+                    <div class="det_img_li">
+                        <ul>
+                        <#if imglist??>
+                        <#list imglist as list>
+                            <li>
+                                <img src="${STATICS_FILESERVER_DOMAIN!}${list.imgPath}">
+                                <!--<p><a href="">洞庭湖抓鲨鱼</a><span><a href=""><img src="${STATIC_PAGE_IMG_SERVER_URL!}/img/ico_love.png"></a>567</span></p>-->
+                            </li>
+                        </#list>
+                        </#if>    
+                        </ul>
+                        <div class="clear"></div>
+                    </div>
+                    <!--
+                    <div class="ht50"></div>
+                    	<div class="det_mor">
+                        <p><a href="">加载更多图片</a></p>
+                    </div>
+                    <div class="ht50"></div>
+                    -->
+                </div>
+            </div>
+            <!--
+            <div class="ht100"></div>-->
+            <div class="ht60"></div>
+            
+        </div>
+    </div>
+    <!-------------------------------------- 内容结束 -------------------------------------->
+    <!-------------------------------------- 尾部开始 -------------------------------------->
+    <div class="footer">
+        
+        <div class="foot_main_m">
+            <div class="ht20"></div>
+            <div class="wrap">
+                <div class="wrap1">
+                    <ul>
+                        <li>
+                            <a class="foot_lxwm" href="#"><span><label>Conant us</label><br />联系我们</span></a>
+                        </li>
+                        <li>
+                            <a href="#"><img src="${STATIC_PAGE_IMG_SERVER_URL!}/img/ytx_gfq.png" /><span>益童行官方群<br />141510339</span></a>
+                        </li>
+                        <li>
+                            <a href="#"><img src="${STATIC_PAGE_IMG_SERVER_URL!}/img/ytx_gfyx.png" /><span>益童行官方邮箱<br />141510339</span></a>
+                        </li>
+                        <li class="foot_last_li">
+                            <a href="#"><span>益童行官方群<br />141510339</span></a>
+                        </li>
+                    </ul>
+                    <div class="clear"></div>
+                </div>
+            </div>
+        </div>
+        <div class="ht20"></div>
+    </div>
+    <!-------------------------------------- 尾部开始 -------------------------------------->
+
+    <!-------------------------------------- 弹窗开始 -------------------------------------->
+    <div class="tc_box">
+        <div class="tc_box_dw">
+            <div class="tc_bmfs">
+                <h2 class="tc_box_title"><a href="javascript:void(0)" onclick="closeRegInfo();">×</a>报名方式</h2>
+                <p>${activity.activityReg}</p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-------------------------------------- 弹窗结束 -------------------------------------->
+</body>
+</html>
+<style>
+
+</style>
+<script>
+    $(function () {
+
+    });
+</script>
+<!-- note
+
+-->

@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+     <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-ajaxsubmit.js"></script>	
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var tranParams={
+                title :'货运公司列表',
+				text:"cname",
+				onRowClick:tranCompanyValueChange,
+                dataSource : "business/TransportCompany/0/searchTranCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	var truckParams={
+                title :'货车列表',
+				text:"cname",
+				onRowClick:tranCompanyValueChange,
+                dataSource : "business/Truck/0/searchTruck?carno=",
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+    };
+	$(function() {	
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("entrucking");
+		$('#btnbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",id:"btnAdd", 
+				   icons : {left : '/images/icon/add.png'},
+				   onClick: saveEntrucking
+				  },
+				 {separtor:true},
+				 {label:"关闭",id:"btnClose", 
+				   icons : {left : '/images/icon/op-edit.png'},
+				   onClick: function(){
+				      closeCurrActivateTabs(1000);
+				   }
+				 }
+		   ]
+        }); 		
+	    var entruckingId=getIframeParm("entruckingId");	
+		if (entruckingId !=""){
+		     var url="customs/CustomFormEntrucking/0/get?entruckingId="+entruckingId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+				   $("#entrucking").initializeInput({"vo":json.entity}); //初始化
+				   $("#tranId").attr("disabled", "disabled"); 
+				   $("#truckId").attr("disabled", "disabled");
+				}			
+			 });
+ 		 }else{
+			$("#entrucking").initializeInput(); //初始化			
+			$("#tranId").initGridDropList(tranParams);
+			$("#truckId").initGridDropList(tranParams);
+		 }
+	});
+	function tranCompanyValueChange(data){
+	     var url1= "business/Truck/0/searchTruck?tranId="+data.id+"&carno=";
+		 var url2="business/Driver/0/list?outRows=true&tranId="+data.id;
+		 $("#truckId").setData(url1);
+		 $('#driverId').omCombo('setData',url2);
+	}
+	function saveEntrucking(){ //保存
+		if(validateForm("entrucking")==false)return false;
+		var vo=	$("#entrucking").getVo(); 
+		var url = $("#id").val()=="" ? "customs/CustomFormEntrucking/0/add" : "customs/CustomFormEntrucking/0/edit";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   $("#id").val(json.entity);
+			   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			}
+		 });
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>
+<div id="nav_entrucking" title="新增装车单">
+	  <form id="entrucking">	
+		<input id="id" name="cfe.id" type="hidden" />
+		<input id="status" name="cfe.status" type="hidden" />
+		<input type="hidden" id="truckBindId" name="cfe.truckBindId" />
+		<input type="hidden" id="lastModifyTime" name="cfe.lastModifyTime" />
+	 	<input type="hidden" id="createTime" name="cfe.createTime" />
+		<input type="hidden" id="lastModifyBy" name="cfe.lastModifyBy" />
+ 		<input type="hidden" id="createBy" name="cfe.createBy" />
+		<table class="edit-table">		
+			<tr>
+				<td class="label">档案编号(只读)：</td>
+				<td class="field"><input  id="entruckingNo" name="cfe.entruckingNo" disabled="" /></td>				
+				<td class="label">运输公司：</td>
+				<td class="field" ><input id="tranId" name="cfe.tranId" validate="rules:['required']" showtext="cfe.tranName" /></td>
+			</tr>
+			<tr>
+				<td class="label">运输车辆：</td>
+				<td class="field">
+				    <span id="truckId" name="cfe.truckNo" ></span>
+				</td>
+				<td class="label">司机：</td>
+				<td class="field" ><span id="driverId" name="cfe.driverName" ></span></td>				
+			</tr>
+			<tr>
+   			    <td class="label">六联单号：</td>
+				<td class="field" ><span id="blNo" name="cfe.truckBind.blNo" /></span></td>
+				<td class="label">报关时间：</td>
+				<td class="field" ><input id="customTime" name="cfe.customTime"  pattern='datetime' /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">上货仓库：</td>
+				<td class="field">
+				<input id="fromWh" name="cfe.fromWh" validate="rules:['required']"
+				pattern='combo' editable='false' remote='Warehouse' /></td>	
+   			    <td class="label">目的仓库：</td>
+				<td class="field" >
+				<input id="toWh" name="cfe.toWh" validate="rules:['required']"
+				pattern='combo' editable='false' remote='Warehouse' /></td>				
+			</tr>
+			<tr>
+   			    <td class="label">上货时间：</td>
+				<td class="field"><input id="deliverDate" name="cfe.deliverDate" pattern='datetime'  /></td>
+   			    <td class="label"></td>
+				<td class="field"></td>
+			</tr>
+			<tr>
+   			    <td class="label">备注：</td>
+				<td class="field" colspan="3"><textarea id="remark" name="cfe.remark" style="height:50px;" ></textarea></td>	
+			</tr>
+		</table>
+		</form>	
+</div>
+<div id="btnbar"></div>	
+</body>
+</html>

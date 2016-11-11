@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {	
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("foreignexchangepay");
+		var fpId=getIframeParm("fpId");
+		if (fpId !=""){ //编辑状态
+		     var url="finance/ForeignExchangePay/0/get?fpId="+fpId;
+			 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					$("#foreignexchangepay").initializeInput({"vo":json.entity}); //初始化
+					$("#currency").html(Dictionary.getDictName(Dictionary.Currencyjson.entity.payCurrency));
+					$("#customerId").attr("disabled", "disabled"); 
+				}			
+			 });
+ 		}		 
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: auditForeignExchangePay
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });
+	});
+	
+	function auditForeignExchangePay(){	 
+		if(validateForm("foreignexchangepay")==false)return false; 
+		var url = "finance/ForeignExchangePay/0/audit";
+		var vo=$("#foreignexchangepay").getVo();	
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){	
+		   $("#id").val(json.entity);
+		   $('#btnSave').omButton('disable');
+		   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+		  }
+		});  	            
+	}	
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>			
+<div id="nav_foreignexchangepay" title="付汇">
+	<form id="foreignexchangepay">	
+	<input id="id" name="fp.id" type="hidden" />
+	<input id="status" name="fp.status" type="hidden" />
+	<input id="actualPayAmt" name="fp.actualPayAmt" type="hidden" />
+	<input id="payCurrency" name="fp.payCurrency" type="hidden" />
+	<input id="lastModifyTime" name="fp.lastModifyTime" type="hidden" />
+	<input id="createTime" name="fp.createTime" type="hidden" />
+		<table class="edit-table">	
+		    <tr>
+			<td class="label">客户：</td>
+			<td class="field">
+			    <input id="customerId" name="fp.customerId" validate="rules:['required']" showtext="fp.customerName" />
+			</td>
+			<td class="label">实际付汇时间：</td>
+			<td class="field" >
+				<input id="payTime" name="fp.payTime" validate="rules:['required']" pattern="datetime" editable="true"/>
+			</td>
+		</tr>	
+			<tr>
+				<td class="label">支付币种：</td>
+				<td class="field">
+				   <span id="currency" name="currency" ></span>
+				</td>							
+				<td class="label">实际汇率：</td>
+				<td class="field">
+				   <input id="rate" name="fp.rate" validate="rules:['required']" pattern="float" />
+                </td>
+			</tr>
+		</table>
+	</form>	
+</div>
+<div id="buttonbar"></div>
+</body>
+</html>

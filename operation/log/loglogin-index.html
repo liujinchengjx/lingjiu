@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tabs.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-tree.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-scrollbar.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-dialog.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-borderlayout.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-fileupload.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-scrollbar.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-ajaxsubmit.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-validate.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null;
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+				     var postData = {searchValue:$('#searchValue').val()};
+					 $('#grid').omGrid({extraData:postData});
+					 $('#grid').omGrid('setData',"log/LogLogin/0/searchLogLogin");
+			   }
+		});		
+	
+		
+		$('#grid').omGrid({
+				autoFit:true,
+				height:560,
+				limit:20,
+				autoFit:true,
+                title : '登录日志',
+                colModel : [
+							 {header : '企业名称', name : 'companyName', width : 80, align : 'left'},	
+                             {header : '用户名', name : 'userName', width : 40, align : 'left'},	
+							 {header : '电话号码', name : 'mobile', width : 40, align : 'left'},	
+							 {header : '登录IP', name : 'loginIp', width : 40, align : 'left'},
+							 {header : '登录时间', name : 'loginTime', width : 45, align : 'left'},
+							 {header : '浏览器', name : 'loginBrowser', width : 160, align : 'left'}
+ 							],
+				rowDetailsProvider:function(rowData,rowIndex){
+                		return '';								
+	            }
+           });
+		    $('span#button-search').click();
+	});
+
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+ 	 <span><input type="text" class="input-text" id="searchValue" /><span id="button-search">搜索</span></span>	
+</div>			
+	<div id="buttonbar"></div>	
+	<div id="grid"></div>
+</body>
+</html>

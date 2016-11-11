@@ -1,0 +1,244 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统---装车单</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+     <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>	
+	<script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>	
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var cartonNos = 0,indexNum = 0,cartonNo=0,cartonNo1=0;
+	$(function() {
+	    var entruckingId=getQueryString("id");
+		var cfOrderIds=getQueryString("cfOrderIds");
+		 var url="customs/CustomFormEntrucking/0/outEntrucking";
+		 var vo={entruckingId:entruckingId,cfOrderIds:cfOrderIds};
+		 $.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			   json.entity.fromWh=Dictionary.getDictName(Dictionary.Warehouse,json.entity.fromWh);
+			   $("#itemHeader").initializeInput({"vo":json.entity}); //初始化
+			   var vcTb=$("#contact");
+			   for(var i=0;i<json.entity.ordersList.length;i++){
+				  var order =json.entity.ordersList[i];
+				  var html="<table class='listContent' style='border-collapse: collapse; table-layout: fixed;width: 760pt'><tbody>";
+				  html=html+"<tr><td class='clsInvoice' height='20' align='left' colspan='10' nowrap='nowrap'>";
+				  html=html+"<b>原合同号:</b>"+order.orgContractNo+"&nbsp;&nbsp;&nbsp;";
+				  html=html+"<b>拆单合同号:</b>"+order.tearContractNo+"&nbsp;&nbsp;&nbsp;";
+				  html=html+"<b>报关单号:</b>"+order.customOrderNo+"&nbsp;&nbsp;&nbsp;";
+				  html=html+"<b>客户:</b>"+order.customerName+"&nbsp;&nbsp;&nbsp;<br>";
+				  html=html+"<b>RefNo.:</b> "+order.refNo+"&nbsp;&nbsp;&nbsp; </td></tr>";
+				  
+				  html=html+"<col style='mso-width-source: userset; mso-width-alt: 3360; width: 20pt'>";
+				  html=html+"<col style='mso-width-source: userset; mso-width-alt: 3360; width: 60pt'>";
+				  html=html+"<col style='mso-width-source: userset; mso-width-alt: 3360; width: 20pt'>";
+				  html=html+"<col style='mso-width-source: userset; mso-width-alt: 3360; width: 40pt'>";
+				  html=html+"<col style='mso-width-source: userset; mso-width-alt: 3360; width: 60pt'>";
+				  html=html+"<col style='mso-width-source: userset; mso-width-alt: 3360; width: 30pt'>";
+				  html=html+"<col style='mso-width-source: userset; mso-width-alt: 3360; width: 30pt'>";
+				  html=html+"<col style='mso-width-source: userset; mso-width-alt: 3360; width: 30pt'>";
+				  html=html+"<col style='mso-width-source: userset; mso-width-alt: 3360; width: 30pt'>";
+				  html=html+"<col style='mso-width-source: userset; mso-width-alt: 3360; width: 20pt'>";
+				  
+				  html=html+"<tr><td class='clsInvoice' height='20' align='center' ><b>Carton</b></td>";
+				  html=html+"<td class='clsInvoice' height='20' align='center' ><b>gsin/out</b></td>";
+				  html=html+"<td class='clsInvoice' height='20' align='center' ><b>location</b></td>";
+				  html=html+"<td class='clsInvoiceRBT' height='20' align='center' ><b>Desc</b></td>";
+				  html=html+"<td class='clsInvoiceRBT' height='20' align='center' ><b>P/N</b></td>";
+				  html=html+"<td class='clsInvoiceRBT' height='20' align='center' ";
+				  html=html+"  style='font-weight: bold;'><b>Qty</b></td>";
+				  html=html+"<td class='clsInvoiceRBT' height='20' align='center' ><b><b>NW<br>KGS</b></td>";
+				  html=html+"<td class='clsInvoiceRBT' height='20' align='center' ><b><b>GW<br>KGS</b></td>";
+				  html=html+"<td class='clsInvoiceRBT' height='20' align='center' ><b><b>Brand</b></td>";
+				  html=html+"<td class='clsInvoiceRBT' height='20' align='center' ><b><b>Origin</b></td></tr>";
+				  var cartonNos=resetCarton(order.cartons);
+				  var totalQty=0,totalGw=0.0,totalNw=0.0;
+				  for(var j=0;j<cartonNos.length;j++){
+					  var carton=cartonNos[j];
+					  var cfdList=carton.customFormDetails;
+					  cartonNo = carton.cartonNo;
+					  for(var k=0;k<cfdList.length;k++){
+						  var cfd=cfdList[k];
+						  if(cfdList.length==1){//如果只有一条数据
+							 carton = getCarton(cartonNos,j,cartonNo);
+							 j=carton.index;
+							 cartonNo=carton.cartonNo;
+							 cfd=carton.customFormDetails[0];
+						  }
+						  if(carton.virtualNo != null && carton.virtualNo != "" && carton.virtualNo != undefined ){
+						  	html=html+"<tr><td height='20' align='left'>"+(k==0?cartonNo+"<label style=\"color: red;\">("+carton.virtualNo+")</label>":"")+"</td>";
+						  } else{
+						 	html=html+"<tr><td height='20' align='left'>"+(k==0?cartonNo:"")+"</td>";
+						  }						  
+						  html=html+"<td height='20' align='left'>"+(k==0?carton.stockInNo:"")+"</td>";
+						  html=html+"<td height='20' align='left'>"+(k==0?carton.slno:"")+"</td>";
+						  html=html+"<td height='20' align='left'>"+cfd.product.productName+"</td>";
+						  html=html+"<td height='20' align='left'>"+cfd.product.pn+"</td>";
+						  html=html+"<td height='20' align='right'>"+toThousands(cfd.qty)+"</td>";
+						  html=html+"<td height='20' align='right'>"+(k==0?carton.nw.toFixed(3):"");
+						  html=html+"</td>";
+						  html=html+"<td height='20' align='right'>"+(k==0?carton.gw.toFixed(3):"");
+						  html=html+"</td>";
+						  html=html+"<td height='20' align='center'>"+cfd.product.brand+"</td>";
+						  html=html+"<td height='20' align='center'>"+cfd.product.origin+"</td></tr>";
+						  totalQty=totalQty.add(cfd.qty);
+						  if (k==0){
+						     totalGw=totalGw+carton.gw;
+							 totalNw=totalNw+carton.nw;
+						  }
+					  }
+				  }		
+				  html=html+"<tr><td class='clsInvoice' height='20' align='center' colspan='5'>total:</td>";
+				  html=html+"<td class='clsInvoiceRBT' height='20' align='right' ' ><span>"+toThousands(totalQty)+"</span></td>";
+				  html=html+"<td class='clsInvoiceRBT' height='20' align='right' '><span>"+totalNw.toFixed(2)+"</span></td>";
+				  html=html+"<td class='clsInvoiceRBT' height='20' align='right' '><span>"+totalGw.toFixed(2)+"</span></td>";
+				  html=html+"<td class='clsInvoiceRBT' height='20' align='center' ' colspan='2'></td></tr>";
+				  
+				  html=html+"</tbody></table><br />";
+				  vcTb.append(html);	
+			   }					
+			}			
+		 });
+	});	
+	
+	function getCarton(cartonList,index,cartonNo){
+	    var carton=cartonList[index];
+		carton["index"]=index;
+		var cfd=carton.customFormDetails[0];
+		var qty=cfd.qty;
+		var cartons=0;
+		for(var i=index+1;i<cartonList.length;i++){
+		    var tempCoc=cartonList[i];
+			var tempCod=tempCoc.customFormDetails[0];
+            if ((tempCoc.customFormDetails.length>1) || (cfd.product.id!=tempCod.product.id) || (qty!=tempCod.qty) ){
+			    break;
+			}
+			if (tempCoc.customFormDetails.length==1 && (carton.stockInNo == tempCoc.stockInNo)){
+			   carton.nw=carton.nw.add(tempCoc.nw);
+			   carton.gw=carton.gw.add(tempCoc.gw);    
+			   carton.customFormDetails[0].qty=carton.customFormDetails[0].qty.add(tempCod.qty);
+			   cartons++;
+			}
+		}
+		if (cartons>0){
+		   carton["cartonNo"]=cartonNo+"~"+(cartonNo+cartons);
+		   carton["index"]=index+cartons;
+		}
+		return carton;
+	}
+	function resetCarton(cartonList){
+	   for(var i=0;i<cartonList.length;i++){
+	      var carton=cartonList[i];
+		  carton.cartonNo=i+1;
+		  cartonList[i]=carton;
+	   }
+	   return cartonList;
+	}
+	</script>
+</head>
+<body style="font-size: 12px;margin-top: 0px;margin-left: 0px;margin-right: 0px;line-height: 18px;margin: 0px;">	
+<div style="width:760pt;text-align:center;padding-top:10px; padding-left:20px;">
+<form id="entrucking" style="margin:0;width:760pt;">
+	<fieldset >
+	<legend>装车备货单</legend>
+	<table id="itemHeader" class="listContent" style='border-collapse: collapse; table-layout: fixed;width: 760pt'>
+	    <tbody>
+	    	<col style='mso-width-source: userset; mso-width-alt: 3360; width: 50pt'>
+			<col style='mso-width-source: userset; mso-width-alt: 3360; width: 50pt'>
+			<col style='mso-width-source: userset; mso-width-alt: 3360; width: 50pt'>
+			<col style='mso-width-source: userset; mso-width-alt: 3360; width: 50pt'>
+		 <tr>
+			   <td style="text-align:left;">装货单编码:</td>
+			   <td style="text-align:left;"><span id="entruckingNo" name="entruckingNo"></span></td>
+			   <td style="text-align:left;">发货仓库:</td>
+			   <td style="text-align:left;" ><span id="fromWh" name="fromWh" ></span></td>
+		  </tr>
+		  <tr>
+				<td style="text-align:left;">上货时间:</td>
+				<td style="text-align:left;"><span  id="deliverDate" name="deliverDate" ></span></td>
+				<td style="text-align:left;">提运单号:</td>
+				<td style="text-align:left;"><span id="blNo" name="blNo" ></span></td>
+		  </tr>
+		  <tr>
+				<td style="text-align:left;">运货车辆:</td>
+				<td style="text-align:left;" ><span id="truckNo" name="truckNo" ></span></td>
+				<td style="text-align:left;">货运公司:</td>
+				<td style="text-align:left;"><span id="transCompanyName" name="transCompanyName"></span></td>
+		</tr>
+		<tr>
+			   <td style="text-align:left;">司机:</td>
+			   <td style="text-align:left;"><span id="driverName" name="driverName"></span></td>
+			   <td style="text-align:left;">联系方式:</td>
+			   <td style="text-align:left;"><span id="driverContact" name="driverContact"></span></td>
+		  </tr>
+		  <tr>
+				<td style="text-align:left;">海关编码:</td>
+				<td style="text-align:left;"><span id="customsCode" name="customsCode"></span></td>
+				<td style="text-align:left;">制单人:</td>
+				<td style="text-align:left;"><span id="oper" name="oper" ></span></td>
+		   </tr>
+		   <tr>
+				<td style="text-align:left;">制单日期:</td>
+				<td style="text-align:left;"><span id="opDate" name="opDate" ></span></td>
+				<td style="text-align:left;">通关口岸:</td>
+				<td style="text-align:left;"><span id="customPort" name="customPort" ></span></td>
+		   </tr>
+		   <tr>
+				<td style="text-align:left;">合同数量:</td>
+				<td style="text-align:left;" colspan="3"><span id="contactCount" name="contactCount" ></span></td>
+			</tr>
+			<tr>
+				<td style="text-align:left;">合同箱子数量:</td>
+				<td style="text-align:left;"><span id="cartonCount" name="cartonCount" ></span></td>
+				<td style="text-align:left;">实际箱子数量:</td>
+				<td style="text-align:left;"><span id="actualCartonCount" name="actualCartonCount" ></span></td>
+			</tr>
+			<tr>
+				  <td style="text-align:left;">总净重:</td>
+				  <td style="text-align:left;"><span id="nw" name="nw" ></span></td>
+				  <td style="text-align:left;">总毛重:</td>
+				  <td style="text-align:left;"><span id="gw"  name="gw"></span></td>
+			</tr>
+			<tr>
+				  <td style="text-align:left;">总数量:</td>
+				  <td style="text-align:left;"><span id="qty"  name="qty" ></span></td>
+				  <td style="text-align:left;">总体积:</td>
+				  <td style="text-align:left;"><span >无</span></td>
+			 </tr>
+			 <tr>
+				 <td style="text-align:left;">备注:</td>
+				 <td style="text-align:left;" colspan="3"><span id="remark" name="remark" ></span></td>
+				
+			 </tr>
+		</tbody>
+	</table>
+	</fieldset>
+	<fieldset class="main">
+	<legend>装车备货明细</legend>
+	   <div id="contact">
+	   </div>
+	   <div>
+		   <table class="listContent" style='border-collapse: collapse; table-layout: fixed;width: 760pt'>
+		   		<tbody>
+				   <tr>
+				      <td class="clsInvoice" height="20" align="left" colspan="8" nowrap="nowrap">
+					    <span style="text-align:center"> 装车核对人确认：___________________装车司机确认：________________鼎丰公司收货人核对签收：_______________</span>
+		   			  </td>
+				   </tr>
+				 </tbody>
+		   </table>
+	   </div>
+	</fieldset>
+</div>
+</form>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-grid-rowexpander.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var cusParams={
+                title :'客户列表',
+				text:"cname",
+                dataSource :"business/Customer/0/searchCusCompany?searchValue=",              
+                colModel: [
+ 							 {header : '客户', name : 'cname', width : 250, align : 'left'},
+							 {header : '简写', name : 'csname', width : 200, align : 'left'}
+						 ]
+     };
+	$(function() {
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		initValidateForm("invoicenotice");
+		var invoiceNoticeId=getIframeParm("invoiceNoticeId");
+		if (invoiceNoticeId !=""){ //编辑状态
+			loadPayItem();
+ 		 }else{
+			$.omMessageTip.show({content : "找不到开票",timeout : 2000,type : 'error'});
+		 }
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [{label:"保存",
+				 id:"btnSave" ,
+				 icons : {left : '/images/icon/add.png'},
+				 onClick: saveInvoiceNotice
+				},
+				{separtor:true},
+            	{label:"关闭",id:"button2", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		 ]
+        });
+		
+	});
+	
+	function loadPayItem(){
+	     var invoiceNoticeId=getIframeParm("invoiceNoticeId");
+	     var url="finance/InvoiceNotice/0/get?invoiceNoticeId="+invoiceNoticeId;
+		 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			 json.entity['opTypeName']=Dictionary.getDictName(Dictionary.OpType,json.entity.opType);
+			 $("#invoicenotice").initializeInput({"vo":json.entity}); //初始化		
+	  	 }
+	  	 });
+	}
+	
+	function iniInvoiceAmt(vos,$invoiceAmt){
+	   var totalAmt=0.0;
+	   for(var i=0;i<vos.length;i++){
+	       var vo=vos[i];
+	       totalAmt=totalAmt.add(vo.invoiceAmt);
+	   }
+	   $invoiceAmt.val(totalAmt.toFixed(2));
+	}
+	function saveInvoiceNotice(){	 
+		if(validateForm("invoicenotice")==false) return false;		
+		var vo=$("#invoicenotice").getVo();
+		vo["in.isSettlement"] = 2;
+		$.omMessageBox.confirm({title:'编辑开票确认',content:'你确定要修改吗？',onClose:function(v){
+		if(v){
+			var url = "finance/InvoiceNotice/0/edit";
+			$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+				loadPayItem();
+				$.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});
+			}});   	            
+		 }
+       }});
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"></div>			
+<div id="nav_invoicenotice" title="新增开票" >
+	<form id="invoicenotice">	
+	<input id="id" name="in.id" type="hidden" />
+	<input id="status" name="in.status" type="hidden" />
+	<input type="hidden" id="amt" name="in.amt" />
+	<input type="hidden" id="settlementIds" name="in.settlementIds" />
+	<input type="hidden" id="orderNo" name="in.orderNo" />
+	<input type="hidden" id="opType" name="in.opType" />
+	<input type="hidden" id="titleCompanyId" name="in.titleCompanyId" />
+	<input type="hidden" id="lastModifyTime" name="in.lastModifyTime" />
+	<input type="hidden" id="createTime" name="in.createTime" />
+	<input type="hidden" id="noticeUserId" name="in.noticeUserId" />
+	<input type="hidden" id="invoiceUserId" name="in.invoiceUserId" />	
+	<table class="edit-table">		
+		<tr>
+			<td class="label">(<span name='opTypeName'></span>)客户：</td>
+			<td class="field"><input id="customerId" name="in.customerId" showtext="id.customerName" validate="rules:['required']" /></td>
+			<td class="label">开票类型：</td>
+			<td class="field" ><input id="type" name="in.type" pattern='combo' editable='false' validate="rules:['required']" 
+			remote='InvoicenoticeType' /></td>				
+		</tr>
+		<tr>
+			<td class="label">金额：</td>
+			<td class="field"><input id="actualAmt" name="in.actualAmt" validate="rules:['required']" /></td>
+			<td class="label">币种：</td>
+			<td class="field"><input id="currency" name="in.currency"  pattern='combo' editable='false' validate="rules:['required']" 
+			 remote='Currency' value='142' /></td>
+		</tr>
+		 <tr>   			    
+			<td class="label">开票号码：</td>
+			<td class="field" ><input id="invoiceNo" name="in.invoiceNo" /></td>				
+			<td class="label">开票日期：</td>
+			<td class="field"><input id="invoiceDate" name="in.invoiceDate" pattern='datetime' validate="rules:['required']"
+				    editable='false' defaultDate="now" /></td>
+		</tr>
+		<tr>   			    
+			<td class="label">备注：</td>
+			<td class="field" colspan="3"><input id="remark" name="in.remark" /></td>
+		</tr>
+		
+	</table>
+	</form>	
+</div>
+<div id="buttonbar"></div>	
+</body>
+</html>

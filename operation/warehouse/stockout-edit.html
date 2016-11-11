@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/json2.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	var dialog=null;
+	$(document).ready(function(){	
+		$("#search-panel").omPanel({title : "",collapsed:true});
+		 initValidateForm("stockout");		 
+		 
+		   $('#consigneeProvinceId').omCombo({			//
+					dataSource :  "baseinfo/AreaDict/-1/getAreaByPLevel1?ad.level=1",
+					optionField:'name',
+					valueField : "id",
+					emptyText : '请输选择地区',
+					onValueChange:function(target,newValue,oldValue,event){ 
+					    var url=  "baseinfo/AreaDict/"+newValue+"/getAreaByPLevel1?ad.level=2";
+						$('#consigneeCityId').omCombo('setData',url);
+						$('#consigneeCountyId').omCombo('setData',null);		
+					}																							
+			});			
+		   $('#consigneeCityId').omCombo({			//
+					dataSource : "",
+					optionField:'name',
+					valueField : "id",
+					emptyText : '请输选择地区',
+					onValueChange:function(target,newValue,oldValue,event){ 
+                        var url="baseinfo/AreaDict/"+newValue+"/getAreaByPLevel1?ad.level=3";
+						$('#consigneeCountyId').omCombo('setData',url);
+					}																																					
+			});		
+			$('#consigneeCountyId').omCombo({			//
+					dataSource : "",
+					optionField:'name',
+					valueField : "id",
+					emptyText : '请输选择地区',
+					onValueChange:function(target,newValue,oldValue,event){ 
+					}																																					
+			});	
+		 
+		$('#buttonbar').omButtonbar({
+		 width : "100%",
+		 btns : [
+			 	{separtor:true},
+            	{label:"保存",id:"btnSave", 
+				  icons : {left : '/images/icon/add.png'},
+				  onClick:saveStockOut
+				},		
+				{separtor:true},
+            	{label:"关闭",id:"btnClose", 
+				  icons : {left : '/images/icon/close.png'},
+				  onClick:function(){
+				      closeCurrActivateTabs(1000);
+				  }
+				 }				
+		       ]
+        });
+		
+		var stockOutId=getIframeParm("id");		
+		if (stockOutId !=""){
+		      var url="warehouse/StockOut/0/get?stockOutId="+stockOutId;
+			  $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+					$('#stockout').initializeInput({"vo":json.entity}); //初始化
+			   }	
+			  });
+ 		}else{
+			 $('#stockout').initializeInput(); //初始化
+		}      
+											
+	});
+	
+	function saveStockOut(){ //保存出库单
+	    if(validateForm("stockout")==false)return false; 
+		var vo=$("#stockout").getVo();
+	   	var url = "warehouse/StockOut/0/edit";
+		$.ajaxPost({data:vo,url:url,msg:false,success:function(json,textStatus){
+			$.omMessageTip.show({content : json.msg,timeout : 2000,type:'success'});
+		  }
+		});    
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel"> 	 
+</div>			
+<div id="buttonbar"></div>	
+<div id="nav_stockout" title="送货信息">
+        <form id="stockout">	
+		<input id="id" name="sOut.id" type="hidden" />
+		<input id="customerId" name="sOut.customerId" type="hidden" />
+		<input id="status" name="sOut.status" type="hidden" />
+		<input id="manageModel" name="sOut.manageModel" type="hidden" />
+		<input id="refOrderId" name="sOut.refOrderId" type="hidden" />
+		<input id="businessType" name="sOut.businessType" type="hidden" />
+	    <input type="hidden" id="lastModifyTime" name="sOut.lastModifyTime" />
+	    <input type="hidden" id="createTime" name="sOut.createTime" />
+	    <input type="hidden" id="lastModifyBy" name="sOut.lastModifyBy" />
+		<input type="hidden" id="createBy" name="sOut.createBy" />
+		 <table class="edit-table">		
+			<tr>	
+			   <td class="label">编码：</td>		
+  			   <td class="field" ><span  id="stockOutNo" name="sOut.stockOutNo" disabled="" /></td>
+			   <td class="label">所在地区(收货)：</td>
+			   <td class="field" ><input id="consigneeProvinceId" name="sOut.consigneeProvinceId" pattern='combo'  /></td>
+			</tr>
+			<tr>
+			    <td class="label">货物来源：</td>
+				<td class="field">
+				   <input id="wh" name="sOut.wh"  validate="rules:['required']"
+					pattern='combo' editable='false' remote='Warehouse' />
+				</td>				
+			</tr>
+		 </table>		
+		</form>	
+</div>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {	
+		$("#search-panel").omPanel({title : "搜索",collapsible:true});
+		$("#search-panel").initializeInput({onkeydown:searchData}); //初始化	
+		$('span#button-search').omButton({icons : {left : '/images/icon/search.png'},width : 50,
+		       onClick : function(event){
+			         searchData();
+			   }
+		});			
+		$('#buttonbar').initToolBar();	
+		$('#grid').omGrid({
+				limit:20,
+				autoFit:true,
+                title : '司机列表',
+                dataSource :"business/Driver/0/searchDriver",
+                colModel : [
+							 {header : '司机编码', name : 'driverNo', width : 50, align : 'left'}, 
+                             {header : '运输公司', name : 'tranName', width : 120, align : 'left'}, 
+							 {header : '姓名', name : 'name', width : 100, align : 'left'},
+							 {header : '手机', name : 'phone', width : 100, align : 'left'},
+							 {header : '居住地址', name : 'liveAddress', width : 200, align : 'left'},
+ 							 {header : '驾驶执照', name : 'driverLicense', width : 80, align : 'left'},
+  							 {header : '状态', name : 'status', width : 100, align : 'left',
+							    renderer : function(colValue, rowData, rowIndex) {
+                                    return Dictionary.getDictName(Dictionary.DriverStatus,colValue);
+								}
+							 } 
+ 							],
+				rowDetailsProvider:function(rowData,rowIndex){
+                		return '';								
+	            }
+            });			
+
+	});
+	function searchData(){
+	    var vo=$("#search-panel").getVo();
+		 var params=convertParamToUrl(vo);
+		 $('#grid').omGrid('setData', "business/Driver/0/searchDriver?"+params);
+	}
+	function addDriver(){	
+	    var paras={tabId:"addDriver001"}; //tabId用方法名加001命名而成，这样就不会重复
+		addNewTab("新添司机","/business/driver-edit.html",paras,function(){
+		     $('#grid').omGrid('reload');//刷新grid
+		});		        
+	}	
+	function editDriver(){
+	  var rowDatas = $('#grid').omGrid('getSelections',true);
+        if(rowDatas.length <= 0 ){
+        	$.omMessageTip.show({title : '提示',content : '请选择修改行！'});
+        		return;
+        }
+		var paras={driverId:rowDatas[0].id,tabId:"editDriver001"}; //tabId用方法名加001命名而成，这样就不会重复
+		addNewTab("编辑司机","/business/driver-edit.html",paras,function(){
+		    $('#grid').omGrid('reload');//刷新grid
+		});			
+	}
+	function auditDriver(){ //审核
+	     var rowDatas = $('#grid').omGrid('getSelections',true);
+		 if(rowDatas.length <= 0 ){
+			 $.omMessageTip.show({title : '提示',timeout : 2000,content : '请选择修改行！'});
+			 return;
+		 }
+		 var url = "business/Driver/0/audit?driverId="+rowDatas[0].id+"&status=20";	
+		 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){	
+		   $('#grid').omGrid('reload');//刷新grid
+		   $.omMessageTip.show({content : json.msg,timeout : 2000,type : 'success'});					  
+		  }});		
+	}
+	function viewDriver(){
+	  
+	}
+	</script>
+</head>
+<body class="dfbody">	
+<div id="search-panel">
+   <table class="edit-panel">		
+	<tr >
+	    <td>关键字：</td>    
+		<td><input id="searchValue" name="searchValue"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>联系方式：</td>   
+		<td><input id="phone" name="phone"  onfocus="myFocus(this,'#f4eaf1')" onblur="myblur(this,'white')"  /></td>
+		<td>状态：</td>
+	    <td><input id="status" name="status" pattern='combo' editable='false' width="120" remote="DriverStatus"/></td>
+		<td><span id="button-search">搜索</span></td>
+	</tr>
+  </table> 	 
+</div>		
+	<div id="buttonbar"></div>	
+	<div id="grid"></div>
+</body>
+</html>

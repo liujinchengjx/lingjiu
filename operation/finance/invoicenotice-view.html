@@ -1,0 +1,138 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>  
+     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>后台管理系统</title>
+	<link rel="stylesheet" type="text/css" href="/plugins/themes/elegant/om-all.css">
+	<link href="/css/mutitable.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-core.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-mouse.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-resizable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-combo.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-calendar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-grid.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-grid-rowexpander.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-button.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-buttonbar.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-panel.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-draggable.js"></script>
+    <script type="text/javascript" src="/plugins/ui/om-position.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-numberfield.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-tooltip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagetip.js"></script>
+	<script type="text/javascript" src="/plugins/ui/om-messagebox.js"></script>
+	<script type="text/javascript" src="/js/jc.validation.js"></script>
+	<script type="text/javascript" src="/js/common.js"></script>
+	<script type="text/javascript" src="/js/dictionary.js"></script>
+	<script type="text/javascript" src="/js/jquery.gscm.js"></script>
+    <script type="text/javascript">
+	$(function() {	
+		loadPayItem();
+	});
+	function loadPayItem(){
+	     var invoiceNoticeId=getIframeParm("invoiceNoticeId");
+	     var url="finance/InvoiceNotice/0/get?invoiceNoticeId="+invoiceNoticeId;
+		 $.ajaxPost({url:url,msg:false,success:function(json,textStatus){
+			 json.entity['opTypeName']=Dictionary.getDictName(Dictionary.OpType,json.entity.opType);
+			 $("#invoicenotice").initializeInput({"vo":json.entity}); //初始化
+		     var stList=json.entity.settlementList;
+		     var opType=json.entity.opType;
+			 var mutitable=$(".mutitable");
+			 $(".tbody_item").remove();
+			 var html="";
+			 for(var i=0;i<stList.length;i++){
+				 var st=stList[i];
+				 html=html+"<div class='tbody_item'>";
+				 html=html+"<table cellpadding='0' cellspacing='0' width='100%' class='tbody_table'>";
+				 html=html+" <tr> ";
+				 html=html+"   <td width='110'><strong><span name='referOrderNo'>"+st.referOrderNo+"</span>";
+				 html=html+"       <span name='setId' style='display:none' >"+st.id+"</span>";
+				 html=html+"       <span name='outInvoiceAmt' style='display:none' >"+st.outInvoiceAmt+"</span>";
+				 html=html+"     </strong></td>";
+				 html=html+"  <td width='80'><strong><span name='type'>";
+				 html=html+      Dictionary.getDictName(Dictionary.SettlementType,st.type)+"</span></strong></td>";
+				 html=html+"  <td width='50'><strong><span name='currency'>";
+				 html=html+      Dictionary.getDictName(Dictionary.Currency,st.currency)+"</span></strong></td>";
+				 html=html+"  <td width='120' style='text-align:right;margin-right:2px;'>";
+				 html=html+"     <input name='invoiceNoticeAmt' style='width:90%;margin-right:2px;text-align: right;' ";
+				 html=html+"         value='"+st.invoiceNoticeAmt+"'/>";
+				 html=html+"   </td>";
+				 html=html+"   <td class='tbody_product' width='610'>";
+				 var indList=st.invoiceNoticeDetailList;
+				 for(var j=0;j<indList.length;j++){
+					 var ind=indList[j];
+					 var productName="&nbsp",pn="&nbsp",qty="&nbsp",unit="&nbsp";
+					 if (ind.product!=null){
+					    productName=ind.product.productName;
+						pn=ind.product.pn;
+					 }
+					 if ((ind.qty!=null) && (ind.qty!="")) {
+					    qty=ind.qty;
+					 }
+					 if ((ind.unit!=null) && (ind.unit!="")) {
+					    unit=ind.unit;
+					 }
+					 html=html+"   <dl>"; 
+					 html=html+"      <dd style='float:left;text-align:center;width:50px;'><span name='orderNo'>"+(j+1)+"</span>";
+					 html=html+"         <span name='id' style='display:none;'>"+ind.id+"</span>";
+					 html=html+"         <span name='productId' style='display:none;'>"+ind.productId+"</span>	";
+					 html=html+"		 <span name='settlementId' style='display:none;'>"+ind.settlementId+"</span>";
+					 html=html+"         <span name='invoiceNoticeId' style='display:none;'>"+ind.invoiceNoticeId+"</span>";
+					 html=html+"      </dd>";
+					 html=html+"      <dd style='float:left;text-align:center;width:120px;'>";
+					 html=html+"          <span name='productName'>";
+					 html=html+        ""+ productName+"</span>";
+					 html=html+"      </dd>";
+					 html=html+"      <dd style='float:left;text-align:center;width:120px;'>";
+					 html=html+"          <span name='pn'>";
+					 html=html+        ""+ pn+"</span>";
+					 html=html+"      </dd>";
+					 html=html+"      <dd style='float:left;text-align:right;width:90px;'>";
+					 html=html+"          <span name='qty'>"+qty+"</span>";
+					 html=html+"       </dd>";
+					 html=html+"      <dd style='float:left;text-align:center;width:60px;'>";
+					 html=html+"          <span name='unit'>"+unit+"</span>";
+					 html=html+"      </dd>";
+					 html=html+"      <dd style='float:left;text-align:right;width:120px;'>";
+					 html=html+"         <input type='text' value='"+ind.invoiceAmt+"' name='invoiceAmt' ";
+					 html=html+"         style='width:90%;margin-right:2px;text-align: right;'";
+					 html=html+"         validate="+"rules:['required']"+"  />";
+					 html=html+"      </dd>";
+					 html=html+"   </dl>";
+				 }
+				 html=html+"  </td>";
+				 html=html+"  <td></td>";
+				 html=html+"</tr>";
+				 html=html+"</table></div>";
+			 } 
+			 mutitable.append(html);
+			 $("input[name='invoiceNoticeAmt']").omNumberField({allowDecimals:true,decimalPrecision:2});
+			 $("input[name='invoiceAmt']").omNumberField({allowDecimals:true,decimalPrecision:2});
+	   }			
+	  });
+	}
+	</script>
+</head>
+<body class="dfbody">			
+<div class="mutitable">
+	<table cellpadding="0" cellspacing="0" width="100%" class="thead">
+		<thead>
+		   <tr>
+			  <td width="110">订单号</td>
+			  <td width="80">结算类型</td>
+			  <td width="50" >结算币种</td>
+			  <td width="120" style="text-align: right;" >开票金额</td>
+			  <td width="50" >序号</td>
+			  <td width="120" >品名</td>
+			  <td width="120" >料号</td>
+			  <td width="90" style="text-align: right;"  >数量</td>
+			  <td width="60" >单位</td>
+			  <td width="120" style="text-align: right;" >开票金额(RMB)</td>
+			  <td></td>
+		   </tr>
+		</thead>
+   </table>
+</div>
+</body>
+</html>

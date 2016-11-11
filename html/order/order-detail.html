@@ -1,0 +1,276 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>百加商城 订单详情</title>
+<meta content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0" name="viewport">
+<meta content="yes" name="apple-mobile-web-app-capable">
+<meta content="black" name="apple-mobile-web-app-status-bar-style">
+<meta content="telephone=no" name="format-detection">
+<meta content="手机版百加商城客户端可以随时随地参与预约抢购百加手机，轻松下单购买，实时查询订单信息掌握物流状态，百加商城app手机客户端还有新品信息通知推送功能，所有商品信息随身掌握。" name="description">
+<meta content="百加商城,百加V6手机,百加V6,百加手机,百加商城app,百加商城app下载" name="keywords">
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+<script type="text/javascript" src="/js/jquery.min.js"></script>
+<script type="text/javascript" src="/js/common.js"></script>
+<script>
+var orderId =$.trim(getUrlParam("id"));
+var type =$.trim(getUrlParam("type"));
+</script>
+<link href="/css/style.css" rel="stylesheet">
+<style type="text/css">
+body{background-color:#f2f4f4}
+.viewport{margin-bottom: -3em;}.p01{padding:0 0.4em}
+.list_nav{border-radius:0.4em;box-sizing:border-box;overflow:hidden}
+.list_nav .abox{color:#51545a;height:100%;width:100%;display:-moz-box;display:-webkit-box;display:box;-moz-box-align: center;-webkit-box-align: center;box-align: center}
+.list_nav .img{width:6.8em;height:6.8em;margin:0 0.5em;overflow:hidden;background-size:cover;}
+.list_nav .img img{width:100%}
+.list_nav>li{border-bottom:1px dashed #ccc;margin:0 1em; padding:0.5em 0;}
+.list_nav>li:last-child{border-bottom:0;}
+.list_nav .items{position:relative;height: 8.8em;box-sizing:border-box}
+.list_nav .info{-moz-box-flex:1;-webkit-box-flex:1;box-flex:1}
+.list_nav .name{font-size:1.6em;color:#000;margin-bottom:0.3125em;overflow:hidden;text-overflow:ellipsis; white-space:nowrap; width:15em;}
+.list_nav .info .price{max-height:2.8em;padding-right:1em;line-height:1.4em;font-size:1.35em;color:#848484;overflow:hidden}
+.list_nav .info .price li{ float:left; width:8em;}
+.order_detail{padding:1em 1em 4em;}
+.detail_main{border-left:1px solid #e0e2e2;border-right:1px solid #e0e2e2;background-color:#fff;position:relative}
+.detail_main:before{content:"\0020";display:block;height:7px;position:absolute;left:-2px;right:-2px;top:0; background:url(/images/icon_box.png) no-repeat; background-size:100% 100%}
+.detail_main:after{content:"\0020";display:block;height:13px;width:100%;position:absolute;left:0;bottom:0;background:url(/images/confirm_foot.jpg) repeat-x 0 bottom}
+.detail_info{padding:1em 0;}.detail_list{padding-bottom:2em;}
+.detail_info dl{padding:0.5em 0;width:100%;display:-moz-box;display:-webkit-box;display:box;-moz-box-align:top;-webkit-box-align: top;box-align: top;}
+.detail_info dt{ width:6em; text-align:right; font-size:1.4em; color:#000;}
+.detail_info dd{-moz-box-flex:1;-webkit-box-flex:1;box-flex:1;font-size:1.4em;color:#000;margin:0 0.5em 0 1em;}
+.detail_info dd.num{ padding-right:1em;}
+.detail_info .price{margin-left:-1.2em;}.detail_info .group{margin-top:1em;}
+.detail_info dd.cred{color:#f74e5f}
+.section { border-bottom:1px dashed #c9c9c9; padding:1em 0; position:relative;}
+.section:first-child{padding-top:0;}
+.cart_del{ position:absolute; width:2.5em; height:2.5em; background:url(../images/module/icon_28.png) 0 0 no-repeat;;-moz-background-size:cover;-webkit-background-size:cover;-o-background-size:cover;background-size:cover; right:1em; top:0}
+.cart_del:hover{ background-image:url(../images/module/icon_29.png);}
+.cart_bar{ padding:1em; position:fixed; bottom:0; box-shadow:0 0 3px rgba(0,0,0,0.5); background-color:#FFF; opacity:0.9;left:0; width:100%;}
+.cart_bar .baijia_button{ width:10em; float:right; margin-right:1em;}
+.cart_bar .total{font-size:1.4em;line-height:2em; float:left;}
+</style>
+</head>
+<body>
+<div class="header">
+	<div class="back"><a href="/"><span class="icon-23"></span></a></div>
+	<div class="tit">
+		<h1>订单详情</h1>
+	</div>
+	<div class="right">
+		<ul>
+			<li class="cart"><a title="购物车" href="/order/cart-index.html"><span class="icon-2"></span><span class="tip hide" id="ShoppingCartNum"></span></a></li>
+		</ul>
+	</div>
+</div>
+<div class="viewport">
+    <div class="order_detail"><div class="detail_main">
+		<div class="detail_info">
+			<div class="section">
+				<a class="cart_del hide" id="cart_del" href="javascript:;" onClick="orderCancel()"></a>
+				<dl>
+					<dt>订单状态</dt><dd id="orderStatus" class="cred num"></dd>
+				</dl>
+				<dl>
+					<dt>商品总价</dt><dd id="proTotalPrice" class="num"></dd>
+				</dl>
+				<dl>
+					<dt>　　运费</dt><dd id="transportPrice" class="num"></dd>
+				</dl>
+				<dl style="display:none">
+					<dt>　优惠券</dt><dd id="discountCost" class="num"></dd>
+				</dl>
+				<dl style="display:none">
+					<dt>　　加币</dt><dd id="jCoinCost" class="num"></dd>
+				</dl>
+				<dl>
+					<dt>应付总额</dt><dd id="totalPrice" class="num"></dd>
+				</dl>
+			</div>
+			<div class="section">
+				<a href="javascript:;">
+					<dl>
+						<dt>物流信息</dt><dd id="transportCompany"></dd>
+					</dl>
+					<dl>
+						<dt>快递单号</dt><dd id="transportNo"></dd>
+					</dl>
+				</a>
+			</div>
+			<div class="section">
+				<dl>
+					<dt>下单日期</dt><dd id="orderTime"></dd>
+				</dl>
+				<dl>
+					<dt>订单编号</dt><dd id="orderNO"></dd>
+				</dl>
+				<dl>
+					<dt class="toTop">收货地址</dt>
+					<dd><span id="address"></span><span id="postcode"></span><br><span id="receiveName"></span><span id="telephone"></span>	
+					</dd>
+				</dl>
+				<dl>
+					<dt>送货时间</dt><dd id="sendDate"></dd>
+				</dl>
+				<dl>
+					<dt>发票类型</dt><dd id="billType"></dd>
+				</dl>
+				<dl>
+					<dt>发票抬头</dt><dd id="billHeader"></dd>
+				</dl>
+			</div>
+        </div>  
+        <div class="detail_list">
+            <ul class="list_nav" id="detail_list">
+            </ul>
+        </div>      
+    </div></div>
+</div>
+<div class="cart_bar" id="cart_bar">
+	<p class="total ">金额合计<strong class="cred" id="totalPrice_transCost_fix">&yen;</strong></p>
+	<a class="baijia_button " style="margin-right:2em;" id="topay" href="javascript:;"><span>立即支付</span></a>
+</div>
+<div class="footer">
+	<div class="links">
+		<p><a href="tel:4008-868-687"><span>百加商城客服热线：4008-868-687</span></a></p>
+		<p><a href="/user/login.html" id="footer_login"><span>登录</span></a><a href="javascript:window.scrollTo(0,0);"><span>返回顶部</span></a></p>
+	</div>
+</div>
+<script type="text/javascript">
+function getOrderData(orderId){
+	if(orderId!=null&&orderId!=''){
+		$.ajax({
+			url:TERMINAL_URL+'/jsonrest/mobile/order/Order/'+orderId+'/viewDetail',
+			type:'post',
+			data:'',
+			dataType:'json',
+			timeout:30000,//非必须.默认30秒
+			error:function(){
+				showTips("提示:加载数据有误，请联系管理员纠正");
+				window.setTimeout(function(){
+					window.location.href ="/order/order-list.html?orderType="+type;
+				},1000);
+			}, //非必须
+			success:getOrderDataSuccess//非必须
+		});
+	}else{
+		showTips("不存在的订单！");
+		window.setTimeout(function(){
+			window.location.href ="/order/order-list.html?orderType="+type;
+		},1000);
+	}
+}
+function orderCancel(){
+	var c = window.confirm('是否确定取消订单？');
+	if(c){
+		var sUrl = "/jsonrest/mobile/order/Order/"+orderId+"/cancel";
+		$.ajax({
+			url:TERMINAL_URL+sUrl,
+			type:"post",
+			dataType:"json",
+			error:function(){},
+			success:function(data){
+				if(data.msgCode==3){
+					window.location.href = "/user/login.html?tourl="+encodeURIComponent(window.location.href);
+					return;
+				}
+				if(data.msgCode==1){
+					window.location.href = '/order/order-list.html';
+				}else{
+					showTips(data.msg);
+					return;
+				}
+			}
+		});
+	}
+}
+function getOrderDataSuccess(data){
+	if(data.msgCode==3){
+		window.location.href = "/user/login.html?tourl="+encodeURIComponent(window.location.href);
+		return;
+	}
+	if(data.msgCode!=1){
+		showTips(data.msg);
+		return;
+	}
+	var dataList = data.entity;
+	$("#orderStatus").html(dataList.orderStatusName);
+	$("#proTotalPrice").html(toPenny(dataList.productPriceAmt)+'元');
+	$("#transportPrice").html(toPenny(dataList.transCost)+'元');
+	if(dataList.jiaCurrencyAmt != 0){
+		$("#jCoinCost").html('- '+toPenny(dataList.jiaCurrencyAmt)+'元').parents("dl").show();
+	}
+	if(dataList.preferentialAmt != 0){
+		$("#discountCost").html('- '+toPenny(dataList.preferentialAmt)+'元').parents("dl").show();
+	}
+	$("#totalPrice").html(toPenny(dataList.orderAmount - dataList.jiaCurrencyAmt - dataList.preferentialAmt)+'元');
+	if(parseInt(dataList.orderStatus) == 10){
+		$("#totalPrice_transCost_fix").html($("#totalPrice").html());
+		$("#topay").attr("href","/pay/weixin/pay.html?showwxpaytitle=1&id="+dataList.orderId)
+		$("#cart_bar").show();
+		$("#cart_del").show();
+	}else{
+		$("#cart_bar").html('').hide();
+		$("#cart_del").hide();
+	}
+	$("#transportCompany").html(dataList.carrier?dataList.carrier:'暂无记录');
+	$("#transportNo").html(dataList.billNo?dataList.billNo:'暂无记录');
+	$("#orderTime").html(dataList.orderTime);
+	$("#orderNO").html(dataList.orderNo);
+	$("#address").html(dataList.consigneeAddress);
+	$("#postcode").html('('+dataList.consigneePostcode+')');
+	$("#receiveName").html(dataList.consignee);
+	$("#telephone").html(dataList.consigneeMobile);
+	var deliveryPeriodStr = '';
+	if(dataList.deliveryPeriod == 1){
+		deliveryPeriodStr = '周一至周五可配送';
+	}else if(dataList.deliveryPeriod == 2){
+		deliveryPeriodStr = '周一至周五、周末均可配送';
+	}else if(dataList.deliveryPeriod == 3){
+		deliveryPeriodStr = '仅周末配送';
+	}else if(dataList.deliveryPeriod == 4){
+		deliveryPeriodStr = '仅限白天配送';
+	}
+	$("#sendDate").html(deliveryPeriodStr);
+	$("#billType").html(dataList.invoiceTypeName?dataList.invoiceTypeName:'暂无记录');
+	if(dataList.invoiceType == 0){
+		$("#billHeader").parents('dl').hide();
+	}else{
+		$("#billHeader").html(dataList.invoiceTitle?dataList.invoiceTitle:'暂无记录');
+	}
+	var orderPro=dataList.orderItemVOs;
+	var html='';
+	for(var i=0,length=orderPro.length;i<length;i++){
+		var productData=orderPro[i].productVO;
+		html+='<li><div class="items"><a class="abox">';
+		html+='<div class="img">';
+		html +='<img src="'+PHOTO_URL+orderPro[i].mainPicturesVO.url4+'" onerror="this.src=\'/images/nopic/nopic_4.jpg\'">';
+		html +='</div><div class="info"><h2 class="name">';
+		html += productData.proName;
+		html +='</h2><div class="price"><ul><li>售价:';
+		html += toPenny(orderPro[i].currentPrice);
+		html += '元</li><li>数量:';
+		html += orderPro[i].quantity;
+		html += '</li></ul></div><div class="price"><ul><li>优惠:';
+		html += orderPro[i].preferentialPrice==0?' - ':toPenny(orderPro[i].preferentialPrice*orderPro[i].quantity)+'元';
+		html += '</li><li>小计:';
+		html += toPenny((orderPro[i].currentPrice-orderPro[i].preferentialPrice)*orderPro[i].quantity);
+		html +='元</li></ul></div></div></a></div></li>';	
+	}
+	$("#detail_list").html(html);	
+}
+(function(){
+	getOrderData(orderId);
+	getCartNum();
+	loginHide();
+})();
+</script>
+<p class="hide">
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F27a6edda23c8cced290e66d76fc16a71' type='text/javascript'%3E%3C/script%3E"));
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create', 'UA-55764976-1', 'auto');ga('send', 'pageview');
+</script>
+</p>
+</body>
+</html>
